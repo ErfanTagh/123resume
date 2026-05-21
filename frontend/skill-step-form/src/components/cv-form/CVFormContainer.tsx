@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,6 +20,8 @@ import { getTestProfile, getTestProfileNames } from "@/lib/testData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
+import { stableSerializeCvPayload } from "@/lib/stableSerializeCvPayload";
+import type { ResumeScore } from "@/lib/resumeScorer";
 import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -35,10 +37,30 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const [currentStep, setCurrentStep] = useState(0);
   const [highestStepVisited, setHighestStepVisited] = useState(0); // Track the highest step number visited
   const [showSignupOverlay, setShowSignupOverlay] = useState(false);
+  /** Latest server AI score after step navigation (Next / Previous / progress). Guests: undefined. */
+  const [navResumeScore, setNavResumeScore] = useState<ResumeScore | undefined>(undefined);
+  const [navResumeScoreLoading, setNavResumeScoreLoading] = useState(false);
+  const navResumeScoreRef = useRef<ResumeScore | undefined>(undefined);
+  const lastSuccessfulScorePayloadRef = useRef<string | null>(null);
+  const scoreRequestIdRef = useRef(0);
   const [templateSelected, setTemplateSelected] = useState(!!initialData?.template);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  navResumeScoreRef.current = navResumeScore;
+
+  useEffect(() => {
+    if (!user) {
+      lastSuccessfulScorePayloadRef.current = null;
+      scoreRequestIdRef.current = 0;
+    }
+  }, [user]);
+
+  useEffect(() => {
+    lastSuccessfulScorePayloadRef.current = null;
+    scoreRequestIdRef.current = 0;
+  }, [editId]);
 
   // Ensure overlay is ALWAYS hidden when navigating between steps - only show when explicitly clicking "Complete CV"
   // Also scroll to top when step changes
@@ -346,6 +368,50 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     return { ...formData, skills };
   }, [formData, skills]);
 
+  const refreshResumeScoreAfterStepNav = useCallback(() => {
+    if (!user) {
+      setNavResumeScore(undefined);
+      setNavResumeScoreLoading(false);
+      lastSuccessfulScorePayloadRef.current = null;
+      scoreRequestIdRef.current = 0;
+      return;
+    }
+
+    const snapshot = stableSerializeCvPayload(form.getValues());
+
+    if (
+      navResumeScoreRef.current !== undefined &&
+      snapshot === lastSuccessfulScorePayloadRef.current
+    ) {
+      return;
+    }
+
+    const requestId = ++scoreRequestIdRef.current;
+
+    setNavResumeScore(undefined);
+    setNavResumeScoreLoading(true);
+    void getResumeScoreWithOptionalAI(form.getValues(), true, { fallbackToLocal: false })
+      .then((score) => {
+        if (requestId !== scoreRequestIdRef.current) return;
+        setNavResumeScore(score);
+        lastSuccessfulScorePayloadRef.current = snapshot;
+      })
+      .catch(() => {
+        if (requestId !== scoreRequestIdRef.current) return;
+        toast({
+          title: t("common.error") || "Error",
+          description:
+            t("resume.score.aiFailed") ||
+            "Could not load AI score. Use Next or Previous to try again.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (requestId !== scoreRequestIdRef.current) return;
+        setNavResumeScoreLoading(false);
+      });
+  }, [user, form, t]);
+
   // Set template as selected and reset form when initialData has a template
   useEffect(() => {
     if (initialData?.template) {
@@ -444,7 +510,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const handleStepClick = async (stepIndex: number) => {
     // Allow going back to previous steps without validation
     if (stepIndex <= currentStep) {
-      setCurrentStep(stepIndex);
+      if (stepIndex !== currentStep) {
+        setCurrentStep(stepIndex);
+        refreshResumeScoreAfterStepNav();
+      }
       return;
     }
 
@@ -460,6 +529,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     setCurrentStep(stepIndex);
     setHighestStepVisited(prev => Math.max(prev, stepIndex));
+    refreshResumeScoreAfterStepNav();
   };
 
   // Test data loader (dev only)
@@ -479,6 +549,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       };
       form.reset(normalizedProfile);
       setCurrentStep(0);
+      lastSuccessfulScorePayloadRef.current = null;
+      scoreRequestIdRef.current = 0;
+      setNavResumeScore(undefined);
       toast({
         title: "Test Profile Loaded! 🧪",
         description: `Loaded "${profileName}" profile with test data.`,
@@ -502,6 +575,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
         setHighestStepVisited(prev => Math.max(prev, nextStep));
+        refreshResumeScoreAfterStepNav();
       }
     }
   };
@@ -510,6 +584,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (currentStep > 0) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
+      refreshResumeScoreAfterStepNav();
     }
   };
 
@@ -882,7 +957,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                       }}
                     >
                       {currentStep === steps.length - 1 ? (
-                        <ReviewStep form={form} onEditStep={handleEditStep} />
+                        <ReviewStep
+                          form={form}
+                          onEditStep={handleEditStep}
+                          resumeScoreFromNav={navResumeScore}
+                          resumeScoreLoadingFromNav={navResumeScoreLoading}
+                        />
                       ) : (
                         <CurrentStepComponent form={form} />
                       )}
@@ -941,6 +1021,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                   <CVPreview
                     data={getPreviewDataWithHints(formDataWithSkills)}
                     actualDataForScoring={formDataWithSkills}
+                    serverResumeScore={navResumeScore}
+                    serverResumeScoreLoading={navResumeScoreLoading}
                     onTemplateChange={(template) => form.setValue("template", template)}
                     onSectionOrderChange={(sectionOrder) => form.setValue("sectionOrder", sectionOrder)}
                     onStylingChange={(styling) => form.setValue("styling", styling)}

@@ -11,9 +11,13 @@ from typing import Any, Dict, List, Tuple
 
 from django.conf import settings
 
+from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import get_deepseek_client
 
 logger = logging.getLogger(__name__)
+
+# Holistic overall_score floor after model + length adjustments (matches rubric baseline for DeepSeek).
+OVERALL_SCORE_BASE = 2.5
 
 # Must match frontend resumeScorer + CVFormContainer category mapping
 EXPECTED_CATEGORIES: List[Tuple[str, float]] = [
@@ -137,6 +141,12 @@ def score_resume_with_deepseek(resume: Dict[str, Any]) -> Dict[str, Any]:
     rubric = """
 You score a resume JSON for the 123Resume builder. Apply this rubric strictly:
 
+OVERALL SCORE BASELINE (critical)
+- Treat **2.5 / 10** as the **baseline** overall_score for a minimal but structurally valid resume (little real content filled in).
+- **Build upward from 2.5** as the candidate demonstrates quality across the categories; cap at **10.0**.
+- Use **below 2.5** only for clearly unusable, empty, irrelevant, or broken submissions (rare).
+- Your **overall_score** must be a single number from **0 to 10** (one decimal), reflecting this baseline (for typical resumes you will usually output **2.5–10.0**).
+
 WEIGHTING
 - Work experience (maps mainly to "Experience Section" and partly "Content Quality"):
   Award BIG points for EACH job entry that has a solid description.
@@ -165,7 +175,7 @@ CATEGORIES (exact names and max_score — you MUST output all six):
 Each category needs: "name" (exact string above), "score" (0 to max_score inclusive), "max_score" (exact as listed),
 and short "feedback" (one or two sentences).
 
-Also return "overall_score" from 0 to 10 (float, one decimal) representing holistic quality AFTER your rubric,
+Also return "overall_score" from 0 to 10 (float, one decimal) using the **2.5 baseline** described above,
 and "suggestions": array of 3-8 concise improvement strings (no duplicates).
 
 Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
@@ -219,6 +229,7 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
         overall = 0.0
     overall = max(0.0, min(10.0, round(overall * 10) / 10))
     overall = _length_penalty(estimated_pages, overall)
+    overall = max(OVERALL_SCORE_BASE, min(10.0, round(overall * 10) / 10))
 
     categories = _normalize_categories(parsed.get("categories"))
     suggestions_raw = parsed.get("suggestions") or []
@@ -230,9 +241,11 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
             suggestions.append(s.strip()[:400])
     suggestions = list(dict.fromkeys(suggestions))[:10]
 
-    return {
+    result = {
         "overall_score": overall,
         "estimated_pages": round(estimated_pages * 100) / 100,
         "categories": categories,
         "suggestions": suggestions,
     }
+    log_deepseek_exchange("resume_score", completion, raw_text, result)
+    return result

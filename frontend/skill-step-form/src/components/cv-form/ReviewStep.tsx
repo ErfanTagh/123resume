@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar, Edit } from "lucide-react";
 import { SectionOrderManager } from "./SectionOrderManager";
 import { CVRating } from "./CVRating";
+import type { ResumeScore } from "@/lib/resumeScorer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
@@ -14,9 +15,16 @@ import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 interface ReviewStepProps {
   form: UseFormReturn<CVFormData>;
   onEditStep: (step: number) => void;
+  resumeScoreFromNav?: ResumeScore;
+  resumeScoreLoadingFromNav?: boolean;
 }
 
-export const ReviewStep = ({ form, onEditStep }: ReviewStepProps) => {
+export const ReviewStep = ({
+  form,
+  onEditStep,
+  resumeScoreFromNav,
+  resumeScoreLoadingFromNav,
+}: ReviewStepProps) => {
   const { t } = useLanguage();
   const data = form.watch();
 
@@ -44,7 +52,11 @@ export const ReviewStep = ({ form, onEditStep }: ReviewStepProps) => {
       </div>
 
       {/* CV Score/Rating */}
-      <CVRating data={data} />
+      <CVRating
+        data={data}
+        rating={resumeScoreFromNav}
+        ratingLoading={resumeScoreLoadingFromNav}
+      />
 
       {/* Section Order Manager */}
       <SectionOrderManager

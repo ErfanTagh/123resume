@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 from django.conf import settings
 
+from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import get_deepseek_client
 
 logger = logging.getLogger(__name__)
@@ -102,8 +103,10 @@ Resume text:
     if not summary:
         summary = (resume_text or "")[:200] + ("..." if len(resume_text or "") > 200 else "")
 
-    return {
+    out = {
         "match_percentage": pct,
         "similarity": sim,
         "resume_summary": summary,
     }
+    log_deepseek_exchange("job_match", completion, raw, out)
+    return out

@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, Sparkles, TrendingUp } from "lucide-react";
 import { CVFormData } from "./types";
-import { calculateResumeScore } from "@/lib/resumeScorer";
-import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
-import { useAuth } from "@/contexts/AuthContext";
+import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { ResumeScoreNumberShimmer } from "@/components/cv-form/ResumeScoreNumberShimmer";
 
 interface RatingCategory {
   name: string;
@@ -21,39 +21,63 @@ interface CVRatingProps {
   data?: CVFormData;
   onAnalyze?: () => void;
   isAnalyzing?: boolean;
+  /** Server AI score from parent (refreshed on step navigation). */
   rating?: {
     overallScore: number;
     categories: RatingCategory[];
     suggestions: string[];
   };
+  /** Logged-in: true while DeepSeek score is in flight (parent clears `rating` during fetch). */
+  ratingLoading?: boolean;
 }
 
-export const CVRating = ({ data, onAnalyze, isAnalyzing, rating: externalRating }: CVRatingProps) => {
-  const { t } = useLanguage();
-  const { isAuthenticated } = useAuth();
-  const [rating, setRating] = useState(externalRating);
-  const [scoreLoading, setScoreLoading] = useState(false);
+function localRatingOrUndefined(data: CVFormData | undefined): ResumeScore | undefined {
+  if (!data) return undefined;
+  try {
+    return calculateResumeScore(data);
+  } catch {
+    return undefined;
+  }
+}
 
-  // Logged-in users: AI score via DeepSeek (debounced). Guests: local heuristic.
+const LOGGED_IN_PLACEHOLDER_OVERALL = 2.5;
+
+export const CVRating = ({
+  data,
+  onAnalyze,
+  isAnalyzing,
+  rating: parentRating,
+  ratingLoading = false,
+}: CVRatingProps) => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+
+  const [rating, setRating] = useState<ResumeScore | undefined>(() => {
+    if (parentRating != null) return parentRating;
+    if (user) return undefined;
+    return localRatingOrUndefined(data);
+  });
+
   useEffect(() => {
-    if (!data) return;
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      setScoreLoading(true);
-      try {
-        const score = await getResumeScoreWithOptionalAI(data, isAuthenticated);
-        if (!cancelled) setRating(score);
-      } catch {
-        if (!cancelled) setRating(calculateResumeScore(data));
-      } finally {
-        if (!cancelled) setScoreLoading(false);
-      }
-    }, 650);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [data, isAuthenticated]);
+    if (parentRating != null) {
+      setRating(parentRating);
+      return;
+    }
+    if (user) {
+      setRating(undefined);
+      return;
+    }
+    if (!data) {
+      setRating(undefined);
+      return;
+    }
+    try {
+      setRating(localRatingOrUndefined(data));
+    } catch {
+      setRating(undefined);
+    }
+  }, [parentRating, user, data]);
 
   const getScoreColor = (score: number, maxScore: number) => {
     const percentage = (score / maxScore) * 100;
@@ -63,37 +87,36 @@ export const CVRating = ({ data, onAnalyze, isAnalyzing, rating: externalRating 
   };
 
   const getOverallScoreColor = (score: number) => {
-    // Score is now always in 0-10 format
     if (score >= 8) return "text-green-600 dark:text-green-400";
     if (score >= 6) return "text-yellow-600 dark:text-yellow-400";
+    if (score >= 4) return "text-orange-600 dark:text-orange-400";
     return "text-red-600 dark:text-red-400";
   };
 
   const getOverallStatus = (score: number) => {
-    // Score is now always in 0-10 format
-    if (score >= 8) return { 
-      label: t('resume.score.status.excellent') || "Excellent", 
+    if (score >= 8) return {
+      label: t('resume.score.status.excellent') || "Excellent",
       color: "bg-green-500",
       borderColor: "border-green-500",
       bgColor: "bg-green-50 dark:bg-green-950/20",
       textColor: "text-green-700 dark:text-green-400"
     };
-    if (score >= 6) return { 
-      label: t('resume.score.status.good') || "Good", 
+    if (score >= 6) return {
+      label: t('resume.score.status.good') || "Good",
       color: "bg-yellow-500",
       borderColor: "border-yellow-500",
       bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
       textColor: "text-yellow-700 dark:text-yellow-400"
     };
-    if (score >= 4) return { 
-      label: t('resume.score.status.fair') || "Fair", 
+    if (score >= 4) return {
+      label: t('resume.score.status.fair') || "Fair",
       color: "bg-orange-500",
       borderColor: "border-orange-500",
       bgColor: "bg-orange-50 dark:bg-orange-950/20",
       textColor: "text-orange-700 dark:text-orange-400"
     };
-    return { 
-      label: t('resume.score.status.needsImprovement') || "Needs Improvement", 
+    return {
+      label: t('resume.score.status.needsImprovement') || "Needs Improvement",
       color: "bg-red-500",
       borderColor: "border-red-500",
       bgColor: "bg-red-50 dark:bg-red-950/20",
@@ -101,32 +124,68 @@ export const CVRating = ({ data, onAnalyze, isAnalyzing, rating: externalRating 
     };
   };
 
-if (!rating) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          {t('resume.score.title') || 'CV Rating & Analysis'}
-        </CardTitle>
-        <CardDescription>
-          {data
-            ? t('resume.score.description.withData') || "Click analyze to generate your latest resume score"
-            : t('resume.score.description.withoutData') || "Get AI-powered feedback on your CV and suggestions for improvement"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button
-          onClick={onAnalyze}
-          disabled={isAnalyzing}
-          className="w-full"
-        >
-          {isAnalyzing ? t('resume.score.analyzing') || "Analyzing..." : t('resume.score.analyzeButton') || "Analyze My CV"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
+  if (isAuthenticated && !rating) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            {t("resume.score.label") || "Resume Score"}
+          </CardTitle>
+          <CardDescription>
+            {ratingLoading
+              ? t("resume.score.waitAi") ||
+                "AI is analyzing your CV. This may take a few seconds."
+              : t("resume.score.moveStepsHint") ||
+                "Use Next or Previous to refresh your AI score if it did not load."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex min-h-[140px] flex-col items-center justify-center gap-4 py-10">
+          <div className="flex items-baseline justify-center gap-1 font-bold">
+            {ratingLoading ? (
+              <ResumeScoreNumberShimmer size="xl" />
+            ) : (
+              <>
+                <span
+                  className={`text-5xl leading-snug tabular-nums tracking-tight ${getOverallScoreColor(LOGGED_IN_PLACEHOLDER_OVERALL)}`}
+                >
+                  {LOGGED_IN_PLACEHOLDER_OVERALL}
+                </span>
+                <span className="text-2xl leading-snug text-muted-foreground">/10</span>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!rating) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            {t('resume.score.title') || 'CV Rating & Analysis'}
+          </CardTitle>
+          <CardDescription>
+            {data
+              ? t('resume.score.description.withData') || "Click analyze to generate your latest resume score"
+              : t('resume.score.description.withoutData') || "Get AI-powered feedback on your CV and suggestions for improvement"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={onAnalyze}
+            disabled={isAnalyzing}
+            className="w-full"
+          >
+            {isAnalyzing ? t('resume.score.analyzing') || "Analyzing..." : t('resume.score.analyzeButton') || "Analyze My CV"}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const status = getOverallStatus(rating.overallScore);
 
@@ -138,27 +197,24 @@ if (!rating) {
           {t('resume.score.label') || 'Resume Score'}
         </CardTitle>
         <CardDescription>
-          {scoreLoading
-            ? t("resume.score.scoringInProgress") || "Updating score…"
-            : t("resume.score.subtitle") || "Real-time completeness analysis"}
+          {t("resume.score.subtitle") || "Real-time completeness analysis"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Overall Score */}
         <div className="space-y-3 text-center">
-          <div className={`text-5xl font-bold ${getOverallScoreColor(rating.overallScore)}`}>
-            {rating.overallScore}
-            <span className="text-2xl text-muted-foreground">/10</span>
+          <div
+            className={`flex items-baseline justify-center gap-1 font-bold ${getOverallScoreColor(rating.overallScore)}`}
+          >
+            <span className="text-5xl leading-snug tabular-nums tracking-tight">{rating.overallScore}</span>
+            <span className="text-2xl leading-snug text-muted-foreground">/10</span>
           </div>
           <Badge className={status.color}>{status.label}</Badge>
           <Progress value={rating.overallScore * 10} className="h-3" />
         </div>
 
-        {/* Category Scores */}
         <div className="space-y-4">
           <h4 className="font-semibold">{t('resume.score.breakdown') || 'Score Breakdown'}</h4>
           {rating.categories.map((category, index) => {
-            // Map category names to localized versions
             const categoryNameMap: Record<string, string> = {
               'Content Quality': t('resume.score.categories.contentQuality') || 'Content Quality',
               'Structure & Format': t('resume.score.categories.structureFormat') || 'Structure & Format',
@@ -169,50 +225,48 @@ if (!rating) {
               'ATS Optimization': t('resume.score.categories.ats') || 'ATS Optimization',
             };
             const localizedName = categoryNameMap[category.name] || category.name;
-            
+
             return (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{localizedName}</span>
-                <span className={`text-sm font-semibold ${getScoreColor(category.score, category.maxScore)}`}>
-                  {category.score}/{category.maxScore}
-                </span>
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{localizedName}</span>
+                  <span className={`text-sm font-semibold ${getScoreColor(category.score, category.maxScore)}`}>
+                    {category.score}/{category.maxScore}
+                  </span>
+                </div>
+                <Progress value={(category.score / category.maxScore) * 100} className="h-2" />
+                <p className="text-xs text-muted-foreground">
+                  {(() => {
+                    const feedbackMap: Record<string, string> = {
+                      "Excellent use of action verbs and metrics": t('resume.score.categoryFeedback.contentQuality.excellent') || category.feedback,
+                      "Good content, add more quantifiable achievements": t('resume.score.categoryFeedback.contentQuality.good') || category.feedback,
+                      "Needs stronger action verbs and measurable results": t('resume.score.categoryFeedback.contentQuality.needsImprovement') || category.feedback,
+                      "Well-structured and easy to scan": t('resume.score.categoryFeedback.structure.excellent') || category.feedback,
+                      "Good structure, could improve formatting": t('resume.score.categoryFeedback.structure.good') || category.feedback,
+                      "Needs better organization and formatting": t('resume.score.categoryFeedback.structure.needsImprovement') || category.feedback,
+                      "Compelling and specific summary": t('resume.score.categoryFeedback.summary.excellent') || category.feedback,
+                      "Good summary, add more specifics": t('resume.score.categoryFeedback.summary.good') || category.feedback,
+                      "Needs a more compelling summary": t('resume.score.categoryFeedback.summary.needsImprovement') || category.feedback,
+                      "Excellent achievement-focused experience": t('resume.score.categoryFeedback.experience.excellent') || category.feedback,
+                      "Good experience section, highlight more achievements": t('resume.score.categoryFeedback.experience.good') || category.feedback,
+                      "Needs more achievement-focused descriptions": t('resume.score.categoryFeedback.experience.needsImprovement') || category.feedback,
+                      "Well-organized and relevant skills": t('resume.score.categoryFeedback.skills.excellent') || category.feedback,
+                      "Good skills, ensure they're relevant": t('resume.score.categoryFeedback.skills.good') || category.feedback,
+                      "Needs more relevant and organized skills": t('resume.score.categoryFeedback.skills.needsImprovement') || category.feedback,
+                      "Complete education and certifications": t('resume.score.categoryFeedback.education.excellent') || category.feedback,
+                      "Add more education or certification details": t('resume.score.categoryFeedback.education.needsImprovement') || category.feedback,
+                      "Well-optimized for ATS systems": t('resume.score.categoryFeedback.ats.excellent') || category.feedback,
+                      "Add more keywords and ensure standard formatting": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
+                      "Add more keywords and ensure ATS-friendly section content": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
+                    };
+                    return feedbackMap[category.feedback] || category.feedback;
+                  })()}
+                </p>
               </div>
-              <Progress value={(category.score / category.maxScore) * 100} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {(() => {
-                  // Map category feedback strings to translation keys
-                  const feedbackMap: Record<string, string> = {
-                    "Excellent use of action verbs and metrics": t('resume.score.categoryFeedback.contentQuality.excellent') || category.feedback,
-                    "Good content, add more quantifiable achievements": t('resume.score.categoryFeedback.contentQuality.good') || category.feedback,
-                    "Needs stronger action verbs and measurable results": t('resume.score.categoryFeedback.contentQuality.needsImprovement') || category.feedback,
-                    "Well-structured and easy to scan": t('resume.score.categoryFeedback.structure.excellent') || category.feedback,
-                    "Good structure, could improve formatting": t('resume.score.categoryFeedback.structure.good') || category.feedback,
-                    "Needs better organization and formatting": t('resume.score.categoryFeedback.structure.needsImprovement') || category.feedback,
-                    "Compelling and specific summary": t('resume.score.categoryFeedback.summary.excellent') || category.feedback,
-                    "Good summary, add more specifics": t('resume.score.categoryFeedback.summary.good') || category.feedback,
-                    "Needs a more compelling summary": t('resume.score.categoryFeedback.summary.needsImprovement') || category.feedback,
-                    "Excellent achievement-focused experience": t('resume.score.categoryFeedback.experience.excellent') || category.feedback,
-                    "Good experience section, highlight more achievements": t('resume.score.categoryFeedback.experience.good') || category.feedback,
-                    "Needs more achievement-focused descriptions": t('resume.score.categoryFeedback.experience.needsImprovement') || category.feedback,
-                    "Well-organized and relevant skills": t('resume.score.categoryFeedback.skills.excellent') || category.feedback,
-                    "Good skills, ensure they're relevant": t('resume.score.categoryFeedback.skills.good') || category.feedback,
-                    "Needs more relevant and organized skills": t('resume.score.categoryFeedback.skills.needsImprovement') || category.feedback,
-                    "Complete education and certifications": t('resume.score.categoryFeedback.education.excellent') || category.feedback,
-                    "Add more education or certification details": t('resume.score.categoryFeedback.education.needsImprovement') || category.feedback,
-                    "Well-optimized for ATS systems": t('resume.score.categoryFeedback.ats.excellent') || category.feedback,
-                    "Add more keywords and ensure standard formatting": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
-                    "Add more keywords and ensure ATS-friendly section content": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
-                  };
-                  return feedbackMap[category.feedback] || category.feedback;
-                })()}
-              </p>
-            </div>
-          );
+            );
           })}
         </div>
 
-        {/* Suggestions */}
         {rating.suggestions.length > 0 && (
           <div className="space-y-3">
             <h4 className="font-semibold flex items-center gap-2">
@@ -221,7 +275,6 @@ if (!rating) {
             </h4>
             <ul className="space-y-2">
               {rating.suggestions.map((suggestion, index) => {
-                // Map English suggestion strings to translation keys
                 const suggestionMap: Record<string, string> = {
                   "Your resume needs significant improvement. Focus on adding quantifiable achievements and strong action verbs.": t('resume.score.feedback.needsImprovement') || suggestion,
                   "Your resume is good but can be improved. Focus on adding more metrics and impact-focused descriptions.": t('resume.score.feedback.canImprove') || suggestion,
@@ -262,20 +315,20 @@ if (!rating) {
                   "Add specific numbers to showcase impact: revenue increased (%), team size managed, cost savings ($), users reached, etc.": t('resume.score.feedback.addSpecificNumbers') || suggestion,
                 };
                 const localizedSuggestion = suggestionMap[suggestion] || suggestion;
-                
+
                 return (
-                <li key={index} className="flex gap-2 text-sm">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <span>{localizedSuggestion}</span>
-                </li>
-              );
+                  <li key={index} className="flex gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <span>{localizedSuggestion}</span>
+                  </li>
+                );
               })}
             </ul>
           </div>
         )}
 
-        <Button 
-          onClick={onAnalyze} 
+        <Button
+          onClick={onAnalyze}
           variant="outline"
           className="w-full"
           disabled={isAnalyzing}

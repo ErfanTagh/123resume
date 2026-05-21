@@ -10,6 +10,8 @@ import logging
 from django.conf import settings
 from openai import OpenAI
 
+from .ai_response_log import log_deepseek_exchange
+
 logger = logging.getLogger(__name__)
 
 RESUME_ASSISTANT_SYSTEM_PROMPT = """You are a helpful assistant for 123Resume, a resume builder application.
@@ -44,4 +46,5 @@ def resume_assistant_reply(user_message: str) -> str:
     text = (choice.content or "").strip()
     if not text:
         logger.warning("DeepSeek returned empty content")
+    log_deepseek_exchange("resume_assistant", completion, choice.content or "", text)
     return text

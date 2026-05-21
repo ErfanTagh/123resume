@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 
 from django.conf import settings
 
+from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import get_deepseek_client
 from .resume_parser.utils import get_empty_structure
 
@@ -331,4 +332,6 @@ Use arrays with one object with empty strings if a section is missing.
         logger.warning("AI parse JSON error: %s snippet=%s", e, raw_text[:500])
         raise
 
-    return normalize_ai_parse(parsed)
+    normalized = normalize_ai_parse(parsed)
+    log_deepseek_exchange("resume_parse", completion, raw_text, normalized)
+    return normalized

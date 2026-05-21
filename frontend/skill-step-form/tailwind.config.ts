@@ -109,12 +109,22 @@ export default {
             transform: "scale(1.1)",
           },
         },
+        /** Horizontal shimmer sweep (Facebook / Instagram–style skeleton). */
+        "score-shimmer-bg": {
+          "0%": {
+            backgroundPosition: "200% 0",
+          },
+          "100%": {
+            backgroundPosition: "-200% 0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "pulse-ring": "pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "pulse-dot": "pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "score-shimmer-bg": "score-shimmer-bg 1.2s linear infinite",
       },
     },
   },

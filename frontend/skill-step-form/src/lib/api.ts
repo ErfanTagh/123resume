@@ -435,6 +435,18 @@ export interface Resume extends ResumeData {
   publicProfileTheme?: PublicProfileThemeId;
 }
 
+/** Sort resumes for “My resumes”: newest created first, then newest updated. */
+export function compareResumesNewestFirst(a: Resume, b: Resume): number {
+  const ts = (v: string | undefined) => {
+    const t = new Date(v || 0).getTime();
+    return Number.isFinite(t) ? t : 0;
+  };
+  const ca = ts(a.createdAt);
+  const cb = ts(b.createdAt);
+  if (cb !== ca) return cb - ca;
+  return ts(b.updatedAt) - ts(a.updatedAt);
+}
+
 export const resumeAPI = {
   /**
    * Get all resumes for the authenticated user
@@ -448,13 +460,9 @@ export const resumeAPI = {
     });
     const response = await makeRequest();
     const data = await handleResponse(response, makeRequest);
-    // Ensure consistent sorting by updated date (newest first)
+    // Newest-created resume first; tie-break by most recently updated (immutable copy)
     if (Array.isArray(data)) {
-      return data.sort((a: any, b: any) => {
-        const dateA = new Date(a.updatedAt || a.updated_at || 0).getTime();
-        const dateB = new Date(b.updatedAt || b.updated_at || 0).getTime();
-        return dateB - dateA; // Newest first
-      });
+      return [...(data as Resume[])].sort(compareResumesNewestFirst);
     }
     return data;
   },

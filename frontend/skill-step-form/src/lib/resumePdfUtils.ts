@@ -13,6 +13,7 @@ import i18n from '@/i18n/config';
 import { formatProficiency as formatProficiencyShared } from '@/lib/languageProficiency';
 import { formatDateRange, formatMonthYear } from '@/lib/dateFormatter';
 import { hasWebLink, normalizeExternalUrl } from '@/lib/contactLinkUtils';
+import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
 
 /**
  * Sanitize filename for filesystem compatibility
@@ -181,6 +182,7 @@ function escapeHtml(text: string): string {
  */
 function generateResumeHTML(resume: Resume): string {
   const personalInfo = resume.personalInfo;
+  const sortedResume = withResumeSectionsSortedForDisplay(resume as CVFormData);
   const locale = (i18n.language || 'en').split('-')[0] as string;
   const presentText = i18n.t('resume.fields.present');
 
@@ -224,8 +226,8 @@ function generateResumeHTML(resume: Resume): string {
   const pdfSizes = pdfFontSizeMap[normalizedFontSize];
 
   const renderWorkExperience = () => {
-    if (!resume.workExperience?.length) return '';
-    const validExps = resume.workExperience.filter((exp: any) => exp.position || exp.company);
+    if (!sortedResume.workExperience?.length) return '';
+    const validExps = sortedResume.workExperience.filter((exp: any) => exp.position || exp.company);
     if (!validExps.length) return '';
 
     return `
@@ -277,8 +279,8 @@ function generateResumeHTML(resume: Resume): string {
   };
 
   const renderEducation = () => {
-    if (!resume.education?.length) return '';
-    const validEdu = resume.education.filter((edu: any) => edu.degree || edu.institution);
+    if (!sortedResume.education?.length) return '';
+    const validEdu = sortedResume.education.filter((edu: any) => edu.degree || edu.institution);
     if (!validEdu.length) return '';
 
     return `
@@ -314,8 +316,8 @@ function generateResumeHTML(resume: Resume): string {
   };
 
   const renderProjects = () => {
-    if (!resume.projects?.length) return '';
-    const validProjects = resume.projects.filter((project: any) => project.name?.trim());
+    if (!sortedResume.projects?.length) return '';
+    const validProjects = sortedResume.projects.filter((project: any) => project.name?.trim());
     if (!validProjects.length) return '';
 
     return `
@@ -345,8 +347,8 @@ function generateResumeHTML(resume: Resume): string {
   };
 
   const renderCertificates = () => {
-    if (!resume.certificates?.length) return '';
-    const validCerts = resume.certificates.filter((cert: any) => cert.name?.trim());
+    if (!sortedResume.certificates?.length) return '';
+    const validCerts = sortedResume.certificates.filter((cert: any) => cert.name?.trim());
     if (!validCerts.length) return '';
 
     return `
@@ -950,7 +952,7 @@ async function downloadPDFFromHTML(
  * Includes styling (fontSize, colors, etc.) so PDF matches Einstellungen
  */
 function convertResumeToFormData(resume: Resume): CVFormData {
-  return {
+  const base: CVFormData = {
     template: resume.template || 'modern',
     personalInfo: resume.personalInfo,
     workExperience: resume.workExperience || [],
@@ -962,6 +964,7 @@ function convertResumeToFormData(resume: Resume): CVFormData {
     sectionOrder: resume.sectionOrder || [],
     styling: resume.styling || {}
   };
+  return withResumeSectionsSortedForDisplay(base);
 }
 
 /**

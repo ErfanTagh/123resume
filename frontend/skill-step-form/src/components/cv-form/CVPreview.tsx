@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
 import { CVFormData, CVTemplate } from "./types";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { ResumeScoreNumberShimmer } from "@/components/cv-form/ResumeScoreNumberShimmer";
+import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 interface CVPreviewProps {
   data: CVFormData;
@@ -77,6 +78,7 @@ export const CVPreview = ({
   const template = data.template || "modern";
   const defaultSectionOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
   const sectionOrder = data.sectionOrder || defaultSectionOrder;
+  const displayData = useMemo(() => withResumeSectionsSortedForDisplay(data), [data]);
 
   // Feedback dialog state (preview-side, so it’s near section titles)
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -375,7 +377,7 @@ export const CVPreview = ({
       setPageBreakPositions([]);
       setCurrentPage(1);
     }
-  }, [data, activeTab, template, templateChangeKey]); // Add templateChangeKey to dependencies
+  }, [displayData, activeTab, template, templateChangeKey]); // Add templateChangeKey to dependencies
 
   // Separate effect to handle template changes specifically
   // Use useLayoutEffect for immediate DOM measurement after template change
@@ -534,7 +536,7 @@ export const CVPreview = ({
       horizontalScrollEl.removeEventListener('scroll', handleHorizontalScroll);
       contentEl.removeEventListener('scroll', handleContentScroll);
     };
-  }, [template, data]);
+  }, [template, displayData]);
 
   const handleTemplateSelect = (selectedTemplate: CVTemplate) => {
     if (onTemplateChange) {
@@ -553,18 +555,18 @@ export const CVPreview = ({
   const renderTemplate = () => {
     switch (template) {
       case "classic":
-        return <ClassicTemplate data={data} />;
+        return <ClassicTemplate data={displayData} />;
       case "minimal":
-        return <MinimalTemplate data={data} />;
+        return <MinimalTemplate data={displayData} />;
       case "creative":
-        return <CreativeTemplate data={data} />;
+        return <CreativeTemplate data={displayData} />;
       case "latex":
-        return <LatexTemplate data={data} />;
+        return <LatexTemplate data={displayData} />;
       case "starRover":
-        return <StarRoverTemplate data={data} />;
+        return <StarRoverTemplate data={displayData} />;
       case "modern":
       default:
-        return <ModernTemplate data={data} />;
+        return <ModernTemplate data={displayData} />;
     }
   };
 

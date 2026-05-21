@@ -1,4 +1,5 @@
 import { CVFormData } from "./types";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -9,6 +10,7 @@ import { MinimalTemplate } from "./templates/MinimalTemplate";
 import { CreativeTemplate } from "./templates/CreativeTemplate";
 import { LatexTemplate } from "./templates/LatexTemplate";
 import { StarRoverTemplate } from "./templates/StarRoverTemplate";
+import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 interface SignupOverlayProps {
   resumeData: CVFormData;
@@ -17,22 +19,26 @@ interface SignupOverlayProps {
 
 export const SignupOverlay = ({ resumeData, onClose }: SignupOverlayProps) => {
   const template = resumeData.template || "modern";
-  
+  const displayData = useMemo(
+    () => withResumeSectionsSortedForDisplay(resumeData),
+    [resumeData],
+  );
+
   const renderTemplate = () => {
     switch (template) {
       case "classic":
-        return <ClassicTemplate data={resumeData} />;
+        return <ClassicTemplate data={displayData} />;
       case "minimal":
-        return <MinimalTemplate data={resumeData} />;
+        return <MinimalTemplate data={displayData} />;
       case "creative":
-        return <CreativeTemplate data={resumeData} />;
+        return <CreativeTemplate data={displayData} />;
       case "latex":
-        return <LatexTemplate data={resumeData} />;
+        return <LatexTemplate data={displayData} />;
       case "starRover":
-        return <StarRoverTemplate data={resumeData} />;
+        return <StarRoverTemplate data={displayData} />;
       case "modern":
       default:
-        return <ModernTemplate data={resumeData} />;
+        return <ModernTemplate data={displayData} />;
     }
   };
 

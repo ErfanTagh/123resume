@@ -7,11 +7,27 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from bson import ObjectId as BsonObjectId
 from datetime import datetime
+
 from .utils import get_date_or_now
 from ..serializers import ResumeSerializer
 # Backend scorer removed - scores are now calculated on frontend
 
 
+def _resume_list_sort_key(entry: dict) -> tuple:
+    """Parse ISO-ish timestamps for stable newest-first ordering (created, then updated)."""
+
+    def _iso_ts(raw) -> float:
+        if not raw:
+            return 0.0
+        try:
+            s = str(raw).replace('Z', '+00:00')
+            return datetime.fromisoformat(s).timestamp()
+        except (ValueError, TypeError, OSError):
+            return 0.0
+
+    c = _iso_ts(entry.get('created_at'))
+    u = _iso_ts(entry.get('updated_at'))
+    return (c, u)
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def resume_list(request):
@@ -115,7 +131,10 @@ def resume_list(request):
                     'updated_at': get_date_or_now(updated_at_raw),
                 }
                 resumes_data.append(resume_dict)
-            
+
+            # Newest-created resume first (then most recently updated)
+            resumes_data.sort(key=_resume_list_sort_key, reverse=True)
+
             return Response(resumes_data)
         except Exception as e:
             logger.error(f"Error listing resumes: {str(e)}")

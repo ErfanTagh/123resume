@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { CVFormData } from "./types";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
+import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 interface ReviewStepProps {
   form: UseFormReturn<CVFormData>;
@@ -27,6 +29,7 @@ export const ReviewStep = ({
 }: ReviewStepProps) => {
   const { t } = useLanguage();
   const data = form.watch();
+  const displayData = useMemo(() => withResumeSectionsSortedForDisplay(data), [data]);
 
   const handleSectionReorder = (newOrder: string[]) => {
     form.setValue("sectionOrder", newOrder);
@@ -159,12 +162,12 @@ export const ReviewStep = ({
         <Separator />
 
         {/* Work Experience */}
-        {data.workExperience.some(exp => exp.position || exp.company) && (
+        {displayData.workExperience.some(exp => exp.position || exp.company) && (
           <>
             <div>
               <SectionHeader title="Work Experience" onEdit={() => onEditStep(1)} />
               <div className="space-y-4">
-                {data.workExperience.map((exp, index) => (
+                {displayData.workExperience.map((exp, index) => (
                   (exp.position || exp.company) && (
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between items-start">
@@ -200,12 +203,12 @@ export const ReviewStep = ({
         )}
 
         {/* Education */}
-        {data.education.some(edu => edu.degree || edu.institution) && (
+        {displayData.education.some(edu => edu.degree || edu.institution) && (
           <>
             <div>
               <SectionHeader title="Education" onEdit={() => onEditStep(2)} />
               <div className="space-y-4">
-                {data.education.map((edu, index) => (
+                {displayData.education.map((edu, index) => (
                   (edu.degree || edu.institution) && (
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between items-start">
@@ -239,12 +242,12 @@ export const ReviewStep = ({
         )}
 
         {/* Projects */}
-        {data.projects.some(proj => proj.name) && (
+        {displayData.projects.some(proj => proj.name) && (
           <>
             <div>
               <SectionHeader title="Projects" onEdit={() => onEditStep(1)} />
               <div className="space-y-4">
-                {data.projects.map((proj, index) => (
+                {displayData.projects.map((proj, index) => (
                   proj.name && (
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between items-start">
@@ -281,12 +284,12 @@ export const ReviewStep = ({
         )}
 
         {/* Certificates */}
-        {data.certificates.some(cert => cert.name) && (
+        {displayData.certificates.some(cert => cert.name) && (
           <>
             <div>
               <SectionHeader title="Certificates" onEdit={() => onEditStep(2)} />
               <div className="space-y-3">
-                {data.certificates.map((cert, index) => (
+                {displayData.certificates.map((cert, index) => (
                   cert.name && (
                     <div key={index} className="space-y-1">
                       <p className="font-semibold text-foreground">

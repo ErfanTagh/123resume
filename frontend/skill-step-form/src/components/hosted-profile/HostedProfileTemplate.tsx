@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useMemo } from "react";
 import type { CVFormData } from "@/components/cv-form/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
@@ -7,6 +8,7 @@ import {
   HOSTED_PROFILE_THEME_COLORS,
   mergePublicProfileTheme,
 } from "@/lib/publicProfileTheme";
+import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 import { Github, Globe, Linkedin, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import "./HostedProfileTemplate.css";
@@ -48,6 +50,18 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
   const themeColors = HOSTED_PROFILE_THEME_COLORS[themeId];
   const dark = "#1c1d25";
 
+  const { projects, certs } = useMemo(() => {
+    const ordered = withResumeSectionsSortedForDisplay(data);
+    return {
+      projects: (ordered.projects || []).filter(
+        (p) => !!(p.name?.trim() || p.description?.trim()),
+      ),
+      certs: (ordered.certificates || []).filter(
+        (c) => !!(c.name?.trim() || c.organization?.trim() || (c.url && c.url.trim())),
+      ),
+    };
+  }, [data]);
+
   const social = [
     pi.linkedin?.trim()
       ? {
@@ -72,12 +86,6 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       : null,
   ].filter(Boolean) as SocialEntry[];
 
-  const projects = (data.projects || []).filter(
-    (p) => !!(p.name?.trim() || p.description?.trim()),
-  );
-  const certs = (data.certificates || []).filter(
-    (c) => !!(c.name?.trim() || c.organization?.trim() || (c.url && c.url.trim())),
-  );
   const hasSummary = !!pi.summary?.trim();
   const hasEmail = !!pi.email?.trim();
   const hasProfileImage = !!pi.profileImage?.trim();

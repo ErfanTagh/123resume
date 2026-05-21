@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { resumeAPI, Resume } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import { CreativeTemplate } from '@/components/cv-form/templates/CreativeTemplat
 import { LatexTemplate } from '@/components/cv-form/templates/LatexTemplate';
 import { StarRoverTemplate } from '@/components/cv-form/templates/StarRoverTemplate';
 import { resumeToCvFormData } from '@/lib/resumeToCvFormData';
+import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
 import { SEO } from '@/components/SEO';
 
 export default function ResumeView() {
@@ -109,6 +110,11 @@ export default function ResumeView() {
     }
   };
 
+  const sortedCvData = useMemo(() => {
+    if (!resume) return null;
+    return withResumeSectionsSortedForDisplay(resumeToCvFormData(resume));
+  }, [resume]);
+
   if (isLoading) {
     return (
       <>
@@ -153,7 +159,8 @@ export default function ResumeView() {
 
   // Render the appropriate template component
   const renderTemplate = () => {
-    const formData = resumeToCvFormData(resume);
+    if (!sortedCvData) return null;
+    const formData = sortedCvData;
     const template = resume.template || 'modern';
 
     switch (template) {

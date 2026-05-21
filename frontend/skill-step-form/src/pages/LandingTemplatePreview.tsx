@@ -5,6 +5,7 @@ import { CreativeTemplate } from "@/components/cv-form/templates/CreativeTemplat
 import { MinimalTemplate } from "@/components/cv-form/templates/MinimalTemplate";
 import { LatexTemplate } from "@/components/cv-form/templates/LatexTemplate";
 import { StarRoverTemplate } from "@/components/cv-form/templates/StarRoverTemplate";
+import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 // Helper function to get profile image based on template (rotate through 4 images)
 const getProfileImageForTemplate = (templateName: string): string => {
@@ -417,6 +418,7 @@ export const LandingTemplatePreview = ({
     ...enhancedData,
     template: templateName,
   };
+  const displayData = withResumeSectionsSortedForDisplay(data);
 
   // Scale factor to fit in the preview card (aspect ratio 3:4)
   // Templates are typically A4 size, so we scale down significantly
@@ -453,12 +455,12 @@ export const LandingTemplatePreview = ({
       >
         <div style={{ minHeight: '1400px', height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, minHeight: '100%' }} data-landing-preview="" data-template={templateName}>
-            {templateName === "modern" && <ModernTemplate data={data} />}
-            {templateName === "classic" && <ClassicTemplate data={data} />}
-            {templateName === "creative" && <CreativeTemplate data={data} />}
-            {templateName === "minimal" && <MinimalTemplate data={data} />}
-            {templateName === "latex" && <LatexTemplate data={data} />}
-            {templateName === "starRover" && <StarRoverTemplate data={data} />}
+            {templateName === "modern" && <ModernTemplate data={displayData} />}
+            {templateName === "classic" && <ClassicTemplate data={displayData} />}
+            {templateName === "creative" && <CreativeTemplate data={displayData} />}
+            {templateName === "minimal" && <MinimalTemplate data={displayData} />}
+            {templateName === "latex" && <LatexTemplate data={displayData} />}
+            {templateName === "starRover" && <StarRoverTemplate data={displayData} />}
           </div>
         </div>
       </div>

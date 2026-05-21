@@ -43,6 +43,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const navResumeScoreRef = useRef<ResumeScore | undefined>(undefined);
   const lastSuccessfulScorePayloadRef = useRef<string | null>(null);
   const scoreRequestIdRef = useRef(0);
+  /** True until a successful score matches current CV; set true again when form content diverges from last scored payload. */
+  const resumeContentDirtyForScoreRef = useRef(true);
+  /** Dedupes dirty detection when RHF yields new object refs for the same CV values. */
+  const lastSerializedFormForDirtyRef = useRef<string>("");
   const [templateSelected, setTemplateSelected] = useState(!!initialData?.template);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -54,12 +58,16 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (!user) {
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
+      lastSerializedFormForDirtyRef.current = "";
     }
+    resumeContentDirtyForScoreRef.current = true;
   }, [user]);
 
   useEffect(() => {
     lastSuccessfulScorePayloadRef.current = null;
     scoreRequestIdRef.current = 0;
+    lastSerializedFormForDirtyRef.current = "";
+    resumeContentDirtyForScoreRef.current = true;
   }, [editId]);
 
   // Ensure overlay is ALWAYS hidden when navigating between steps - only show when explicitly clicking "Complete CV"
@@ -368,21 +376,45 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     return { ...formData, skills };
   }, [formData, skills]);
 
+  // When CV JSON (stable) differs from the last successful score payload, require a new score fetch.
+  useEffect(() => {
+    try {
+      const s = stableSerializeCvPayload(formDataWithSkills);
+      if (lastSerializedFormForDirtyRef.current === s) {
+        return;
+      }
+      lastSerializedFormForDirtyRef.current = s;
+      if (
+        lastSuccessfulScorePayloadRef.current === null ||
+        s !== lastSuccessfulScorePayloadRef.current
+      ) {
+        resumeContentDirtyForScoreRef.current = true;
+      }
+    } catch {
+      resumeContentDirtyForScoreRef.current = true;
+    }
+  }, [formDataWithSkills]);
+
   const refreshResumeScoreAfterStepNav = useCallback(() => {
     if (!user) {
       setNavResumeScore(undefined);
       setNavResumeScoreLoading(false);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
+      resumeContentDirtyForScoreRef.current = true;
+      lastSerializedFormForDirtyRef.current = "";
       return;
     }
 
-    const snapshot = stableSerializeCvPayload(form.getValues());
+    let snapshot: string;
+    try {
+      snapshot = stableSerializeCvPayload(form.getValues());
+    } catch {
+      resumeContentDirtyForScoreRef.current = true;
+      snapshot = "";
+    }
 
-    if (
-      navResumeScoreRef.current !== undefined &&
-      snapshot === lastSuccessfulScorePayloadRef.current
-    ) {
+    if (navResumeScoreRef.current !== undefined && !resumeContentDirtyForScoreRef.current) {
       return;
     }
 
@@ -395,6 +427,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         if (requestId !== scoreRequestIdRef.current) return;
         setNavResumeScore(score);
         lastSuccessfulScorePayloadRef.current = snapshot;
+        resumeContentDirtyForScoreRef.current = false;
       })
       .catch(() => {
         if (requestId !== scoreRequestIdRef.current) return;
@@ -522,7 +555,13 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       const isValid = await form.trigger("personalInfo");
 
       if (!isValid) {
-        // Validation failed - prevent navigation silently
+        toast({
+          title: t("resume.form.completeRequiredFieldsTitle") || "Complete required fields",
+          description:
+            t("resume.form.completeRequiredFieldsDesc") ||
+            "Please enter your first name, last name, and a valid work email before continuing.",
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -551,6 +590,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       setCurrentStep(0);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
+      resumeContentDirtyForScoreRef.current = true;
+      lastSerializedFormForDirtyRef.current = "";
       setNavResumeScore(undefined);
       toast({
         title: "Test Profile Loaded! 🧪",
@@ -577,6 +618,14 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         setHighestStepVisited(prev => Math.max(prev, nextStep));
         refreshResumeScoreAfterStepNav();
       }
+    } else if (currentStep === 0) {
+      toast({
+        title: t("resume.form.completeRequiredFieldsTitle") || "Complete required fields",
+        description:
+          t("resume.form.completeRequiredFieldsDesc") ||
+          "Please enter your first name, last name, and a valid work email before continuing.",
+        variant: "destructive",
+      });
     }
   };
 

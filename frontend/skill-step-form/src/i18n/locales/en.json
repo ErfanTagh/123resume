@@ -348,7 +348,9 @@
       "subtitle": "Fill in your information step by step to create your professional CV",
       "sectionTitles": "Section titles",
       "sectionTitlesEnglish": "English",
-      "sectionTitlesDeutsch": "Deutsch"
+      "sectionTitlesDeutsch": "Deutsch",
+      "completeRequiredFieldsTitle": "Complete required fields",
+      "completeRequiredFieldsDesc": "Please enter your first name, last name, and a valid work email before continuing."
     },
     "templates": {
       "modern": "Modern",

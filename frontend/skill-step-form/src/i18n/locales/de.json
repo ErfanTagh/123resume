@@ -351,7 +351,9 @@
       "subtitle": "Geben Sie Ihre Informationen Schritt für Schritt ein, um Ihren professionellen Lebenslauf zu erstellen",
       "sectionTitles": "Abschnittsüberschriften",
       "sectionTitlesEnglish": "Englisch",
-      "sectionTitlesDeutsch": "Deutsch"
+      "sectionTitlesDeutsch": "Deutsch",
+      "completeRequiredFieldsTitle": "Pflichtfelder ausfüllen",
+      "completeRequiredFieldsDesc": "Bitte geben Sie Vorname, Nachname und eine gültige E-Mail-Adresse ein, bevor Sie fortfahren."
     },
     "templates": {
       "modern": "Modern",

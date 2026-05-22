@@ -283,6 +283,7 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def logout(request):
     """
     Logout user by blacklisting the refresh token

@@ -261,6 +261,7 @@
       "education": "Bildung",
       "skills": "Fähigkeiten",
       "review": "Überprüfung",
+      "reviewStepLead": "Überprüfen Sie alle Angaben vor dem Absenden. Wenn Sie angemeldet sind, werden auf diesem Schritt KI-Bewertung und Kommentare geladen. Darunter können Sie die Abschnittsreihenfolge anpassen.",
       "personalInfo": "Persönliche Informationen",
       "personalInfoDesc": "Beginnen wir mit Ihren Grunddaten",
       "workExperience": "Berufserfahrung",
@@ -379,7 +380,12 @@
       "label": "Lebenslauf-Bewertung",
       "title": "CV-Bewertung & Analyse",
       "subtitle": "Echtzeit-Vollständigkeitsanalyse",
+      "subtitleAi": "KI-Feedback basierend auf Ihrem aktuellen Lebenslauf.",
+      "signInForAi": "Melden Sie sich an, um auf dieser Seite eine KI-Bewertung und individuelle Kommentare zu erhalten.",
+      "reviewAiHint": "Die KI-Bewertung wird geladen, sobald Sie diesen Schritt öffnen. Falls nichts erscheint, nutzen Sie „Erneut analysieren“.",
+      "waitAi": "Die KI analysiert Ihren Lebenslauf. Das kann einige Sekunden dauern.",
       "scoringInProgress": "Bewertung wird per KI aktualisiert…",
+      "aiFailed": "Die KI-Bewertung konnte nicht geladen werden. Versuchen Sie „Erneut analysieren“, melden Sie sich bei abgelaufener Sitzung erneut an, oder prüfen Sie im Netzwerk-Tab blockierte Anfragen.",
       "description": {
         "withData": "Klicken Sie auf Analysieren, um Ihre neueste Lebenslauf-Bewertung zu generieren",
         "withoutData": "Erhalten Sie KI-gestütztes Feedback zu Ihrem Lebenslauf und Verbesserungsvorschläge"

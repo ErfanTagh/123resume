@@ -43,17 +43,81 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load auth state from localStorage on mount
+  // Load auth from localStorage, then verify tokens so we do not show "logged in" with a dead session.
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedTokens = localStorage.getItem('tokens');
+    let cancelled = false;
 
-    if (storedUser && storedTokens) {
-      setUser(JSON.parse(storedUser));
-      setTokens(JSON.parse(storedTokens));
-    }
+    const bootstrap = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedTokens = localStorage.getItem('tokens');
+      if (!storedUser || !storedTokens) {
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(false);
+      let tokensObj: AuthTokens;
+      try {
+        tokensObj = JSON.parse(storedTokens);
+      } catch {
+        localStorage.removeItem('user');
+        localStorage.removeItem('tokens');
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+      if (!tokensObj?.access || !tokensObj?.refresh) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('tokens');
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+
+      const profileOk = async (access: string) => {
+        const res = await fetch('/api/auth/profile/', {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        return res.ok;
+      };
+
+      if (await profileOk(tokensObj.access)) {
+        if (!cancelled) {
+          setUser(JSON.parse(storedUser));
+          setTokens(tokensObj);
+        }
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+
+      const refreshRes = await fetch('/api/auth/token/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: tokensObj.refresh }),
+      });
+
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        const newTokens: AuthTokens = { ...tokensObj, access: data.access };
+        localStorage.setItem('tokens', JSON.stringify(newTokens));
+        if (!cancelled) {
+          setUser(JSON.parse(storedUser));
+          setTokens(newTokens);
+        }
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+
+      localStorage.removeItem('user');
+      localStorage.removeItem('tokens');
+      if (!cancelled) {
+        setUser(null);
+        setTokens(null);
+      }
+      if (!cancelled) setIsLoading(false);
+    };
+
+    void bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -171,7 +235,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokens.access}`,
           },
           body: JSON.stringify({ refresh: tokens.refresh }),
         });

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { CVFormData } from "./types";
 import { Card } from "@/components/ui/card";
@@ -13,12 +13,16 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
+import { logResumeScore } from "@/lib/resumeScoreDebug";
 
 interface ReviewStepProps {
   form: UseFormReturn<CVFormData>;
   onEditStep: (step: number) => void;
   resumeScoreFromNav?: ResumeScore;
   resumeScoreLoadingFromNav?: boolean;
+  /** Logged-in: force a new DeepSeek run (Re-analyze). */
+  onReanalyzeAiScore?: () => void;
+  reanalyzeAiScoreLoading?: boolean;
 }
 
 export const ReviewStep = ({
@@ -26,10 +30,26 @@ export const ReviewStep = ({
   onEditStep,
   resumeScoreFromNav,
   resumeScoreLoadingFromNav,
+  onReanalyzeAiScore,
+  reanalyzeAiScoreLoading,
 }: ReviewStepProps) => {
   const { t } = useLanguage();
   const data = form.watch();
   const displayData = useMemo(() => withResumeSectionsSortedForDisplay(data), [data]);
+
+  useEffect(() => {
+    logResumeScore("ui:review-step-props", {
+      hasScoreFromNav: resumeScoreFromNav != null,
+      loadingFromNav: !!resumeScoreLoadingFromNav,
+      hasReanalyzeHandler: typeof onReanalyzeAiScore === "function",
+      reanalyzeLoading: !!reanalyzeAiScoreLoading,
+    });
+  }, [
+    resumeScoreFromNav,
+    resumeScoreLoadingFromNav,
+    onReanalyzeAiScore,
+    reanalyzeAiScoreLoading,
+  ]);
 
   const handleSectionReorder = (newOrder: string[]) => {
     form.setValue("sectionOrder", newOrder);
@@ -50,13 +70,14 @@ export const ReviewStep = ({
       <div>
         <h2 className="text-2xl font-semibold mb-2">Review Your CV</h2>
         <p className="text-muted-foreground">
-          Review all your information before submitting. Customize section order and check your resume score below.
+          {t("resume.steps.reviewStepLead")}
         </p>
       </div>
 
       {/* CV Score/Rating */}
       <CVRating
-        data={data}
+        onAnalyze={onReanalyzeAiScore}
+        isAnalyzing={reanalyzeAiScoreLoading}
         rating={resumeScoreFromNav}
         ratingLoading={resumeScoreLoadingFromNav}
       />

@@ -21,7 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
 import { stableSerializeCvPayload } from "@/lib/stableSerializeCvPayload";
-import type { ResumeScore } from "@/lib/resumeScorer";
+import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
+import { logResumeScore } from "@/lib/resumeScoreDebug";
 import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -43,10 +44,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const navResumeScoreRef = useRef<ResumeScore | undefined>(undefined);
   const lastSuccessfulScorePayloadRef = useRef<string | null>(null);
   const scoreRequestIdRef = useRef(0);
-  /** True until a successful score matches current CV; set true again when form content diverges from last scored payload. */
-  const resumeContentDirtyForScoreRef = useRef(true);
-  /** Dedupes dirty detection when RHF yields new object refs for the same CV values. */
-  const lastSerializedFormForDirtyRef = useRef<string>("");
   /** Tracks language for AI score refetch (skip first run after mount / login). */
   const previousLanguageRef = useRef<"en" | "de" | null>(null);
   const [templateSelected, setTemplateSelected] = useState(!!initialData?.template);
@@ -60,16 +57,15 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (!user) {
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
-      lastSerializedFormForDirtyRef.current = "";
+      setNavResumeScore(undefined);
+      setNavResumeScoreLoading(false);
     }
-    resumeContentDirtyForScoreRef.current = true;
   }, [user]);
 
   useEffect(() => {
     lastSuccessfulScorePayloadRef.current = null;
     scoreRequestIdRef.current = 0;
-    lastSerializedFormForDirtyRef.current = "";
-    resumeContentDirtyForScoreRef.current = true;
+    setNavResumeScore(undefined);
   }, [editId]);
 
   // Ensure overlay is ALWAYS hidden when navigating between steps - only show when explicitly clicking "Complete CV"
@@ -378,75 +374,121 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     return { ...formData, skills };
   }, [formData, skills]);
 
-  // When CV JSON (stable) differs from the last successful score payload, require a new score fetch.
-  useEffect(() => {
-    try {
-      const s = stableSerializeCvPayload(formDataWithSkills);
-      if (lastSerializedFormForDirtyRef.current === s) {
-        return;
-      }
-      lastSerializedFormForDirtyRef.current = s;
-      if (
-        lastSuccessfulScorePayloadRef.current === null ||
-        s !== lastSuccessfulScorePayloadRef.current
-      ) {
-        resumeContentDirtyForScoreRef.current = true;
-      }
-    } catch {
-      resumeContentDirtyForScoreRef.current = true;
-    }
-  }, [formDataWithSkills]);
-
-  const refreshResumeScoreAfterStepNav = useCallback(() => {
+  /**
+   * DeepSeek resume score for the current form. Always runs the request when called (no snapshot skip):
+   * skipping caused missed loads / no loading state when refs and serialize were slightly out of sync.
+   * Call sites: Review step mount (useEffect), Score tab open / explicit request, Re-analyze.
+   */
+  const fetchAiResumeScoreIfDirty = useCallback((_opts?: { force?: boolean }) => {
+    logResumeScore("fetch:called", {
+      force: !!_opts?.force,
+      userHint: user?.email ?? "(guest)",
+    });
     if (!user) {
+      logResumeScore("fetch:abort-no-user", {});
       setNavResumeScore(undefined);
       setNavResumeScoreLoading(false);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
-      resumeContentDirtyForScoreRef.current = true;
-      lastSerializedFormForDirtyRef.current = "";
       return;
     }
 
     let snapshot: string;
     try {
       snapshot = stableSerializeCvPayload(form.getValues());
-    } catch {
-      resumeContentDirtyForScoreRef.current = true;
+    } catch (e) {
       snapshot = "";
+      logResumeScore("fetch:snapshot-error", {
+        err: e instanceof Error ? e.message : String(e),
+      });
     }
 
-    if (navResumeScoreRef.current !== undefined && !resumeContentDirtyForScoreRef.current) {
-      return;
-    }
+    logResumeScore("fetch:start-request", {
+      snapshotLen: snapshot.length,
+      lastSuccessLen: lastSuccessfulScorePayloadRef.current?.length ?? 0,
+      hadNavScore: navResumeScoreRef.current !== undefined,
+      scoreRequestIdBefore: scoreRequestIdRef.current,
+    });
+
+    setNavResumeScoreLoading(true);
 
     const requestId = ++scoreRequestIdRef.current;
-
-    setNavResumeScore(undefined);
-    setNavResumeScoreLoading(true);
+    logResumeScore("fetch:loading-true", { requestId });
     void getResumeScoreWithOptionalAI(form.getValues(), true, {
       fallbackToLocal: false,
       outputLanguage: language,
     })
       .then((score) => {
-        if (requestId !== scoreRequestIdRef.current) return;
+        if (requestId !== scoreRequestIdRef.current) {
+          logResumeScore("fetch:then-superseded", {
+            requestId,
+            currentId: scoreRequestIdRef.current,
+          });
+          return;
+        }
+        let nowSnap: string;
+        try {
+          nowSnap = stableSerializeCvPayload(form.getValues());
+        } catch {
+          setNavResumeScore(score);
+          lastSuccessfulScorePayloadRef.current = null;
+          logResumeScore("fetch:then-apply-with-nowSnap-error", { requestId });
+          return;
+        }
+        if (nowSnap !== snapshot) {
+          // CV changed while the request was in flight — do not apply stale AI output.
+          lastSuccessfulScorePayloadRef.current = null;
+          logResumeScore("fetch:then-stale-discard", {
+            requestId,
+            snapshotLen: snapshot.length,
+            nowSnapLen: nowSnap.length,
+          });
+          return;
+        }
         setNavResumeScore(score);
         lastSuccessfulScorePayloadRef.current = snapshot;
-        resumeContentDirtyForScoreRef.current = false;
+        logResumeScore("fetch:then-success", {
+          requestId,
+          overall: score.overallScore,
+          fromAi: score.fromAi === true,
+          categoryCount: score.categories?.length ?? 0,
+        });
       })
-      .catch(() => {
-        if (requestId !== scoreRequestIdRef.current) return;
+      .catch((err: unknown) => {
+        if (requestId !== scoreRequestIdRef.current) {
+          logResumeScore("fetch:catch-superseded", {
+            requestId,
+            currentId: scoreRequestIdRef.current,
+          });
+          return;
+        }
+        lastSuccessfulScorePayloadRef.current = null;
+        setNavResumeScore(undefined);
+        if (import.meta.env.DEV) {
+          console.warn("[resume-score] AI request failed:", err);
+        }
+        logResumeScore("fetch:catch-clear-score", {
+          requestId,
+          err: err instanceof Error ? err.message : String(err),
+        });
         toast({
           title: t("common.error") || "Error",
           description:
             t("resume.score.aiFailed") ||
-            "Could not load AI score. Use Next or Previous to try again.",
+            "Could not load AI score. Check your connection and try Re-analyze, or disable extensions that block API calls.",
           variant: "destructive",
         });
       })
       .finally(() => {
-        if (requestId !== scoreRequestIdRef.current) return;
+        if (requestId !== scoreRequestIdRef.current) {
+          logResumeScore("fetch:finally-superseded", {
+            requestId,
+            currentId: scoreRequestIdRef.current,
+          });
+          return;
+        }
         setNavResumeScoreLoading(false);
+        logResumeScore("fetch:finally-loading-false", { requestId });
       });
   }, [user, form, t, language]);
 
@@ -454,15 +496,16 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (!user) previousLanguageRef.current = null;
   }, [user]);
 
-  // Re-run AI scoring when UI language changes (not on initial mount — step nav loads the first score).
+  // New UI language → invalidate cached AI text (refetch when still on Review).
   useEffect(() => {
     if (!user) return;
     const prev = previousLanguageRef.current;
     previousLanguageRef.current = language;
     if (prev === null || prev === language) return;
-    resumeContentDirtyForScoreRef.current = true;
-    refreshResumeScoreAfterStepNav();
-  }, [language, user, refreshResumeScoreAfterStepNav]);
+    logResumeScore("ui:language-changed-invalidate-score", { prev, language });
+    lastSuccessfulScorePayloadRef.current = null;
+    setNavResumeScore(undefined);
+  }, [language, user]);
   useEffect(() => {
     if (initialData?.template) {
       setTemplateSelected(true);
@@ -553,6 +596,14 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     { component: ReviewStep, label: t('resume.steps.review') },
   ];
 
+  const reviewStepIndex = steps.length - 1;
+
+  // DeepSeek score only on the Review step (not on every navigation or preview tab).
+  useEffect(() => {
+    if (!user || currentStep !== reviewStepIndex) return;
+    fetchAiResumeScoreIfDirty({ force: true });
+  }, [user, currentStep, language, reviewStepIndex, fetchAiResumeScoreIfDirty]);
+
   const handleEditStep = (step: number) => {
     setCurrentStep(step);
   };
@@ -562,7 +613,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (stepIndex <= currentStep) {
       if (stepIndex !== currentStep) {
         setCurrentStep(stepIndex);
-        refreshResumeScoreAfterStepNav();
       }
       return;
     }
@@ -585,7 +635,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     setCurrentStep(stepIndex);
     setHighestStepVisited(prev => Math.max(prev, stepIndex));
-    refreshResumeScoreAfterStepNav();
   };
 
   // Test data loader (dev only)
@@ -607,8 +656,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       setCurrentStep(0);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
-      resumeContentDirtyForScoreRef.current = true;
-      lastSerializedFormForDirtyRef.current = "";
       setNavResumeScore(undefined);
       toast({
         title: "Test Profile Loaded! 🧪",
@@ -633,7 +680,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
         setHighestStepVisited(prev => Math.max(prev, nextStep));
-        refreshResumeScoreAfterStepNav();
       }
     } else if (currentStep === 0) {
       toast({
@@ -650,7 +696,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     if (currentStep > 0) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      refreshResumeScoreAfterStepNav();
     }
   };
 
@@ -708,10 +753,25 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     setShowSignupOverlay(false);
 
     try {
-      // Resume score: DeepSeek AI for logged-in users (server rubric), else local heuristic
-      const scoreResult = await getResumeScoreWithOptionalAI(data, !!user, {
-        outputLanguage: language,
-      });
+      // Persist scores: reuse last AI score if it matches this submit payload; else local heuristic.
+      let scoreResult: ResumeScore;
+      let serializedSubmit = "";
+      try {
+        serializedSubmit = stableSerializeCvPayload(data);
+      } catch {
+        serializedSubmit = "";
+      }
+      if (
+        user &&
+        navResumeScore != null &&
+        lastSuccessfulScorePayloadRef.current !== null &&
+        serializedSubmit !== "" &&
+        serializedSubmit === lastSuccessfulScorePayloadRef.current
+      ) {
+        scoreResult = navResumeScore;
+      } else {
+        scoreResult = calculateResumeScore(data);
+      }
 
       // Map frontend score format to backend format
       // Frontend: categories with names, overallScore 0-100
@@ -1030,6 +1090,15 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                           onEditStep={handleEditStep}
                           resumeScoreFromNav={navResumeScore}
                           resumeScoreLoadingFromNav={navResumeScoreLoading}
+                          onReanalyzeAiScore={
+                            user
+                              ? () => {
+                                  logResumeScore("ui:reanalyze-click", {});
+                                  fetchAiResumeScoreIfDirty({ force: true });
+                                }
+                              : undefined
+                          }
+                          reanalyzeAiScoreLoading={!!user && navResumeScoreLoading}
                         />
                       ) : (
                         <CurrentStepComponent form={form} />
@@ -1088,9 +1157,16 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                 <div className="hidden lg:block lg:col-span-4">
                   <CVPreview
                     data={getPreviewDataWithHints(formDataWithSkills)}
-                    actualDataForScoring={formDataWithSkills}
                     serverResumeScore={navResumeScore}
                     serverResumeScoreLoading={navResumeScoreLoading}
+                    onRequestAiResumeScore={
+                      user
+                        ? (o) => {
+                            logResumeScore("ui:preview-score-tab-request", { opts: o ?? {} });
+                            fetchAiResumeScoreIfDirty(o);
+                          }
+                        : undefined
+                    }
                     onTemplateChange={(template) => form.setValue("template", template)}
                     onSectionOrderChange={(sectionOrder) => form.setValue("sectionOrder", sectionOrder)}
                     onStylingChange={(styling) => form.setValue("styling", styling)}

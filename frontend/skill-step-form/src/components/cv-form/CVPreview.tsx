@@ -13,7 +13,7 @@ import { CVRating } from "./CVRating";
 import { TemplateSelector } from "./TemplateSelector";
 import { SectionOrderManager } from "./SectionOrderManager";
 import { StylingSettings } from "./StylingSettings";
-import { FileText, TrendingUp, FileStack, Settings, Info, Languages, MessageSquare } from "lucide-react";
+import { FileText, FileStack, Settings, Info, Languages, MessageSquare, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -23,43 +23,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
 import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ResumeScoreNumberShimmer } from "@/components/cv-form/ResumeScoreNumberShimmer";
+import { logResumeScore } from "@/lib/resumeScoreDebug";
+import type { ResumeScore } from "@/lib/resumeScorer";
 import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 interface CVPreviewProps {
   data: CVFormData;
-  actualDataForScoring?: CVFormData; // Use actual form data (without hints) for score calculation
-  /** After Next/Previous (logged-in), parent refreshes server AI score; merged over local for display. */
+  /** Logged-in: AI score from parent (Review step or Score tab refresh). */
   serverResumeScore?: ResumeScore;
-  /** Logged-in: true while waiting for DeepSeek (no local heuristic shown). */
   serverResumeScoreLoading?: boolean;
+  /** Logged-in: request AI score (e.g. when opening Score tab or Re-analyze). */
+  onRequestAiResumeScore?: (opts?: { force?: boolean }) => void;
   onTemplateChange?: (template: CVTemplate) => void;
   onSectionOrderChange?: (sectionOrder: string[]) => void;
   onStylingChange?: (styling: CVFormData['styling']) => void;
   currentStep?: number; // Current step to show relevant section styling
 }
 
-const LOGGED_IN_SCORE_PLACEHOLDER = 2.5;
-
-function overallScoreTextClass(overallScore: number): string {
-  if (overallScore >= 8) return "text-green-600 dark:text-green-400";
-  if (overallScore >= 6) return "text-yellow-600 dark:text-yellow-400";
-  if (overallScore >= 4) return "text-orange-600 dark:text-orange-400";
-  return "text-red-600 dark:text-red-400";
-}
-
 export const CVPreview = ({
   data,
-  actualDataForScoring,
   serverResumeScore,
   serverResumeScoreLoading,
+  onRequestAiResumeScore,
   onTemplateChange,
   onSectionOrderChange,
   onStylingChange,
@@ -143,63 +134,6 @@ export const CVPreview = ({
     }
   }, [template]);
 
-  // Calculate resume score using actual form data (without hints), not preview data
-  // Track skills array length and content to ensure score updates when skills change
-  const skillsForDependency = actualDataForScoring?.skills 
-    ? `${actualDataForScoring.skills.length}-${actualDataForScoring.skills.map(s => s.skill || '').join(',')}`
-    : '0-';
-  
-  const dataForScoring = actualDataForScoring || data;
-  const [resumeScore, setResumeScore] = useState(() => {
-    try {
-      return calculateResumeScore(dataForScoring);
-    } catch {
-      return { overallScore: 0, categories: [], suggestions: [] };
-    }
-  });
-
-  // Local heuristic for guests only; logged-in users see AI score from parent (placeholder until it arrives).
-  useEffect(() => {
-    if (user) return;
-    const d = actualDataForScoring || data;
-    let cancelled = false;
-    const t = window.setTimeout(() => {
-      try {
-        const score = calculateResumeScore(d);
-        if (!cancelled) setResumeScore(score);
-      } catch {
-        if (!cancelled) {
-          setResumeScore({ overallScore: 0, categories: [], suggestions: [] });
-        }
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(t);
-    };
-  }, [
-    user,
-    skillsForDependency,
-    actualDataForScoring?.workExperience?.length || 0,
-    actualDataForScoring?.education?.length || 0,
-    actualDataForScoring?.personalInfo?.summary,
-    actualDataForScoring,
-    data,
-  ]);
-
-  const hasAiScoreReady =
-    !!user && serverResumeScore != null && !serverResumeScoreLoading;
-  const displayResumeScore = user
-    ? hasAiScoreReady
-      ? serverResumeScore!
-      : {
-          overallScore: LOGGED_IN_SCORE_PLACEHOLDER,
-          categories: [],
-          suggestions: [],
-        }
-    : serverResumeScore ?? resumeScore;
-  const showLoggedInScorePending =
-    !!user && (serverResumeScoreLoading || serverResumeScore == null);
   // Calculate page count based on content height
   // Use useLayoutEffect for synchronous DOM measurement after React updates
   useLayoutEffect(() => {
@@ -572,7 +506,19 @@ export const CVPreview = ({
 
   return (
     <div className="space-y-4 sticky top-4 w-full min-w-[400px]">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setActiveTab(v);
+          if (v === "score" && user) {
+            logResumeScore("ui:preview-tab-score", {
+              hasHandler: typeof onRequestAiResumeScore === "function",
+            });
+            onRequestAiResumeScore?.();
+          }
+        }}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="design" className="flex items-center gap-2 text-xs">
             <FileText className="h-4 w-4" />
@@ -594,32 +540,8 @@ export const CVPreview = ({
 
         <TabsContent value="design" className="mt-4">
           <div className="relative flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-            {/* Score indicator + Page indicator - sticky at top */}
+            {/* Page indicator + section titles — sticky at top */}
             <div className="sticky top-0 z-20 mb-2 flex-shrink-0 overflow-visible bg-background/95 pb-2 pt-0.5 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="flex items-baseline justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">{t('resume.score.label') || 'Resume Score'}</span>
-                </div>
-                {showLoggedInScorePending ? (
-                  serverResumeScoreLoading ? (
-                    <ResumeScoreNumberShimmer size="md" className="translate-y-px" />
-                  ) : (
-                    <span
-                      className={`text-sm font-bold leading-normal transition-colors duration-300 ${overallScoreTextClass(LOGGED_IN_SCORE_PLACEHOLDER)}`}
-                    >
-                      {LOGGED_IN_SCORE_PLACEHOLDER}/10
-                    </span>
-                  )
-                ) : (
-                  <span
-                    className={`text-sm font-bold leading-normal transition-colors duration-300 ${overallScoreTextClass(displayResumeScore.overallScore)}`}
-                  >
-                    {displayResumeScore.overallScore}/10
-                  </span>
-                )}
-              </div>
-
               {/* Page indicator */}
               <div className="flex items-center justify-between px-2 py-1.5 bg-muted/30 rounded-md border border-border/50">
                 <div className="flex items-center gap-2">
@@ -925,7 +847,8 @@ export const CVPreview = ({
 
         <TabsContent value="score" className="mt-4">
           <CVRating
-            data={actualDataForScoring || data}
+            onAnalyze={user ? () => onRequestAiResumeScore?.({ force: true }) : undefined}
+            isAnalyzing={!!user && !!serverResumeScoreLoading}
             rating={serverResumeScore}
             ratingLoading={!!user && !!serverResumeScoreLoading}
           />

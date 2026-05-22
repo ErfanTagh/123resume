@@ -140,10 +140,29 @@ def _normalize_categories(raw: Any, lang: str) -> List[Dict[str, Any]]:
                 "name": name,
                 "score": score,
                 "max_score": max_score,
-                "feedback": feedback[:500],
+                "feedback": feedback[:200],
             }
         )
     return out
+
+
+# JSON example for the model prompt — must NOT live inside an f-string (braces break f-string parsing).
+_RUBRIC_JSON_SHAPE = """
+Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
+{
+  "overall_score": <number>,
+  "overall_feedback": "<string>",
+  "categories": [
+    {"name":"Content Quality","score":<number>,"max_score":3,"feedback":"..."},
+    {"name":"Professional Summary","score":<number>,"max_score":1,"feedback":"..."},
+    {"name":"Experience Section","score":<number>,"max_score":2,"feedback":"..."},
+    {"name":"Skills & Proficiency","score":<number>,"max_score":1,"feedback":"..."},
+    {"name":"Education & Certifications","score":<number>,"max_score":0.5,"feedback":"..."},
+    {"name":"ATS Optimization","score":<number>,"max_score":0.5,"feedback":"..."}
+  ],
+  "suggestions": ["..."]
+}
+""".strip()
 
 
 def score_resume_with_deepseek(
@@ -170,9 +189,10 @@ OUTPUT LANGUAGE (critical)
   (English names below are required for the app parser).
 """
         overall_fb_rule = """
-Also return "overall_feedback": one string of **3-5 sentences** in **German** that holistically summarizes this
-candidate's resume: main strengths, the biggest gaps or risks, and the top 1-3 priorities before applying.
-Do not repeat the numeric scores verbatim; write for a human reader.
+Also return "overall_feedback": **one string** in **German** formatted as a **short bullet list only**:
+- Use **3 to 5 lines** separated by newline characters.
+- Each line MUST start with "- " (dash + space) followed by **at most ~90 characters** of text (one compact idea per line).
+- Cover: top strength, main gap/risk, top 1-2 fix priorities. No score numbers. No long paragraphs.
 """
     else:
         lang_rules = """
@@ -182,9 +202,10 @@ OUTPUT LANGUAGE (critical)
 - JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly.
 """
         overall_fb_rule = """
-Also return "overall_feedback": one string of **3-5 sentences** in **English** that holistically summarizes this
-candidate's resume: main strengths, the biggest gaps or risks, and the top 1-3 priorities before applying.
-Do not repeat the numeric scores verbatim; write for a human reader.
+Also return "overall_feedback": **one string** in **English** formatted as a **short bullet list only**:
+- Use **3 to 5 lines** separated by newline characters.
+- Each line MUST start with "- " (dash + space) followed by **at most ~90 characters** of text (one compact idea per line).
+- Cover: top strength, main gap/risk, top 1-2 fix priorities. No score numbers. No long paragraphs.
 """
 
     rubric = f"""
@@ -223,26 +244,14 @@ CATEGORIES (exact names and max_score — you MUST output all six):
 6) ATS Optimization — max_score 0.5
 
 Each category needs: "name" (exact string above), "score" (0 to max_score inclusive), "max_score" (exact as listed),
-and short "feedback" (one or two sentences in the OUTPUT LANGUAGE).
+and "feedback": **one** short bullet line in the OUTPUT LANGUAGE (start with "- ", max ~120 characters total).
 
 Also return "overall_score" from 0 to 10 (float, one decimal) using the **2.5 baseline** described above,
-and "suggestions": array of 3-8 concise improvement strings in the OUTPUT LANGUAGE (no duplicates).
+and "suggestions": array of **at most 4** strings in the OUTPUT LANGUAGE (no duplicates): each string is **one** bullet
+line starting with "- " plus a compact tip (max ~110 characters per string including the "- ").
 {overall_fb_rule}
 
-Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
-{
-  "overall_score": <number>,
-  "overall_feedback": "<string>",
-  "categories": [
-    {"name":"Content Quality","score":<number>,"max_score":3,"feedback":"..."},
-    {"name":"Professional Summary","score":<number>,"max_score":1,"feedback":"..."},
-    {"name":"Experience Section","score":<number>,"max_score":2,"feedback":"..."},
-    {"name":"Skills & Proficiency","score":<number>,"max_score":1,"feedback":"..."},
-    {"name":"Education & Certifications","score":<number>,"max_score":0.5,"feedback":"..."},
-    {"name":"ATS Optimization","score":<number>,"max_score":0.5,"feedback":"..."}
-  ],
-  "suggestions": ["..."]
-}
+{_RUBRIC_JSON_SHAPE}
 """.strip()
 
     user_msg = (
@@ -293,12 +302,12 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
     suggestions = []
     for s in suggestions_raw:
         if isinstance(s, str) and s.strip():
-            suggestions.append(s.strip()[:400])
-    suggestions = list(dict.fromkeys(suggestions))[:10]
+            suggestions.append(s.strip()[:120])
+    suggestions = list(dict.fromkeys(suggestions))[:5]
 
     overall_feedback_raw = parsed.get("overall_feedback")
     if isinstance(overall_feedback_raw, str):
-        overall_feedback = overall_feedback_raw.strip()[:2000]
+        overall_feedback = overall_feedback_raw.strip()[:600]
     else:
         overall_feedback = ""
 

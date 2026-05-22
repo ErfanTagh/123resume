@@ -1,5 +1,6 @@
 import type { CVFormData } from "@/components/cv-form/types";
 import { aiAPI } from "@/lib/api";
+import { logResumeScore } from "@/lib/resumeScoreDebug";
 import {
   calculateResumeScore,
   type ResumeScore,
@@ -56,8 +57,16 @@ export async function getResumeScoreWithOptionalAI(
   if (!isAuthenticated) {
     return calculateResumeScore(data);
   }
+  logResumeScore("client:getResumeScoreWithOptionalAI:start", {
+    outputLanguage,
+    fallbackToLocal,
+  });
   try {
     const raw = await aiAPI.scoreResume(data, { outputLanguage });
+    logResumeScore("client:getResumeScoreWithOptionalAI:api-ok", {
+      overall: raw.overallScore,
+      suggestionCount: raw.suggestions?.length ?? 0,
+    });
     if (import.meta.env.DEV) {
       console.info("[resume-score] server AI ok", {
         overall: raw.overallScore,
@@ -66,6 +75,10 @@ export async function getResumeScoreWithOptionalAI(
     }
     return normalizeAiScore(raw);
   } catch (err) {
+    logResumeScore("client:getResumeScoreWithOptionalAI:api-error", {
+      err: err instanceof Error ? err.message : String(err),
+      fallbackToLocal,
+    });
     if (import.meta.env.DEV) {
       const msg = err instanceof Error ? err.message : String(err);
       if (fallbackToLocal) {
@@ -80,6 +93,9 @@ export async function getResumeScoreWithOptionalAI(
     if (!fallbackToLocal) {
       throw err instanceof Error ? err : new Error(String(err));
     }
+    logResumeScore("client:getResumeScoreWithOptionalAI:fallback-local", {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return calculateResumeScore(data);
   }
 }

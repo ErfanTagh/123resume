@@ -107,11 +107,24 @@ def resume_score(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
+    out_lang = resume_ai_scoring.normalize_output_language(
+        (data.get("output_language") or data.get("outputLanguage") or "en"),
+    )
+    logger.info(
+        "resume_score start user_id=%s payload_chars=%s output_lang=%s",
+        getattr(request.user, "pk", None),
+        raw_len,
+        out_lang,
+    )
+
     try:
-        out_lang = resume_ai_scoring.normalize_output_language(
-            (data.get("output_language") or data.get("outputLanguage") or "en"),
-        )
         result = resume_ai_scoring.score_resume_with_deepseek(resume, out_lang)
+        logger.info(
+            "resume_score ok user_id=%s overall=%s categories=%s",
+            getattr(request.user, "pk", None),
+            result.get("overall_score"),
+            len(result.get("categories") or []),
+        )
         return Response(result, status=status.HTTP_200_OK)
     except RuntimeError as e:
         logger.error("Resume score configuration error: %s", e)

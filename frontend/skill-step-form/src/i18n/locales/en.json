@@ -258,6 +258,7 @@
       "education": "Education",
       "skills": "Skills",
       "review": "Review",
+      "reviewStepLead": "Review all your information before submitting. If you are signed in, an AI resume score and comments load on this step. You can customize section order below.",
       "personalInfo": "Personal Information",
       "personalInfoDesc": "Let's start with your basic details",
       "workExperience": "Work Experience",
@@ -376,7 +377,12 @@
       "label": "Resume Score",
       "title": "CV Rating & Analysis",
       "subtitle": "Real-time completeness analysis",
+      "subtitleAi": "AI feedback based on your current CV content.",
+      "signInForAi": "Sign in to get an AI resume score and tailored comments on this step.",
+      "reviewAiHint": "Your AI score loads when you open this step. If it does not appear, use Re-analyze below.",
+      "waitAi": "AI is analyzing your CV. This may take a few seconds.",
       "scoringInProgress": "Updating score with AI…",
+      "aiFailed": "Could not load the AI score. Try Re-analyze, sign in again if your session expired, or check the Network tab for blocked requests.",
       "description": {
         "withData": "Click analyze to generate your latest resume score",
         "withoutData": "Get AI-powered feedback on your CV and suggestions for improvement"

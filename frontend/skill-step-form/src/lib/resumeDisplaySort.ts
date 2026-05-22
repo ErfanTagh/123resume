@@ -19,7 +19,7 @@ function isOngoingEndDate(end: string | undefined | null): boolean {
     "laufend",
   ]);
   if (exact.has(lower)) return true;
-  return /^(bis\s+)?(heute|jetzt|aktuell)$/i.test(raw.trim());
+  return /^(bis\s+)?(heute|jetzt|aktuell)$/i.test(t);
 }
 
 /** Parse common resume date strings to UTC ms; null if unknown. */

@@ -47,10 +47,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const resumeContentDirtyForScoreRef = useRef(true);
   /** Dedupes dirty detection when RHF yields new object refs for the same CV values. */
   const lastSerializedFormForDirtyRef = useRef<string>("");
+  /** Tracks language for AI score refetch (skip first run after mount / login). */
+  const previousLanguageRef = useRef<"en" | "de" | null>(null);
   const [templateSelected, setTemplateSelected] = useState(!!initialData?.template);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   navResumeScoreRef.current = navResumeScore;
 
@@ -422,7 +424,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     setNavResumeScore(undefined);
     setNavResumeScoreLoading(true);
-    void getResumeScoreWithOptionalAI(form.getValues(), true, { fallbackToLocal: false })
+    void getResumeScoreWithOptionalAI(form.getValues(), true, {
+      fallbackToLocal: false,
+      outputLanguage: language,
+    })
       .then((score) => {
         if (requestId !== scoreRequestIdRef.current) return;
         setNavResumeScore(score);
@@ -443,9 +448,21 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         if (requestId !== scoreRequestIdRef.current) return;
         setNavResumeScoreLoading(false);
       });
-  }, [user, form, t]);
+  }, [user, form, t, language]);
 
-  // Set template as selected and reset form when initialData has a template
+  useEffect(() => {
+    if (!user) previousLanguageRef.current = null;
+  }, [user]);
+
+  // Re-run AI scoring when UI language changes (not on initial mount — step nav loads the first score).
+  useEffect(() => {
+    if (!user) return;
+    const prev = previousLanguageRef.current;
+    previousLanguageRef.current = language;
+    if (prev === null || prev === language) return;
+    resumeContentDirtyForScoreRef.current = true;
+    refreshResumeScoreAfterStepNav();
+  }, [language, user, refreshResumeScoreAfterStepNav]);
   useEffect(() => {
     if (initialData?.template) {
       setTemplateSelected(true);
@@ -692,7 +709,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     try {
       // Resume score: DeepSeek AI for logged-in users (server rubric), else local heuristic
-      const scoreResult = await getResumeScoreWithOptionalAI(data, !!user);
+      const scoreResult = await getResumeScoreWithOptionalAI(data, !!user, {
+        outputLanguage: language,
+      });
 
       // Map frontend score format to backend format
       // Frontend: categories with names, overallScore 0-100

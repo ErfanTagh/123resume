@@ -286,14 +286,16 @@ export const aiAPI = {
   },
 
   /**
-   * AI resume score (DeepSeek). Body sends { resume }. Returns camelCase:
-   * overallScore, estimatedPages?, categories[{name,score,maxScore,feedback}], suggestions
+   * AI resume score (DeepSeek). Body sends { resume, outputLanguage }. Returns camelCase:
+   * overallScore, estimatedPages?, overallFeedback?, categories[{name,score,maxScore,feedback}], suggestions
    */
   scoreResume: async (
     resume: Record<string, unknown>,
+    options?: { outputLanguage?: "en" | "de" },
   ): Promise<{
     overallScore: number;
     estimatedPages?: number;
+    overallFeedback?: string;
     categories: Array<{
       name: string;
       score: number;
@@ -302,7 +304,10 @@ export const aiAPI = {
     }>;
     suggestions: string[];
   }> => {
-    const payload = { resume };
+    const payload: Record<string, unknown> = { resume };
+    if (options?.outputLanguage === "de" || options?.outputLanguage === "en") {
+      payload.outputLanguage = options.outputLanguage;
+    }
     const doFetch = () =>
       fetch(`${API_BASE_URL}/ai/resume-score/`, {
         method: "POST",
@@ -313,6 +318,7 @@ export const aiAPI = {
     return handleResponse(response, doFetch) as Promise<{
       overallScore: number;
       estimatedPages?: number;
+      overallFeedback?: string;
       categories: Array<{
         name: string;
         score: number;

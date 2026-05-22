@@ -74,7 +74,12 @@ def resume_assistant_chat(request):
 @permission_classes([IsAuthenticated])
 def resume_score(request):
     """
-    AI resume score for logged-in users (DeepSeek). Body: { "resume": { ... CV JSON ... } }.
+    AI resume score for logged-in users (DeepSeek).
+
+    Body JSON:
+      - resume (required): CV JSON object
+      - output_language or outputLanguage (optional): "en" | "de" — language for all prose fields
+        (category feedback, suggestions, overall_feedback). Defaults to "en".
     """
     data = request.data or {}
     resume = data.get("resume")
@@ -103,7 +108,10 @@ def resume_score(request):
         )
 
     try:
-        result = resume_ai_scoring.score_resume_with_deepseek(resume)
+        out_lang = resume_ai_scoring.normalize_output_language(
+            (data.get("output_language") or data.get("outputLanguage") or "en"),
+        )
+        result = resume_ai_scoring.score_resume_with_deepseek(resume, out_lang)
         return Response(result, status=status.HTTP_200_OK)
     except RuntimeError as e:
         logger.error("Resume score configuration error: %s", e)

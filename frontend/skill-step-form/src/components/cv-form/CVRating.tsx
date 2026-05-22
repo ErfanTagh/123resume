@@ -188,6 +188,8 @@ export const CVRating = ({
   }
 
   const status = getOverallStatus(rating.overallScore);
+  /** Server AI returns free-form copy; skip English→i18n canned maps so users see the model text. */
+  const useAiCopy = rating.fromAi === true;
 
   return (
     <Card>
@@ -236,31 +238,33 @@ export const CVRating = ({
                 </div>
                 <Progress value={(category.score / category.maxScore) * 100} className="h-2" />
                 <p className="text-xs text-muted-foreground">
-                  {(() => {
-                    const feedbackMap: Record<string, string> = {
-                      "Excellent use of action verbs and metrics": t('resume.score.categoryFeedback.contentQuality.excellent') || category.feedback,
-                      "Good content, add more quantifiable achievements": t('resume.score.categoryFeedback.contentQuality.good') || category.feedback,
-                      "Needs stronger action verbs and measurable results": t('resume.score.categoryFeedback.contentQuality.needsImprovement') || category.feedback,
-                      "Well-structured and easy to scan": t('resume.score.categoryFeedback.structure.excellent') || category.feedback,
-                      "Good structure, could improve formatting": t('resume.score.categoryFeedback.structure.good') || category.feedback,
-                      "Needs better organization and formatting": t('resume.score.categoryFeedback.structure.needsImprovement') || category.feedback,
-                      "Compelling and specific summary": t('resume.score.categoryFeedback.summary.excellent') || category.feedback,
-                      "Good summary, add more specifics": t('resume.score.categoryFeedback.summary.good') || category.feedback,
-                      "Needs a more compelling summary": t('resume.score.categoryFeedback.summary.needsImprovement') || category.feedback,
-                      "Excellent achievement-focused experience": t('resume.score.categoryFeedback.experience.excellent') || category.feedback,
-                      "Good experience section, highlight more achievements": t('resume.score.categoryFeedback.experience.good') || category.feedback,
-                      "Needs more achievement-focused descriptions": t('resume.score.categoryFeedback.experience.needsImprovement') || category.feedback,
-                      "Well-organized and relevant skills": t('resume.score.categoryFeedback.skills.excellent') || category.feedback,
-                      "Good skills, ensure they're relevant": t('resume.score.categoryFeedback.skills.good') || category.feedback,
-                      "Needs more relevant and organized skills": t('resume.score.categoryFeedback.skills.needsImprovement') || category.feedback,
-                      "Complete education and certifications": t('resume.score.categoryFeedback.education.excellent') || category.feedback,
-                      "Add more education or certification details": t('resume.score.categoryFeedback.education.needsImprovement') || category.feedback,
-                      "Well-optimized for ATS systems": t('resume.score.categoryFeedback.ats.excellent') || category.feedback,
-                      "Add more keywords and ensure standard formatting": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
-                      "Add more keywords and ensure ATS-friendly section content": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
-                    };
-                    return feedbackMap[category.feedback] || category.feedback;
-                  })()}
+                  {useAiCopy
+                    ? category.feedback
+                    : (() => {
+                        const feedbackMap: Record<string, string> = {
+                          "Excellent use of action verbs and metrics": t('resume.score.categoryFeedback.contentQuality.excellent') || category.feedback,
+                          "Good content, add more quantifiable achievements": t('resume.score.categoryFeedback.contentQuality.good') || category.feedback,
+                          "Needs stronger action verbs and measurable results": t('resume.score.categoryFeedback.contentQuality.needsImprovement') || category.feedback,
+                          "Well-structured and easy to scan": t('resume.score.categoryFeedback.structure.excellent') || category.feedback,
+                          "Good structure, could improve formatting": t('resume.score.categoryFeedback.structure.good') || category.feedback,
+                          "Needs better organization and formatting": t('resume.score.categoryFeedback.structure.needsImprovement') || category.feedback,
+                          "Compelling and specific summary": t('resume.score.categoryFeedback.summary.excellent') || category.feedback,
+                          "Good summary, add more specifics": t('resume.score.categoryFeedback.summary.good') || category.feedback,
+                          "Needs a more compelling summary": t('resume.score.categoryFeedback.summary.needsImprovement') || category.feedback,
+                          "Excellent achievement-focused experience": t('resume.score.categoryFeedback.experience.excellent') || category.feedback,
+                          "Good experience section, highlight more achievements": t('resume.score.categoryFeedback.experience.good') || category.feedback,
+                          "Needs more achievement-focused descriptions": t('resume.score.categoryFeedback.experience.needsImprovement') || category.feedback,
+                          "Well-organized and relevant skills": t('resume.score.categoryFeedback.skills.excellent') || category.feedback,
+                          "Good skills, ensure they're relevant": t('resume.score.categoryFeedback.skills.good') || category.feedback,
+                          "Needs more relevant and organized skills": t('resume.score.categoryFeedback.skills.needsImprovement') || category.feedback,
+                          "Complete education and certifications": t('resume.score.categoryFeedback.education.excellent') || category.feedback,
+                          "Add more education or certification details": t('resume.score.categoryFeedback.education.needsImprovement') || category.feedback,
+                          "Well-optimized for ATS systems": t('resume.score.categoryFeedback.ats.excellent') || category.feedback,
+                          "Add more keywords and ensure standard formatting": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
+                          "Add more keywords and ensure ATS-friendly section content": t('resume.score.categoryFeedback.ats.needsImprovement') || category.feedback,
+                        };
+                        return feedbackMap[category.feedback] || category.feedback;
+                      })()}
                 </p>
               </div>
             );
@@ -313,8 +317,12 @@ export const CVRating = ({
                   "Add a professional website or LinkedIn profile to strengthen your online presence": t('resume.score.feedback.onlinePresence') || suggestion,
                   "Your resume is solid! Adding more metrics and impact-focused descriptions would make it even stronger.": t('resume.score.feedback.solid') || suggestion,
                   "Add specific numbers to showcase impact: revenue increased (%), team size managed, cost savings ($), users reached, etc.": t('resume.score.feedback.addSpecificNumbers') || suggestion,
+                  "Your resume has good foundations. Consider adding more quantifiable achievements and strong action verbs to strengthen it further.": t('resume.score.feedback.foundations') || suggestion,
+                  "Great resume! A few more quantified achievements would make it exceptional.": t('resume.score.feedback.greatQuantify') || suggestion,
                 };
-                const localizedSuggestion = suggestionMap[suggestion] || suggestion;
+                const localizedSuggestion = useAiCopy
+                  ? suggestion
+                  : suggestionMap[suggestion] || suggestion;
 
                 return (
                   <li key={index} className="flex gap-2 text-sm">
@@ -326,6 +334,17 @@ export const CVRating = ({
             </ul>
           </div>
         )}
+
+        {useAiCopy && rating.overallFeedback ? (
+          <div className="space-y-2 rounded-lg border border-primary/15 bg-muted/30 p-4">
+            <h4 className="flex items-center gap-2 font-semibold text-foreground">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {t("resume.score.overallAiSummary")}
+            </h4>
+            <p className="text-xs text-muted-foreground">{t("resume.score.overallAiSummaryHint")}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{rating.overallFeedback}</p>
+          </div>
+        ) : null}
 
         <Button
           onClick={onAnalyze}

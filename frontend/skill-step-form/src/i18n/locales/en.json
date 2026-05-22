@@ -385,6 +385,8 @@
       "analyzeButton": "Analyze My CV",
       "breakdown": "Score Breakdown",
       "suggestions": "Suggestions for Improvement",
+      "overallAiSummary": "AI summary",
+      "overallAiSummaryHint": "Follows your selected interface language (English or German).",
       "reanalyze": "Re-analyze CV",
       "status": {
         "excellent": "Excellent",
@@ -438,7 +440,9 @@
         "interests": "Limit interests to 3-5 most relevant ones",
         "onlinePresence": "Add a professional website or LinkedIn profile to strengthen your online presence",
         "solid": "Your resume is solid! Adding more metrics and impact-focused descriptions would make it even stronger.",
-        "addSpecificNumbers": "Add specific numbers to showcase impact: revenue increased (%), team size managed, cost savings ($), users reached, etc."
+        "addSpecificNumbers": "Add specific numbers to showcase impact: revenue increased (%), team size managed, cost savings ($), users reached, etc.",
+        "foundations": "Your resume has good foundations. Consider adding more quantifiable achievements and strong action verbs to strengthen it further.",
+        "greatQuantify": "Great resume! A few more quantified achievements would make it exceptional."
       },
       "categoryFeedback": {
         "contentQuality": {

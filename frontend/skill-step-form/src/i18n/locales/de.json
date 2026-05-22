@@ -388,6 +388,8 @@
       "analyzeButton": "Meinen Lebenslauf analysieren",
       "breakdown": "Bewertungsaufschlüsselung",
       "suggestions": "Verbesserungsvorschläge",
+      "overallAiSummary": "KI-Zusammenfassung",
+      "overallAiSummaryHint": "Entspricht der gewählten Oberflächensprache (Englisch oder Deutsch).",
       "reanalyze": "Lebenslauf erneut analysieren",
       "status": {
         "excellent": "Ausgezeichnet",
@@ -441,7 +443,9 @@
         "interests": "Begrenzen Sie Interessen auf die 3-5 relevantesten",
         "onlinePresence": "Fügen Sie eine professionelle Website oder ein LinkedIn-Profil hinzu, um Ihre Online-Präsenz zu stärken",
         "solid": "Ihr Lebenslauf ist solide! Das Hinzufügen von mehr Metriken und wirkungsorientierten Beschreibungen würde ihn noch stärker machen.",
-        "addSpecificNumbers": "Fügen Sie konkrete Zahlen hinzu, um die Wirkung zu zeigen: Umsatzsteigerung (%), Teamgröße, Kosteneinsparungen (€), erreichte Nutzer, etc."
+        "addSpecificNumbers": "Fügen Sie konkrete Zahlen hinzu, um die Wirkung zu zeigen: Umsatzsteigerung (%), Teamgröße, Kosteneinsparungen (€), erreichte Nutzer, etc.",
+        "foundations": "Ihr Lebenslauf hat eine solide Basis. Ergänzen Sie mehr quantifizierbare Erfolge und starke Aktionsverben, um ihn weiter zu schärfen.",
+        "greatQuantify": "Starker Lebenslauf! Mit noch etwas mehr quantifizierten Erfolgen wird er richtig herausragend."
       },
       "categoryFeedback": {
         "contentQuality": {

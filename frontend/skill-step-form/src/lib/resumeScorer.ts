@@ -11,6 +11,10 @@ export interface ResumeScore {
   overallScore: number; // 0-10 scale
   categories: ScoreCategory[];
   suggestions: string[];
+  /** Closing narrative from server-side AI (DeepSeek); empty for local heuristic. */
+  overallFeedback?: string;
+  /** When true, category feedback and suggestions are model-written — skip canned i18n string maps. */
+  fromAi?: boolean;
 }
 
 /**
@@ -466,7 +470,8 @@ export const calculateResumeScore = (data: CVFormData): ResumeScore => {
   return {
     overallScore,
     categories,
-    suggestions: [...new Set(suggestions)].slice(0, 10) // Remove duplicates and limit to 10
+    suggestions: [...new Set(suggestions)].slice(0, 10), // Remove duplicates and limit to 10
+    fromAi: false,
   };
 };
 

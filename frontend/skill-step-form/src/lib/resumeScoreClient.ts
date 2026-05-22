@@ -8,6 +8,7 @@ import {
 function normalizeAiScore(raw: {
   overallScore: number;
   estimatedPages?: number;
+  overallFeedback?: string;
   categories: Array<{
     name: string;
     score: number;
@@ -16,6 +17,8 @@ function normalizeAiScore(raw: {
   }>;
   suggestions: string[];
 }): ResumeScore {
+  const overallFeedback =
+    typeof raw.overallFeedback === "string" ? raw.overallFeedback.trim() : "";
   return {
     overallScore: Math.max(0, Math.min(10, Number(raw.overallScore) || 0)),
     categories: (raw.categories || []).map((c) => ({
@@ -27,12 +30,16 @@ function normalizeAiScore(raw: {
     suggestions: Array.isArray(raw.suggestions)
       ? raw.suggestions.filter((s) => typeof s === "string" && s.trim())
       : [],
+    overallFeedback: overallFeedback || undefined,
+    fromAi: true,
   };
 }
 
 export type GetResumeScoreOptions = {
   /** When false and authenticated, API errors throw instead of using local heuristic (default true). */
   fallbackToLocal?: boolean;
+  /** Matches site / résumé section language: AI prose in English or German. */
+  outputLanguage?: "en" | "de";
 };
 
 /**
@@ -45,11 +52,12 @@ export async function getResumeScoreWithOptionalAI(
   options?: GetResumeScoreOptions,
 ): Promise<ResumeScore> {
   const fallbackToLocal = options?.fallbackToLocal !== false;
+  const outputLanguage = options?.outputLanguage ?? "en";
   if (!isAuthenticated) {
     return calculateResumeScore(data);
   }
   try {
-    const raw = await aiAPI.scoreResume(data);
+    const raw = await aiAPI.scoreResume(data, { outputLanguage });
     if (import.meta.env.DEV) {
       console.info("[resume-score] server AI ok", {
         overall: raw.overallScore,

@@ -30,6 +30,16 @@ EXPECTED_CATEGORIES: List[Tuple[str, float]] = [
 ]
 
 
+def normalize_output_language(raw: Any) -> str:
+    """UI / résumé section language: 'de' or 'en' (default)."""
+    if not isinstance(raw, str):
+        return "en"
+    v = raw.strip().lower()
+    if v in ("de", "deutsch", "german"):
+        return "de"
+    return "en"
+
+
 def estimate_resume_pages(data: Dict[str, Any]) -> float:
     """Mirror frontend estimateResumeLength (~250 words per page)."""
     if not isinstance(data, dict):
@@ -103,21 +113,27 @@ def _extract_json_object(text: str) -> Dict[str, Any]:
     return json.loads(text)
 
 
-def _normalize_categories(raw: Any) -> List[Dict[str, Any]]:
+def _normalize_categories(raw: Any, lang: str) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     if not isinstance(raw, list):
         return out
     by_name = {row.get("name"): row for row in raw if isinstance(row, dict)}
+    default_fb = "Siehe Verbesserungsvorschläge." if lang == "de" else "See suggestions."
+    missing_fb = (
+        "Vom Modell nicht bewertet; Standardwert null."
+        if lang == "de"
+        else "Not scored by model; defaulting to zero."
+    )
     for name, max_score in EXPECTED_CATEGORIES:
         row = by_name.get(name)
         if not isinstance(row, dict):
-            score, feedback = 0.0, "Not scored by model; defaulting to zero."
+            score, feedback = 0.0, missing_fb
         else:
             try:
                 score = float(row.get("score", 0))
             except (TypeError, ValueError):
                 score = 0.0
-            feedback = str(row.get("feedback") or "").strip() or "See suggestions."
+            feedback = str(row.get("feedback") or "").strip() or default_fb
         score = max(0.0, min(float(max_score), round(score * 10) / 10))
         out.append(
             {
@@ -130,16 +146,50 @@ def _normalize_categories(raw: Any) -> List[Dict[str, Any]]:
     return out
 
 
-def score_resume_with_deepseek(resume: Dict[str, Any]) -> Dict[str, Any]:
+def score_resume_with_deepseek(
+    resume: Dict[str, Any],
+    output_language: str = "en",
+) -> Dict[str, Any]:
     """
-    Returns dict with keys: overall_score, estimated_pages, categories, suggestions
+    Returns dict with keys: overall_score, estimated_pages, categories, suggestions, overall_feedback
     (snake_case for DRF JSON).
+
+    output_language: 'en' or 'de' — all prose fields (feedback, suggestions, overall_feedback) should match.
     """
+    lang = normalize_output_language(output_language)
     estimated_pages = estimate_resume_pages(resume)
     payload = resume_json_for_prompt(resume)
 
-    rubric = """
+    if lang == "de":
+        lang_rules = """
+OUTPUT LANGUAGE (critical)
+- Write **all** human-readable strings in **German** (professional Hochdeutsch): each category's "feedback",
+  every string in "suggestions", and the full "overall_feedback" text.
+- Use **Sie**-Form for tips addressed to the candidate.
+- JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly
+  (English names below are required for the app parser).
+"""
+        overall_fb_rule = """
+Also return "overall_feedback": one string of **3-5 sentences** in **German** that holistically summarizes this
+candidate's resume: main strengths, the biggest gaps or risks, and the top 1-3 priorities before applying.
+Do not repeat the numeric scores verbatim; write for a human reader.
+"""
+    else:
+        lang_rules = """
+OUTPUT LANGUAGE (critical)
+- Write **all** human-readable strings in **English**: each category's "feedback", every string in "suggestions",
+  and the full "overall_feedback" text.
+- JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly.
+"""
+        overall_fb_rule = """
+Also return "overall_feedback": one string of **3-5 sentences** in **English** that holistically summarizes this
+candidate's resume: main strengths, the biggest gaps or risks, and the top 1-3 priorities before applying.
+Do not repeat the numeric scores verbatim; write for a human reader.
+"""
+
+    rubric = f"""
 You score a resume JSON for the 123Resume builder. Apply this rubric strictly:
+{lang_rules}
 
 OVERALL SCORE BASELINE (critical)
 - Treat **2.5 / 10** as the **baseline** overall_score for a minimal but structurally valid resume (little real content filled in).
@@ -173,14 +223,16 @@ CATEGORIES (exact names and max_score — you MUST output all six):
 6) ATS Optimization — max_score 0.5
 
 Each category needs: "name" (exact string above), "score" (0 to max_score inclusive), "max_score" (exact as listed),
-and short "feedback" (one or two sentences).
+and short "feedback" (one or two sentences in the OUTPUT LANGUAGE).
 
 Also return "overall_score" from 0 to 10 (float, one decimal) using the **2.5 baseline** described above,
-and "suggestions": array of 3-8 concise improvement strings (no duplicates).
+and "suggestions": array of 3-8 concise improvement strings in the OUTPUT LANGUAGE (no duplicates).
+{overall_fb_rule}
 
 Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
 {
   "overall_score": <number>,
+  "overall_feedback": "<string>",
   "categories": [
     {"name":"Content Quality","score":<number>,"max_score":3,"feedback":"..."},
     {"name":"Professional Summary","score":<number>,"max_score":1,"feedback":"..."},
@@ -206,7 +258,10 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
         messages=[
             {
                 "role": "system",
-                "content": "You are an expert resume reviewer. Output only valid JSON as instructed.",
+                "content": (
+                    "You are an expert resume reviewer. Output only valid JSON as instructed. "
+                    "Follow OUTPUT LANGUAGE for every prose field."
+                ),
             },
             {"role": "user", "content": user_msg},
         ],
@@ -231,7 +286,7 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
     overall = _length_penalty(estimated_pages, overall)
     overall = max(OVERALL_SCORE_BASE, min(10.0, round(overall * 10) / 10))
 
-    categories = _normalize_categories(parsed.get("categories"))
+    categories = _normalize_categories(parsed.get("categories"), lang)
     suggestions_raw = parsed.get("suggestions") or []
     if not isinstance(suggestions_raw, list):
         suggestions_raw = []
@@ -241,11 +296,18 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
             suggestions.append(s.strip()[:400])
     suggestions = list(dict.fromkeys(suggestions))[:10]
 
+    overall_feedback_raw = parsed.get("overall_feedback")
+    if isinstance(overall_feedback_raw, str):
+        overall_feedback = overall_feedback_raw.strip()[:2000]
+    else:
+        overall_feedback = ""
+
     result = {
         "overall_score": overall,
         "estimated_pages": round(estimated_pages * 100) / 100,
         "categories": categories,
         "suggestions": suggestions,
+        "overall_feedback": overall_feedback,
     }
     log_deepseek_exchange("resume_score", completion, raw_text, result)
     return result

@@ -922,8 +922,8 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
               </div>
             </div>
 
-            {/* Profile image with subtle border */}
-            {personalInfo.profileImage ? (
+            {/* Profile image with subtle border — only when set */}
+            {personalInfo.profileImage?.trim() ? (
               <div className="flex-shrink-0">
                 <div 
                   className="w-20 h-20 rounded-xl overflow-hidden shadow-lg border-[3px]" 
@@ -944,17 +944,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                   />
                 </div>
               </div>
-            ) : (
-              <div 
-                className="flex-shrink-0 w-20 h-20 rounded-xl shadow-lg border-[3px] flex items-center justify-center photo-placeholder" 
-                style={{ 
-                  borderColor: accentColor,
-                  backgroundColor: `${accentColor}10`
-                }}
-              >
-                <span style={{ fontSize: sizes.xs, color: accentColor, opacity: 0.6 }}>Photo</span>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 

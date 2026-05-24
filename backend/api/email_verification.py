@@ -1,6 +1,7 @@
 """
 Email verification utilities
 """
+import os
 import secrets
 import hashlib
 import uuid
@@ -363,9 +364,97 @@ def send_feedback_email(support_email, reply_to_email, subject, plain_message):
     )
 
 
-def _send_with_mailgun(subject, plain_message, html_message, to_email, reply_to=None):
+def send_ai_features_announcement_email(to_email: str, username: str = "") -> bool:
+    """
+    Product announcement: new AI resume score + assistant (Mailgun).
+
+    Set BROADCAST_FROM_EMAIL in the environment to a full From header, e.g.
+    "123Resume <contact@123resume.de>". That address must be authorized in Mailgun.
+    If unset, defaults to 123Resume <contact@123resume.de>.
+    """
+    greet = (username or "").strip() or "there"
+    subject = "New on 123Resume: AI feedback for your CV"
+
+    plain_message = f"""Hi {greet},
+
+We've added new AI-powered features to 123Resume to help you improve your CV faster:
+
+• AI resume score — Get a structured score and practical feedback on your content, experience, skills, and ATS-related aspects.
+• AI resume assistant — Ask for help with wording, bullet points, summaries, and how you present your experience.
+
+These tools are there to support your writing; you stay in control of what goes on your CV.
+
+What you need to do
+Nothing is required. Log in, open your CV in the builder, and use the new options where you see them. If something does not load, try again in a moment or refresh the page.
+
+Thank you for using 123Resume.
+
+Best regards,
+The 123Resume team
+
+---
+123Resume — https://123resume.de
+"""
+
+    html_message = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; margin: 0; padding: 0;">
+  <table role="presentation" style="width:100%;border-collapse:collapse;background:#f4f4f4;">
+    <tr><td style="padding:20px 0;">
+      <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.08);">
+        <tr><td style="padding:32px 40px 24px;background:#667eea;border-radius:8px 8px 0 0;">
+          <h1 style="margin:0;font-size:22px;color:#fff;font-weight:600;">New AI features on 123Resume</h1>
+        </td></tr>
+        <tr><td style="padding:28px 40px;">
+          <p style="margin:0 0 16px;font-size:16px;">Hi {greet},</p>
+          <p style="margin:0 0 16px;font-size:16px;">We've added new <strong>AI-powered features</strong> to 123Resume to help you improve your CV faster:</p>
+          <ul style="margin:0 0 16px;padding-left:20px;font-size:15px;">
+            <li style="margin-bottom:10px;"><strong>AI resume score</strong> — Structured score and practical feedback on your content, experience, skills, and ATS-related aspects.</li>
+            <li style="margin-bottom:10px;"><strong>AI resume assistant</strong> — Help with wording, bullet points, summaries, and how you present your experience.</li>
+          </ul>
+          <p style="margin:0 0 20px;font-size:15px;">These tools support your writing; <strong>you stay in control</strong> of what goes on your CV.</p>
+          <h2 style="font-size:16px;margin:24px 0 8px;">What you need to do</h2>
+          <p style="margin:0;font-size:15px;">Nothing is required. Log in, open your CV in the builder, and use the new options where you see them. If something does not load, try again in a moment or refresh the page.</p>
+          <p style="margin:24px 0 0;font-size:15px;">Thank you for using 123Resume.</p>
+          <p style="margin:16px 0 0;font-size:15px;">Best regards,<br>The 123Resume team</p>
+        </td></tr>
+        <tr><td style="padding:16px 40px;background:#f8f9fa;border-top:1px solid #e9ecef;border-radius:0 0 8px 8px;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#888;"><a href="https://123resume.de" style="color:#667eea;">123resume.de</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip()
+    if not from_formatted:
+        from_formatted = "123Resume <contact@123resume.de>"
+
+    return _send_with_mailgun(
+        subject=subject,
+        plain_message=plain_message,
+        html_message=html_message,
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+    )
+
+
+def _send_with_mailgun(
+    subject,
+    plain_message,
+    html_message,
+    to_email,
+    reply_to=None,
+    from_formatted=None,
+):
     """
     Internal helper to send email via Mailgun HTTP API using configuration from settings.
+
+    from_formatted: optional full RFC5322 From, e.g. "123Resume <contact@123resume.de>".
+        If omitted, uses noreply@<MAILGUN_DOMAIN> (must be authorized in Mailgun).
     """
     api_key = getattr(settings, "MAILGUN_API_KEY", "")
     domain = getattr(settings, "MAILGUN_DOMAIN", "")
@@ -377,9 +466,10 @@ def _send_with_mailgun(subject, plain_message, html_message, to_email, reply_to=
 
     url = f"{base_url}/v3/{domain}/messages"
 
-    # From must be on the Mailgun sending domain (e.g. mg.123resume.de) to avoid 403.
-    from_address = f"noreply@{domain}"
-    from_formatted = f"123Resume <{from_address}>"
+    # From must be authorized in Mailgun for the sending domain.
+    if not from_formatted:
+        from_address = f"noreply@{domain}"
+        from_formatted = f"123Resume <{from_address}>"
 
     data = {
         "from": from_formatted,

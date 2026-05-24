@@ -816,8 +816,8 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
               </div>
             </div>
 
-            {/* Compact profile image */}
-            {personalInfo.profileImage ? (
+            {/* Compact profile image — only when set */}
+            {personalInfo.profileImage?.trim() ? (
               <div className="flex-shrink-0">
                 <div className="w-20 h-20 rounded-md border-2 overflow-hidden" style={{ borderColor: linkColor }}>
                   <img
@@ -830,14 +830,7 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
                   />
                 </div>
               </div>
-            ) : (
-              <div 
-                className="flex-shrink-0 w-20 h-20 rounded-md border-2 bg-muted flex items-center justify-center photo-placeholder" 
-                style={{ borderColor: linkColor }}
-              >
-                <span className="text-xs text-muted-foreground">Photo</span>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 

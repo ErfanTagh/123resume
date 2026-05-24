@@ -413,8 +413,8 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
       <div className="resume-page-container bg-background text-foreground p-8 max-w-3xl mx-auto font-classic" style={{ fontFamily: `"${fontFamily}", serif` }}>
         {/* Header - centered and traditional */}
         <div className="text-center mb-6 pb-4 border-b-2 border-foreground">
-          {/* Profile image */}
-          {personalInfo.profileImage ? (
+          {/* Profile image — only when user uploaded one (no placeholder on later steps) */}
+          {personalInfo.profileImage?.trim() ? (
             <div className="flex justify-center mb-4">
               <div className="w-28 h-28 rounded-full border-2 border-foreground overflow-hidden flex-shrink-0">
                 <img
@@ -428,13 +428,7 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
                 />
               </div>
             </div>
-          ) : (
-            <div className="flex justify-center mb-4">
-              <div className="w-28 h-28 rounded-full border-2 border-foreground bg-muted flex items-center justify-center flex-shrink-0 photo-placeholder">
-                <span className="text-xs text-muted-foreground">Photo</span>
-              </div>
-            </div>
-          )}
+          ) : null}
 
           <h1 className="font-bold mb-1 uppercase tracking-wide" style={{ fontSize: sizes.name, fontWeight: titleBold ? '700' : '400', color: linkColor, letterSpacing: '0.02em' }}>
             {personalInfo.firstName} {personalInfo.lastName}

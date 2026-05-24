@@ -608,8 +608,8 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
               )}
             </div>
 
-            {/* Profile photo */}
-            {personalInfo.profileImage ? (
+            {/* Profile photo — only when set */}
+            {personalInfo.profileImage?.trim() ? (
               <div style={{
                 flexShrink: 0,
                 width: '88px',
@@ -625,19 +625,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                   decoding="async"
                 />
               </div>
-            ) : (
-              <div className="photo-placeholder" style={{
-                flexShrink: 0,
-                width: '88px',
-                height: '88px',
-                border: `1.5px dashed ${sectionHeadingColor}50`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: '9px', color: `${sectionHeadingColor}60`, letterSpacing: '0.1em' }}>PHOTO</span>
-              </div>
-            )}
+            ) : null}
           </div>
 
           {/* Contact row — two balanced groups separated by a faint rule */}

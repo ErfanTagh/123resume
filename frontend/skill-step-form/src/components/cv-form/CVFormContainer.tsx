@@ -269,11 +269,20 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     // Show hints for personalInfo only when on step 0
     const showPersonalInfoHints = currentStep === 0;
+    // Sample profile photo in preview only on a brand-new flow: step 0 and user has not
+    // advanced to later steps yet (avoids showing the stock photo after navigating back).
+    const showSampleProfilePhotoHint =
+      showPersonalInfoHints &&
+      highestStepVisited === 0 &&
+      !(formData.personalInfo?.profileImage?.trim());
+
     const mergedPersonalInfo = {
       firstName: useHintIfEmpty(formData.personalInfo?.firstName || "", hintData.personalInfo.firstName, showPersonalInfoHints),
       lastName: useHintIfEmpty(formData.personalInfo?.lastName || "", hintData.personalInfo.lastName, showPersonalInfoHints),
       professionalTitle: useHintIfEmpty(formData.personalInfo?.professionalTitle || "", hintData.personalInfo.professionalTitle || "", showPersonalInfoHints),
-      profileImage: showPersonalInfoHints ? (formData.personalInfo?.profileImage || "/resume-sample-3-optimized.jpg") : (formData.personalInfo?.profileImage || ""),
+      profileImage: showSampleProfilePhotoHint
+        ? (formData.personalInfo?.profileImage || "/resume-sample-3-optimized.jpg")
+        : (formData.personalInfo?.profileImage || ""),
       email: useHintIfEmpty(formData.personalInfo?.email || "", hintData.personalInfo.email, showPersonalInfoHints),
       phone: useHintIfEmpty(formData.personalInfo?.phone || "", hintData.personalInfo.phone || "", showPersonalInfoHints),
       location: useHintIfEmpty(formData.personalInfo?.location || "", hintData.personalInfo.location || "", showPersonalInfoHints),
@@ -415,7 +424,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     const requestId = ++scoreRequestIdRef.current;
     logResumeScore("fetch:loading-true", { requestId });
     void getResumeScoreWithOptionalAI(form.getValues(), true, {
-      fallbackToLocal: false,
+      // When the server has no API key (503) or DeepSeek errors (502), still show the local heuristic
+      // so logged-in users see a score instead of a blank card + error toast.
+      fallbackToLocal: true,
       outputLanguage: language,
     })
       .then((score) => {
@@ -654,6 +665,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       };
       form.reset(normalizedProfile);
       setCurrentStep(0);
+      setHighestStepVisited(0);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
       setNavResumeScore(undefined);

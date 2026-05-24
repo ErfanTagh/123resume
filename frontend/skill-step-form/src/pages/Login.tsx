@@ -207,11 +207,13 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Username or email</Label>
               <Input
                 id="username"
+                name="username"
                 type="text"
-                placeholder="Enter your username"
+                autoComplete="username"
+                placeholder="Your username or account email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required

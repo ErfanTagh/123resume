@@ -559,9 +559,9 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
 
-            {/* Profile image */}
-            <div style={{ flexShrink: 0 }}>
-              {personalInfo.profileImage ? (
+            {/* Profile image — only when set */}
+            {personalInfo.profileImage?.trim() ? (
+              <div style={{ flexShrink: 0 }}>
                 <div style={{
                   width: '90px',
                   height: '90px',
@@ -578,24 +578,8 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                     decoding="async"
                   />
                 </div>
-              ) : (
-                <div
-                  className="photo-placeholder"
-                  style={{
-                    width: '90px',
-                    height: '90px',
-                    borderRadius: '4px',
-                    border: `1.5px dashed ${sectionHeadingColor}40`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: `${sectionHeadingColor}06`,
-                  }}
-                >
-                  <span style={{ fontSize: '10px', color: `${sectionHeadingColor}70` }}>Photo</span>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : null}
 
             {/* Name + title */}
             <div style={{ flex: 1, minWidth: 0 }}>

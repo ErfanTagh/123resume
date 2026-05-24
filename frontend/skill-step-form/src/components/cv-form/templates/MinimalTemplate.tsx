@@ -703,8 +703,8 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
               )}
             </div>
 
-            {/* Profile image with subtle border */}
-            {personalInfo.profileImage ? (
+            {/* Profile image with subtle border — only when set */}
+            {personalInfo.profileImage?.trim() ? (
               <div className="flex-shrink-0">
                 <div
                   className="w-24 h-24 md:w-28 md:h-28 rounded overflow-hidden border-2"
@@ -728,19 +728,7 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
                   />
                 </div>
               </div>
-            ) : (
-              <div 
-                className="flex-shrink-0 w-24 h-24 md:w-28 md:h-28 rounded flex items-center justify-center photo-placeholder" 
-                style={{ 
-                  border: '2px dashed',
-                  borderColor: headingColor,
-                  opacity: 0.15,
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <span className="text-xs" style={{ color: textColor, opacity: 0.4 }}>Photo</span>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 

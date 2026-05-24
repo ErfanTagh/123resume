@@ -200,10 +200,10 @@ def register(request):
 def login(request):
     """
     Login user
-    
+
     Expected payload:
     {
-        "username": "string",
+        "username": "string",  # actual username OR account email (case-insensitive for email)
         "password": "string"
     }
     """
@@ -218,20 +218,28 @@ def login(request):
         print(f"Data: {request.data}", file=sys.stderr)
         print("=" * 50, file=sys.stderr)
         
-        username = request.data.get('username')
+        identifier = (request.data.get('username') or '').strip()
         password = request.data.get('password')
         
-        if not username or not password:
+        if not identifier or not password:
             return Response(
-                {'error': 'Username and password are required'},
+                {'error': 'Username or email and password are required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if user exists
+        user_obj = None
         try:
-            user_obj = User.objects.get(username=username)
-            
-            # Check if email is verified
+            user_obj = User.objects.get(username=identifier)
+        except User.DoesNotExist:
+            try:
+                user_obj = User.objects.get(email__iexact=identifier)
+            except User.MultipleObjectsReturned:
+                user_obj = User.objects.filter(email__iexact=identifier).first()
+            except User.DoesNotExist:
+                pass
+        
+        # Check if user exists and email is verified (inactive = unverified in this app)
+        if user_obj is not None:
             if not user_obj.is_active:
                 try:
                     verification = EmailVerification.objects.get(user=user_obj)
@@ -242,10 +250,9 @@ def login(request):
                         }, status=status.HTTP_403_FORBIDDEN)
                 except EmailVerification.DoesNotExist:
                     pass
-        except User.DoesNotExist:
-            pass
         
-        user = authenticate(username=username, password=password)
+        auth_username = user_obj.username if user_obj is not None else identifier
+        user = authenticate(username=auth_username, password=password)
         
         if user is not None:
             refresh = RefreshToken.for_user(user)
@@ -625,11 +632,27 @@ def reset_password(request):
         
         # Send confirmation email
         send_password_changed_email(user.email, user.username)
-        
-        return Response({
-            'message': 'Password has been reset successfully! You can now log in with your new password.',
-            'success': True
-        })
+
+        # Log the user in immediately (same payload shape as login) so the app can redirect to /resumes
+        # instead of forcing another password entry.
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "message": "Password has been reset successfully.",
+                "success": True,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+            }
+        )
         
     except PasswordReset.DoesNotExist:
         return Response({

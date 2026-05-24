@@ -6,10 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setAuthState } = useAuth();
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
@@ -83,10 +86,79 @@ export default function ResetPassword() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        if (data.user && data.tokens) {
+          setAuthState({ user: data.user, tokens: data.tokens });
+
+          // Match AuthContext.login: save guest draft resume in the background when present.
+          const pendingResume = localStorage.getItem('pendingResume');
+          if (pendingResume) {
+            void (async () => {
+              try {
+                const resumeData = JSON.parse(pendingResume);
+                const { resumeAPI } = await import('@/lib/api');
+                await resumeAPI.create(resumeData);
+                localStorage.removeItem('pendingResume');
+                window.dispatchEvent(new CustomEvent('resumeSaved'));
+              } catch {
+                /* keep pendingResume for retry */
+              }
+            })();
+          }
+
+          const redirect = searchParams.get('redirect');
+          const saveResume = searchParams.get('saveResume');
+          const pendingResumeId = localStorage.getItem('pendingResumeId');
+
+          const goAfterLogin = async () => {
+            if (redirect) {
+              navigate(redirect);
+              if (pendingResumeId) localStorage.removeItem('pendingResumeId');
+              return;
+            }
+            if (pendingResumeId) {
+              localStorage.removeItem('pendingResumeId');
+              navigate('/resumes');
+              return;
+            }
+            if (saveResume === 'true') {
+              const pendingResume = localStorage.getItem('pendingResume');
+              if (pendingResume) {
+                try {
+                  const resumeData = JSON.parse(pendingResume);
+                  const { resumeAPI } = await import('@/lib/api');
+                  await resumeAPI.create(resumeData);
+                  localStorage.removeItem('pendingResume');
+                  toast({
+                    title: 'Resume Saved!',
+                    description: 'Your resume has been created successfully.',
+                  });
+                  navigate('/resumes');
+                } catch (err: unknown) {
+                  toast({
+                    title: 'Error Saving Resume',
+                    description:
+                      err instanceof Error
+                        ? err.message
+                        : 'Failed to save your resume. You can create it again from the dashboard.',
+                    variant: 'destructive',
+                  });
+                  navigate('/resumes');
+                }
+              } else {
+                navigate('/resumes');
+              }
+              return;
+            }
+            navigate('/resumes');
+          };
+
+          await goAfterLogin();
+        } else {
+          setSuccess(true);
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        }
       } else {
         if (data.expired) {
           setError('This reset link has expired. Please request a new one.');
@@ -121,7 +193,7 @@ export default function ResetPassword() {
             <Alert className="mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               <AlertDescription className="text-green-700 dark:text-green-300">
-                You can now log in with your new password. Redirecting to login page...
+                You can now log in with your new password. Redirecting to login…
               </AlertDescription>
             </Alert>
 

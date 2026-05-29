@@ -1,17 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { resumeAPI, Resume, ResumeData } from '@/lib/api';
-import {
-  mergePublicProfileSections,
-  PUBLIC_PROFILE_SECTION_KEYS,
-  type PublicProfileSectionKey,
-} from '@/lib/publicProfileSections';
-import {
-  HOSTED_PROFILE_THEME_COLORS,
-  mergePublicProfileTheme,
-  PUBLIC_PROFILE_THEME_IDS,
-  type PublicProfileThemeId,
-} from '@/lib/publicProfileTheme';
+import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
+import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
+import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,9 +24,6 @@ import {
   Check,
   MoreVertical,
   Copy,
-  Globe,
-  ExternalLink,
-  Link2,
 } from 'lucide-react';
 import { downloadResumePDF } from '@/lib/resumePdfUtils';
 import {
@@ -63,8 +53,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 // Helper function to generate default resume name
 const generateDefaultResumeName = (resume: Resume): string => {
@@ -85,8 +73,17 @@ const generateDefaultResumeName = (resume: Resume): string => {
   return parts.length > 0 ? parts.join('-') : 'Untitled Resume';
 };
 
+const RESUMES_TABS = ['resumes', 'job-matching', 'portfolio'] as const;
+type ResumesTab = (typeof RESUMES_TABS)[number];
+
 export default function Resumes() {
   const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: ResumesTab = RESUMES_TABS.includes(tabParam as ResumesTab)
+    ? (tabParam as ResumesTab)
+    : 'resumes';
+
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -94,7 +91,6 @@ export default function Resumes() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingResumeId, setEditingResumeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
-  const [publicProfileLoadingId, setPublicProfileLoadingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -296,146 +292,6 @@ export default function Resumes() {
     setEditingName('');
   };
 
-  // Handle duplicate resume
-  const publicProfileUrl = (id: string) => `${window.location.origin}/p/${id}`;
-
-  const handlePublicProfileToggle = async (resume: Resume, enabled: boolean) => {
-    setPublicProfileLoadingId(resume.id);
-    try {
-      const merged = mergePublicProfileSections(resume.publicProfileSections);
-      const result = await resumeAPI.setPublicProfile(
-        resume.id,
-        enabled,
-        enabled ? merged : undefined,
-        enabled ? mergePublicProfileTheme(resume.publicProfileTheme) : undefined,
-      );
-      setResumes((prev) =>
-        prev.map((r) =>
-          r.id === resume.id
-            ? {
-                ...r,
-                publicProfileEnabled: result.publicProfileEnabled,
-                publicProfileSections: mergePublicProfileSections(result.publicProfileSections),
-                publicProfileTheme: mergePublicProfileTheme(result.publicProfileTheme),
-              }
-            : r,
-        ),
-      );
-      toast({
-        title: enabled
-          ? t('pages.resumes.publicProfile.toastOn') || 'Public profile enabled'
-          : t('pages.resumes.publicProfile.toastOff') || 'Public profile disabled',
-        description: enabled
-          ? t('pages.resumes.publicProfile.toastOnDesc') || 'Share your link from this page anytime.'
-          : t('pages.resumes.publicProfile.toastOffDesc') || 'Your profile URL no longer works for others.',
-      });
-    } catch (err: unknown) {
-      toast({
-        title: t('pages.resumes.toast.error.title') || 'Error',
-        description:
-          err instanceof Error
-            ? err.message
-            : t('pages.resumes.publicProfile.toggleFailed') || 'Could not update public profile',
-        variant: 'destructive',
-      });
-    } finally {
-      setPublicProfileLoadingId(null);
-    }
-  };
-
-  const handlePublicProfileSectionChange = async (
-    resume: Resume,
-    key: PublicProfileSectionKey,
-    on: boolean,
-  ) => {
-    if (!resume.publicProfileEnabled) return;
-    const next = { ...mergePublicProfileSections(resume.publicProfileSections), [key]: on };
-    setPublicProfileLoadingId(resume.id);
-    try {
-      const result = await resumeAPI.setPublicProfile(
-        resume.id,
-        true,
-        next,
-        mergePublicProfileTheme(resume.publicProfileTheme),
-      );
-      setResumes((prev) =>
-        prev.map((r) =>
-          r.id === resume.id
-            ? {
-                ...r,
-                publicProfileSections: mergePublicProfileSections(result.publicProfileSections),
-                publicProfileTheme: mergePublicProfileTheme(result.publicProfileTheme),
-              }
-            : r,
-        ),
-      );
-    } catch (err: unknown) {
-      toast({
-        title: t('pages.resumes.toast.error.title') || 'Error',
-        description:
-          err instanceof Error
-            ? err.message
-            : t('pages.resumes.publicProfile.toggleFailed') || 'Could not update public profile',
-        variant: 'destructive',
-      });
-    } finally {
-      setPublicProfileLoadingId(null);
-    }
-  };
-
-  const handlePublicProfileThemeChange = async (resume: Resume, nextTheme: PublicProfileThemeId) => {
-    if (!resume.publicProfileEnabled) return;
-    if (mergePublicProfileTheme(resume.publicProfileTheme) === nextTheme) return;
-    setPublicProfileLoadingId(resume.id);
-    try {
-      const result = await resumeAPI.setPublicProfile(
-        resume.id,
-        true,
-        mergePublicProfileSections(resume.publicProfileSections),
-        nextTheme,
-      );
-      setResumes((prev) =>
-        prev.map((r) =>
-          r.id === resume.id
-            ? {
-                ...r,
-                publicProfileSections: mergePublicProfileSections(result.publicProfileSections),
-                publicProfileTheme: mergePublicProfileTheme(result.publicProfileTheme),
-              }
-            : r,
-        ),
-      );
-    } catch (err: unknown) {
-      toast({
-        title: t('pages.resumes.toast.error.title') || 'Error',
-        description:
-          err instanceof Error
-            ? err.message
-            : t('pages.resumes.publicProfile.toggleFailed') || 'Could not update public profile',
-        variant: 'destructive',
-      });
-    } finally {
-      setPublicProfileLoadingId(null);
-    }
-  };
-
-  const copyPublicProfileLink = async (id: string) => {
-    const url = publicProfileUrl(id);
-    try {
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: t('pages.resumes.publicProfile.linkCopied') || 'Link copied',
-        description: url,
-      });
-    } catch {
-      toast({
-        title: t('pages.resumes.toast.error.title') || 'Error',
-        description: t('pages.resumes.publicProfile.copyFailed') || 'Could not copy to clipboard',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleDuplicate = async (resume: Resume) => {
     try {
       // Get the full resume data
@@ -501,6 +357,32 @@ export default function Resumes() {
           </Alert>
         )}
 
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setSearchParams({ tab: v })}
+          className="space-y-6"
+        >
+          <ResumesTabBar
+            tabs={[
+              {
+                id: 'resumes',
+                label: t('pages.resumes.tabs.resumes') || 'My Resumes',
+              },
+              {
+                id: 'job-matching',
+                label: t('pages.resumes.tabs.jobMatching') || 'AI Job Matching',
+              },
+              {
+                id: 'portfolio',
+                label: t('pages.resumes.tabs.portfolio') || 'Portfolio Website',
+              },
+            ]}
+          />
+
+          <TabsContent
+            value="resumes"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -558,16 +440,6 @@ export default function Resumes() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDuplicate(resume);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <Copy className="mr-2 h-4 w-4" />
-                        <span>{t('pages.resumes.duplicate') || 'Duplicate'}</span>
-                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
@@ -678,159 +550,54 @@ export default function Resumes() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-border/80 bg-muted/30 p-3 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Globe className="h-4 w-4 text-primary shrink-0" aria-hidden />
-                          <Label
-                            htmlFor={`public-profile-${resume.id}`}
-                            className="text-sm font-medium cursor-pointer leading-tight"
-                          >
-                            {t('pages.resumes.publicProfile.label') || 'Public profile page'}
-                          </Label>
-                        </div>
-                        <Switch
-                          id={`public-profile-${resume.id}`}
-                          checked={!!resume.publicProfileEnabled}
-                          disabled={publicProfileLoadingId === resume.id}
-                          onCheckedChange={(checked) => handlePublicProfileToggle(resume, checked)}
-                          aria-label={t('pages.resumes.publicProfile.label') || 'Public profile page'}
-                        />
+                    <div className="mt-auto space-y-3 border-t border-border/60 pt-3">
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          size="sm"
+                          onClick={() => navigate(`/create?edit=${resume.id}`)}
+                          title={t('pages.resumes.actions.edit') || 'Edit resume'}
+                        >
+                          <Edit className="h-3 w-3 mr-1 sm:mr-1.5" />
+                          <span className="text-xs sm:text-sm">{t('pages.resumes.actions.edit') || 'Edit'}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          size="sm"
+                          onClick={() => handleDownloadPDF(resume)}
+                          title={t('pages.resumes.actions.downloadPDF') || 'Download PDF'}
+                        >
+                          <Download className="h-3 w-3 mr-1 sm:mr-1.5" />
+                          <span className="text-xs sm:text-sm">{t('pages.resumes.actions.pdf') || 'PDF'}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          size="sm"
+                          onClick={() => navigate(`/resume/${resume.id}`)}
+                        >
+                          <Eye className="h-3 w-3 mr-1 sm:mr-1.5" />
+                          <span className="text-xs sm:text-sm">{t('pages.resumes.actions.view') || 'View'}</span>
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-snug">
-                        {t('pages.resumes.publicProfile.hint') ||
-                          'Anyone with the link can view a portfolio-style page. You control this here—not on save.'}
-                      </p>
-                      {resume.publicProfileEnabled && (
-                        <div className="space-y-2 pt-2 border-t border-border/60">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            {t('pages.resumes.publicProfile.sectionsTitle') || 'Show on public page'}
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2">
-                            {PUBLIC_PROFILE_SECTION_KEYS.map((sectionKey) => {
-                              const sections = mergePublicProfileSections(resume.publicProfileSections);
-                              const sectionLabel =
-                                t(`pages.resumes.publicProfile.sections.${sectionKey}`) || sectionKey;
-                              return (
-                                <div
-                                  key={sectionKey}
-                                  className="flex items-center justify-between gap-2 min-w-0"
-                                >
-                                  <Label
-                                    htmlFor={`public-profile-${resume.id}-${sectionKey}`}
-                                    className="text-xs font-normal cursor-pointer leading-tight truncate"
-                                  >
-                                    {sectionLabel}
-                                  </Label>
-                                  <Switch
-                                    id={`public-profile-${resume.id}-${sectionKey}`}
-                                    checked={sections[sectionKey]}
-                                    disabled={publicProfileLoadingId === resume.id}
-                                    onCheckedChange={(checked) =>
-                                      handlePublicProfileSectionChange(resume, sectionKey, checked)
-                                    }
-                                    aria-label={sectionLabel}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      {resume.publicProfileEnabled && (
-                        <div className="space-y-2 pt-2 border-t border-border/60">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            {t('pages.resumes.publicProfile.themeTitle') || 'Color scheme'}
-                          </p>
-                          <div
-                            className="flex flex-wrap gap-2"
-                            role="radiogroup"
-                            aria-label={t('pages.resumes.publicProfile.themeTitle') || 'Color scheme'}
-                          >
-                            {PUBLIC_PROFILE_THEME_IDS.map((tid) => {
-                              const active = mergePublicProfileTheme(resume.publicProfileTheme) === tid;
-                              const c = HOSTED_PROFILE_THEME_COLORS[tid];
-                              return (
-                                <button
-                                  key={tid}
-                                  type="button"
-                                  role="radio"
-                                  aria-checked={active}
-                                  disabled={publicProfileLoadingId === resume.id}
-                                  onClick={() => handlePublicProfileThemeChange(resume, tid)}
-                                  className={`h-9 w-9 rounded-full shrink-0 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                                    active
-                                      ? 'ring-2 ring-offset-2 ring-offset-background ring-primary'
-                                      : 'ring-1 ring-border'
-                                  }`}
-                                  style={{
-                                    background: `linear-gradient(135deg, ${c.accent} 50%, ${c.secondary} 50%)`,
-                                  }}
-                                  title={t(`pages.resumes.publicProfile.themes.${tid}`) || tid}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      {resume.publicProfileEnabled && (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => copyPublicProfileLink(resume.id)}
-                          >
-                            <Link2 className="h-3.5 w-3.5 mr-1.5" />
-                            {t('pages.resumes.publicProfile.copyLink') || 'Copy link'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1"
-                            asChild
-                          >
-                            <a href={publicProfileUrl(resume.id)} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                              {t('pages.resumes.publicProfile.open') || 'Open'}
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2 pt-2 mt-auto">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        size="sm"
-                        onClick={() => navigate(`/create?edit=${resume.id}`)}
-                        title={t('pages.resumes.actions.edit') || 'Edit resume'}
-                      >
-                        <Edit className="h-3 w-3 mr-1 sm:mr-1.5" />
-                        <span className="text-xs sm:text-sm">{t('pages.resumes.actions.edit') || 'Edit'}</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        size="sm"
-                        onClick={() => handleDownloadPDF(resume)}
-                        title={t('pages.resumes.actions.downloadPDF') || 'Download PDF'}
-                      >
-                        <Download className="h-3 w-3 mr-1 sm:mr-1.5" />
-                        <span className="text-xs sm:text-sm">{t('pages.resumes.actions.pdf') || 'PDF'}</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        size="sm"
-                        onClick={() => navigate(`/resume/${resume.id}`)}
-                      >
-                        <Eye className="h-3 w-3 mr-1 sm:mr-1.5" />
-                        <span className="text-xs sm:text-sm">{t('pages.resumes.actions.view') || 'View'}</span>
-                      </Button>
+                      <div className="flex w-full justify-center">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-9 rounded-full border-0 bg-blue-600 px-8 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicate(resume);
+                          }}
+                          title={t('pages.resumes.duplicate') || 'Duplicate'}
+                        >
+                          <Copy className="mr-2 h-4 w-4 shrink-0 opacity-95" />
+                          {t('pages.resumes.duplicate') || 'Duplicate'}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -838,6 +605,26 @@ export default function Resumes() {
             })}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent
+            value="job-matching"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <JobMatchingPanel resumes={resumes} isLoadingResumes={isLoading} />
+          </TabsContent>
+
+          <TabsContent
+            value="portfolio"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <PortfolioWebsiteTab
+              resumes={resumes}
+              isLoading={isLoading}
+              onResumesChange={setResumes}
+            />
+          </TabsContent>
+        </Tabs>
 
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>

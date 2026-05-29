@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FileText, User, LogOut, Settings, Sparkles } from 'lucide-react';
+import { FileText, User, LogOut, Settings, Sparkles, Globe } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Header = () => {
@@ -61,9 +61,13 @@ export const Header = () => {
                       <FileText className="mr-2 h-4 w-4" />
                       <span>{t('navigation.myResumes')}</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/job-matching')}>
+                    <DropdownMenuItem onClick={() => navigate('/resumes?tab=job-matching')}>
                       <Sparkles className="mr-2 h-4 w-4" />
                       <span>AI Job Matching</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/resumes?tab=portfolio')}>
+                      <Globe className="mr-2 h-4 w-4" />
+                      <span>{t('pages.resumes.tabs.portfolio') || 'Portfolio Website'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                       <FileText className="mr-2 h-4 w-4" />

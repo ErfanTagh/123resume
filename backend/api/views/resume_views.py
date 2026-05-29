@@ -689,6 +689,13 @@ def resume_public_profile_toggle(request, pk):
     if not isinstance(enabled, bool):
         enabled = str(enabled).lower() in ('1', 'true', 'yes')
 
+    # One portfolio site per user: enabling a resume turns off all others.
+    if enabled:
+        db.resumes.update_many(
+            {'user_id': request.user.id, '_id': {'$ne': resume_id}},
+            {'$set': {'public_profile_enabled': False, 'updated_at': datetime.utcnow()}},
+        )
+
     set_fields = {
         'public_profile_enabled': bool(enabled),
         'updated_at': datetime.utcnow(),

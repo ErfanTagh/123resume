@@ -6,16 +6,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Languages } from "lucide-react";
 
 export const LanguageSwitcher = () => {
   const { language, setLanguage } = useLanguage();
+  const label = language === "de" ? "DE" : "EN";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex-shrink-0">
-          <Languages className="h-4 w-4 sm:h-5 sm:w-5" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 min-w-[2.5rem] px-2 sm:h-9 sm:min-w-[2.75rem] md:h-10 flex-shrink-0 font-semibold tracking-wide text-xs sm:text-sm"
+          aria-label={language === "de" ? "Sprache: Deutsch" : "Language: English"}
+        >
+          {label}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

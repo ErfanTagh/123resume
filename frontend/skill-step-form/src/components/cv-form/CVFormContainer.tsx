@@ -24,6 +24,7 @@ import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
 import { stableSerializeCvPayload } from "@/lib/stableSerializeCvPayload";
 import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
 import { logResumeScore } from "@/lib/resumeScoreDebug";
+import { summarizeResumePayloadForScore } from "@/lib/resumeScorePayloadSummary";
 import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -311,11 +312,13 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       });
     }
 
+    const payloadSummary = summarizeResumePayloadForScore(form.getValues());
     logResumeScore("fetch:start-request", {
       snapshotLen: snapshot.length,
       lastSuccessLen: lastSuccessfulScorePayloadRef.current?.length ?? 0,
       hadNavScore: navResumeScoreRef.current !== undefined,
       scoreRequestIdBefore: scoreRequestIdRef.current,
+      payloadSummary,
     });
 
     setNavResumeScoreLoading(true);
@@ -348,10 +351,20 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         if (nowSnap !== snapshot) {
           // CV changed while the request was in flight — do not apply stale AI output.
           lastSuccessfulScorePayloadRef.current = null;
+          let snapshotSummary: Record<string, unknown> | undefined;
+          try {
+            snapshotSummary = summarizeResumePayloadForScore(
+              JSON.parse(snapshot) as CVFormData,
+            );
+          } catch {
+            snapshotSummary = { parseError: true };
+          }
           logResumeScore("fetch:then-stale-discard", {
             requestId,
             snapshotLen: snapshot.length,
             nowSnapLen: nowSnap.length,
+            snapshotSummary,
+            nowSummary: summarizeResumePayloadForScore(form.getValues()),
           });
           return;
         }
@@ -419,14 +432,18 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   useEffect(() => {
     if (initialData?.template) {
       setTemplateSelected(true);
-      // Reset form with initialData to ensure template is set in the form
-      const defaultValues = getDefaultValues();
-      // Only reset if the template doesn't match to avoid unnecessary resets
-      if (form.getValues("template") !== initialData.template) {
-        form.reset(defaultValues);
-      }
     }
-  }, [initialData, form]);
+  }, [initialData?.template]);
+
+  // When opening an existing resume, sync API data into the form once it is loaded.
+  useEffect(() => {
+    if (!editId || !initialData) return;
+    form.reset(getDefaultValues());
+    logResumeScore("form:reset-from-initialData", {
+      editId,
+      payloadSummary: summarizeResumePayloadForScore(getDefaultValues()),
+    });
+  }, [editId, initialData, form]);
 
   // Reset styling to defaults when template changes
   // Use useLayoutEffect to ensure styling is set before browser paints
@@ -511,8 +528,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   // DeepSeek score only on the Review step (not on every navigation or preview tab).
   useEffect(() => {
     if (!user || currentStep !== reviewStepIndex) return;
+    // When editing, wait until resume is loaded into the form before scoring.
+    if (editId && !initialData) return;
     fetchAiResumeScoreIfDirty({ force: true });
-  }, [user, currentStep, language, reviewStepIndex, fetchAiResumeScoreIfDirty]);
+  }, [user, currentStep, language, reviewStepIndex, fetchAiResumeScoreIfDirty, editId, initialData]);
 
   const handleEditStep = (step: number) => {
     setCurrentStep(step);

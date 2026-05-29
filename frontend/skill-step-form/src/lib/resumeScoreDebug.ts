@@ -8,8 +8,18 @@ export function logResumeScore(event: string, data?: Record<string, unknown>): v
     import.meta.env.DEV ||
     import.meta.env.VITE_DEBUG_RESUME_SCORE === "true";
   if (!enabled) return;
-  console.info("[resume-score]", event, {
+  const line = {
     t: new Date().toISOString(),
     ...data,
-  });
+  };
+  console.info("[resume-score]", event, line);
+  // Also expose last event for support debugging in DevTools: window.__resumeScoreDebug
+  try {
+    const w = window as Window & {
+      __resumeScoreDebug?: { lastEvent: string; last: Record<string, unknown> };
+    };
+    w.__resumeScoreDebug = { lastEvent: event, last: line };
+  } catch {
+    /* non-browser */
+  }
 }

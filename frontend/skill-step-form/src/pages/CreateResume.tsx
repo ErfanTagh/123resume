@@ -4,6 +4,7 @@ import { CVFormContainer } from "@/components/cv-form/CVFormContainer";
 import { CreatePageContactFAB } from "@/components/CreatePageContactFAB";
 import type { CVFormData } from "@/components/cv-form/types";
 import { resumeAPI, type Resume } from "@/lib/api";
+import { resumeToCvFormData } from "@/lib/resumeToCvFormData";
 import { SEO } from "@/components/SEO";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 
@@ -77,45 +78,41 @@ const createEmptyCVFormData = (): CVFormData => ({
 
 const mapResumeToCVFormData = (resume: Resume): CVFormData => {
   const base = createEmptyCVFormData();
-  const anyResume = resume as any;
+  const mapped = resumeToCvFormData(resume);
 
   return {
     ...base,
-    personalInfo: {
-      ...base.personalInfo,
-      ...(resume.personalInfo || (anyResume.personalInfo ?? {})),
-    },
+    ...mapped,
     workExperience:
-      resume.workExperience && resume.workExperience.length > 0
-        ? resume.workExperience
+      mapped.workExperience && mapped.workExperience.length > 0
+        ? mapped.workExperience
         : base.workExperience,
     education:
-      resume.education && resume.education.length > 0
-        ? resume.education
+      mapped.education && mapped.education.length > 0
+        ? mapped.education
         : base.education,
     projects:
-      resume.projects && resume.projects.length > 0
-        ? resume.projects
+      mapped.projects && mapped.projects.length > 0
+        ? mapped.projects
         : base.projects,
     certificates:
-      resume.certificates && resume.certificates.length > 0
-        ? resume.certificates
+      mapped.certificates && mapped.certificates.length > 0
+        ? mapped.certificates
         : base.certificates,
     languages:
-      resume.languages && resume.languages.length > 0
-        ? resume.languages
+      mapped.languages && mapped.languages.length > 0
+        ? mapped.languages
         : base.languages,
     skills:
-      resume.skills && resume.skills.length > 0 ? resume.skills : base.skills,
+      mapped.skills && mapped.skills.length > 0 ? mapped.skills : base.skills,
     sectionOrder:
-      anyResume.sectionOrder && anyResume.sectionOrder.length > 0
-        ? anyResume.sectionOrder
+      mapped.sectionOrder && mapped.sectionOrder.length > 0
+        ? mapped.sectionOrder
         : base.sectionOrder,
-    template: anyResume.template || base.template,
-    styling: anyResume.styling || undefined,
+    template: mapped.template || base.template,
+    styling: mapped.styling || base.styling,
   };
 };
-
 
 const CreateResume = () => {
   const [searchParams] = useSearchParams();

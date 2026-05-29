@@ -1,10 +1,28 @@
 import type { CVFormData } from "@/components/cv-form/types";
 import { aiAPI } from "@/lib/api";
 import { logResumeScore } from "@/lib/resumeScoreDebug";
+import { summarizeResumePayloadForScore } from "@/lib/resumeScorePayloadSummary";
 import {
   calculateResumeScore,
   type ResumeScore,
 } from "@/lib/resumeScorer";
+
+/** Never send profile photos to the scoring API — not used by the rubric and they bloat the payload. */
+function cloneResumeForAiScore(data: CVFormData): CVFormData {
+  try {
+    const copy = structuredClone(data) as CVFormData;
+    if (copy.personalInfo) {
+      delete copy.personalInfo.profileImage;
+    }
+    return copy;
+  } catch {
+    if (!data.personalInfo) {
+      return { ...data } as CVFormData;
+    }
+    const { profileImage: _omit, ...personalInfoRest } = data.personalInfo;
+    return { ...data, personalInfo: personalInfoRest } as CVFormData;
+  }
+}
 
 function normalizeAiScore(raw: {
   overallScore: number;
@@ -57,12 +75,20 @@ export async function getResumeScoreWithOptionalAI(
   if (!isAuthenticated) {
     return calculateResumeScore(data);
   }
+  const payloadForApi = cloneResumeForAiScore(data);
+  const payloadSummary = summarizeResumePayloadForScore(payloadForApi);
   logResumeScore("client:getResumeScoreWithOptionalAI:start", {
     outputLanguage,
     fallbackToLocal,
+    payloadSummary,
   });
+  if (import.meta.env.DEV) {
+    console.info("[resume-score] payload sent to API", payloadSummary);
+  }
   try {
-    const raw = await aiAPI.scoreResume(data, { outputLanguage });
+    const raw = await aiAPI.scoreResume(payloadForApi, {
+      outputLanguage,
+    });
     logResumeScore("client:getResumeScoreWithOptionalAI:api-ok", {
       overall: raw.overallScore,
       suggestionCount: raw.suggestions?.length ?? 0,

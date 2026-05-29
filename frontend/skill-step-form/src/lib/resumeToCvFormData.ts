@@ -120,12 +120,56 @@ export function convertStyling(styling: any | undefined): CVFormData["styling"] 
   };
 }
 
+function normalizeWorkExperienceFromResume(
+  resume: Resume | Record<string, unknown>,
+): NonNullable<CVFormData["workExperience"]> {
+  const r = resume as Record<string, unknown>;
+  const raw =
+    r.workExperience ??
+    r.work_experience ??
+    (r as { WorkExperience?: unknown }).WorkExperience;
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw.map((item) => {
+    const exp = item as Record<string, unknown>;
+    const responsibilitiesRaw = exp.responsibilities;
+    let responsibilities: NonNullable<CVFormData["workExperience"]>[0]["responsibilities"];
+    if (Array.isArray(responsibilitiesRaw)) {
+      responsibilities = responsibilitiesRaw.map((entry) => {
+        if (typeof entry === "string") {
+          return { responsibility: entry.trim() || undefined };
+        }
+        const row = entry as { responsibility?: string };
+        return { responsibility: pickStr(row.responsibility) || undefined };
+      });
+    }
+    return {
+      position: pickStr(exp.position ?? exp.job_title ?? exp.title) || undefined,
+      company: pickStr(exp.company ?? exp.employer ?? exp.organization) || undefined,
+      location: pickStr(exp.location) || undefined,
+      startDate: pickStr(exp.startDate ?? exp.start_date) || undefined,
+      endDate: pickStr(exp.endDate ?? exp.end_date) || undefined,
+      description: pickStr(exp.description) || undefined,
+      responsibilities,
+      technologies: Array.isArray(exp.technologies)
+        ? (exp.technologies as NonNullable<CVFormData["workExperience"]>[0]["technologies"])
+        : undefined,
+      competencies: Array.isArray(exp.competencies)
+        ? (exp.competencies as NonNullable<CVFormData["workExperience"]>[0]["competencies"])
+        : undefined,
+      link: pickStr(exp.link ?? exp.url) || undefined,
+    };
+  });
+}
+
 export function resumeToCvFormData(resume: Resume): CVFormData {
   const r = resume as Record<string, unknown>;
+  const workExperience = normalizeWorkExperienceFromResume(resume);
   return {
     template: resume.template || "modern",
     personalInfo: normalizePersonalInfoFromResume(resume),
-    workExperience: resume.workExperience || [],
+    workExperience,
     education: resume.education || [],
     projects: normalizeProjectsFromResume(resume),
     certificates: normalizeCertificatesFromResume(resume),

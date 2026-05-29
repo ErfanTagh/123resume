@@ -98,7 +98,7 @@ def resume_list(request):
                     'id': str(resume_doc['_id']),
                     'name': resume_doc.get('name'),
                     'personal_info': resume_doc.get('personal_info', {}),
-                    'work_experience': resume_doc.get('work_experience', []),
+                    'work_experience': _doc_work_experience(resume_doc),
                     'education': resume_doc.get('education', []),
                     'projects': resume_doc.get('projects', []),
                     'certificates': resume_doc.get('certificates', []),
@@ -150,11 +150,13 @@ def resume_list(request):
         import sys
         logger = logging.getLogger(__name__)
         
-        # Verbose request logging removed - only styling-specific logs remain
-        print("=" * 50, file=sys.stderr)
-        
-        logger.error(f"Received POST data: {request.data}")
-        
+        # Never log full request body: profile_image base64 is huge and looks like an error in logs.
+        logger.info(
+            "resume_list POST create user_id=%s name=%s",
+            request.user.id,
+            str(request.data.get("name") or "")[:200],
+        )
+
         serializer = ResumeSerializer(data=request.data)
         if serializer.is_valid():
             try:
@@ -260,7 +262,7 @@ def resume_list(request):
                     'id': str(created_doc['_id']),
                     'name': created_doc.get('name'),
                     'personal_info': created_doc.get('personal_info', {}),
-                    'work_experience': created_doc.get('work_experience', []),
+                    'work_experience': _doc_work_experience(created_doc),
                     'education': created_doc.get('education', []),
                     'projects': created_doc.get('projects', []),
                     'certificates': created_doc.get('certificates', []),
@@ -563,6 +565,20 @@ def _doc_personal_info(resume_doc):
     return {}
 
 
+def _doc_work_experience(resume_doc):
+    """Prefer snake_case; some legacy docs store camelCase workExperience."""
+    if 'work_experience' in resume_doc:
+        v = resume_doc['work_experience']
+        return v if v is not None else []
+    if 'workExperience' in resume_doc:
+        v = resume_doc['workExperience']
+        return v if v is not None else []
+    if 'WorkExperience' in resume_doc:
+        v = resume_doc['WorkExperience']
+        return v if v is not None else []
+    return []
+
+
 def _doc_projects(resume_doc):
     if 'projects' in resume_doc:
         v = resume_doc['projects']
@@ -589,7 +605,7 @@ def _resume_dict_from_doc(resume_doc):
         'id': str(resume_doc['_id']),
         'name': resume_doc.get('name'),
         'personal_info': _doc_personal_info(resume_doc),
-        'work_experience': resume_doc.get('work_experience', []),
+        'work_experience': _doc_work_experience(resume_doc),
         'education': resume_doc.get('education', []),
         'projects': _doc_projects(resume_doc),
         'certificates': _doc_certificates(resume_doc),

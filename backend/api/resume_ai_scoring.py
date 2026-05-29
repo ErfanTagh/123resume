@@ -40,6 +40,50 @@ def normalize_output_language(raw: Any) -> str:
     return "en"
 
 
+def summarize_resume_payload_for_log(data: Dict[str, Any]) -> Dict[str, Any]:
+    """PII-safe counts for debugging empty or wrong AI scores."""
+    if not isinstance(data, dict):
+        return {"error": "not_a_dict"}
+    pi = data.get("personalInfo") or data.get("personal_info") or {}
+    if not isinstance(pi, dict):
+        pi = {}
+    work = data.get("workExperience") or data.get("work_experience") or []
+    if not isinstance(work, list):
+        work = []
+    with_role = 0
+    with_bullets = 0
+    for exp in work:
+        if not isinstance(exp, dict):
+            continue
+        if (exp.get("position") or exp.get("company") or "").strip():
+            with_role += 1
+        bullets = 0
+        for resp in exp.get("responsibilities") or []:
+            if isinstance(resp, str) and resp.strip():
+                bullets += 1
+            elif isinstance(resp, dict) and (resp.get("responsibility") or "").strip():
+                bullets += 1
+        if bullets or (exp.get("description") or "").strip():
+            with_bullets += 1
+    skills = data.get("skills") or []
+    skill_n = (
+        len([s for s in skills if isinstance(s, dict) and (s.get("skill") or "").strip()])
+        if isinstance(skills, list)
+        else 0
+    )
+    return {
+        "template": data.get("template"),
+        "has_work_experience_key": "workExperience" in data,
+        "has_work_experience_snake_key": "work_experience" in data,
+        "work_experience_count": len(work),
+        "work_with_position_or_company": with_role,
+        "work_with_bullets_or_description": with_bullets,
+        "education_count": len(data.get("education") or []) if isinstance(data.get("education"), list) else 0,
+        "skills_count": skill_n,
+        "summary_chars": len((pi.get("summary") or "")),
+    }
+
+
 def estimate_resume_pages(data: Dict[str, Any]) -> float:
     """Mirror frontend estimateResumeLength (~250 words per page)."""
     if not isinstance(data, dict):
@@ -49,12 +93,18 @@ def estimate_resume_pages(data: Dict[str, Any]) -> float:
     wc += len((pi.get("summary") or "").split())
     wc += len((pi.get("professionalTitle") or "").split())
 
-    for exp in data.get("workExperience") or []:
+    work_list = data.get("workExperience") or data.get("work_experience") or []
+    for exp in work_list:
         if not isinstance(exp, dict):
             continue
         wc += len((exp.get("description") or "").split())
         wc += len((exp.get("position") or "").split())
         wc += len((exp.get("company") or "").split())
+        for resp in exp.get("responsibilities") or []:
+            if isinstance(resp, str):
+                wc += len(resp.split())
+            elif isinstance(resp, dict):
+                wc += len((resp.get("responsibility") or "").split())
 
     for edu in data.get("education") or []:
         if not isinstance(edu, dict):

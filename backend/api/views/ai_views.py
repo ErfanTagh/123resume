@@ -1,6 +1,7 @@
 """
 AI-assisted features (authenticated). Backed by DeepSeek's OpenAI-compatible API.
 """
+import copy
 import json
 import logging
 
@@ -17,6 +18,17 @@ logger = logging.getLogger(__name__)
 
 MAX_MESSAGE_CHARS = 8000
 MAX_RESUME_JSON_CHARS = 320_000
+
+
+def _resume_without_profile_images(resume: dict) -> dict:
+    """Drop photo fields before DeepSeek — images are not used by the rubric and waste context."""
+    out = copy.deepcopy(resume)
+    for block_key in ("personalInfo", "personal_info"):
+        pi = out.get(block_key)
+        if isinstance(pi, dict):
+            pi.pop("profileImage", None)
+            pi.pop("profile_image", None)
+    return out
 
 
 @api_view(["POST"])
@@ -90,6 +102,8 @@ def resume_score(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    resume = _resume_without_profile_images(resume)
+
     try:
         raw_len = len(json.dumps(resume, default=str))
     except Exception:
@@ -110,11 +124,14 @@ def resume_score(request):
     out_lang = resume_ai_scoring.normalize_output_language(
         (data.get("output_language") or data.get("outputLanguage") or "en"),
     )
+    payload_summary = resume_ai_scoring.summarize_resume_payload_for_log(resume)
     logger.info(
-        "resume_score start user_id=%s payload_chars=%s output_lang=%s",
+        "resume_score start user_id=%s email=%s payload_chars=%s output_lang=%s summary=%s",
         getattr(request.user, "pk", None),
+        getattr(request.user, "email", None),
         raw_len,
         out_lang,
+        payload_summary,
     )
 
     try:

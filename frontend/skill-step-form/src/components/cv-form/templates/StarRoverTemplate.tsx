@@ -6,6 +6,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { getWorkExperienceBullets } from "@/lib/workExperienceBullets";
 
 interface StarRoverTemplateProps {
   data: CVFormData;
@@ -324,11 +325,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
               {workExperience.map((exp, index) => {
                 if (!exp.position && !exp.company) return null;
                 const dateRange = formatDateRangeStar(exp.startDate, exp.endDate);
-                const responsibilities = exp.responsibilities
-                  ? exp.responsibilities.filter(r => r.responsibility).map(r => r.responsibility!)
-                  : exp.description
-                    ? exp.description.split('\n').filter(line => line.trim())
-                    : [];
+                const responsibilities = getWorkExperienceBullets(exp);
                 return (
                   <div key={index}>
                     {/* Company line */}

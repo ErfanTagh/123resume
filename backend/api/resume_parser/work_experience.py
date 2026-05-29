@@ -243,7 +243,9 @@ def extract_work_experience_block_based(text: str, sections: Dict[str, str] = No
                 "startDate": start_date,
                 "endDate": end_date,
                 "description": '\n'.join(description_lines) if description_lines else "",
-                "responsibilities": description_lines,
+                "responsibilities": [
+                    {"responsibility": line} for line in description_lines
+                ],
                 "technologies": [],
                 "competencies": []
             })

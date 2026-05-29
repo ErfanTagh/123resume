@@ -5,6 +5,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { getWorkExperienceBullets } from "@/lib/workExperienceBullets";
 
 interface LatexTemplateProps {
   data: CVFormData;
@@ -373,11 +374,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
               {workExperience.map((exp, index) => {
                 if (!exp.position && !exp.company) return null;
                 const dateRange = formatDateRangeLatex(exp.startDate, exp.endDate);
-                const responsibilities = exp.responsibilities
-                  ? exp.responsibilities.filter(r => r.responsibility).map(r => r.responsibility!)
-                  : exp.description
-                    ? exp.description.split('\n').filter(line => line.trim())
-                    : [];
+                const responsibilities = getWorkExperienceBullets(exp);
                 const technologies = exp.technologies
                   ? exp.technologies.map(t => typeof t === 'string' ? t : t.technology).filter(Boolean)
                   : [];

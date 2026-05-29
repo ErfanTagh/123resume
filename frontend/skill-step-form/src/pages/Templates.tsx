@@ -1,86 +1,44 @@
 import { Link } from "react-router-dom";
-import { FileText, Sparkles, Palette, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { LandingTemplatePreview } from "./LandingTemplatePreview";
+import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SEO } from "@/components/SEO";
 
 const Templates = () => {
   const { t } = useLanguage();
-  const templates = [
-    { name: t('resume.templates.modern'), key: 'modern' as const, description: t('landing.templateModernDesc'), icon: Sparkles },
-    { name: t('resume.templates.classic'), key: 'classic' as const, description: t('landing.templateClassicDesc'), icon: FileText },
-    { name: t('resume.templates.creative'), key: 'creative' as const, description: t('landing.templateCreativeDesc'), icon: Palette },
-    { name: t('resume.templates.minimal'), key: 'minimal' as const, description: t('landing.templateMinimalDesc'), icon: Minus },
-  ];
 
   return (
     <>
       <SEO
         title="Professional CV Templates | 123Resume"
-        description="Choose from 6 professional CV templates: Modern, Classic, Creative, Minimal, LaTeX, and StarRover. All templates are ATS-friendly and customizable."
+        description="Choose from 6 professional CV templates: Modern, Classic, Creative, Minimal, LaTeX, and Star Rover. All templates are ATS-friendly and customizable."
         keywords="CV templates, resume templates, professional templates, ATS templates, modern CV, classic resume"
         url="https://123resume.de/templates"
       />
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 max-w-6xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">{t('pages.templates.title')}</h1>
+        <div className="container mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-4 max-w-6xl text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+            {t("pages.templates.title")}
+          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('pages.templates.subtitle')}
+            {t("pages.templates.subtitle")}
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 mb-12">
-          {templates.map((template) => (
-            <div
-              key={template.key}
-              className="bg-card rounded-2xl border border-border p-6 shadow-lg hover:shadow-[0_8px_25px_-5px_hsl(var(--primary)/0.35)] transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="aspect-[3/4] bg-white rounded-lg mb-4 overflow-hidden border border-border shadow-inner relative max-h-[320px]">
-                <div className="absolute inset-0">
-                  <LandingTemplatePreview templateName={template.key} />
-                </div>
-              </div>
-              <div className="flex items-start gap-3 mb-4">
-                <template.icon className="w-6 h-6 text-primary mt-1" />
-                <div>
-                  <h3 className="font-bold text-xl text-foreground mb-1">{template.name} {t('pages.templates.template')}</h3>
-                  <p className="text-sm text-muted-foreground">{template.description}</p>
-                </div>
-              </div>
-              <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>{t('pages.templates.atsOptimizedFormatting')}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>{t('pages.templates.professionalDesign')}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>{t('pages.templates.pdfExport')}</span>
-                </li>
-              </ul>
-            </div>
-          ))}
-        </div>
+        <TemplateShowcase hideHeader showViewAll={false} />
 
-        <div className="text-center">
+        <div className="container mx-auto px-4 sm:px-6 pb-16 sm:pb-24 max-w-6xl text-center">
           <Link to="/create/start">
             <Button size="lg" className="bg-primary hover:bg-primary/90">
-              {t('pages.about.startBuilding')}
+              {t("pages.about.startBuilding")}
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </Link>
         </div>
       </div>
-    </div>
     </>
   );
 };
 
 export default Templates;
-

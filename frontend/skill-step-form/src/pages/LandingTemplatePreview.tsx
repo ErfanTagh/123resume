@@ -240,10 +240,15 @@ const createSampleData = (templateName: string): CVFormData => ({
 
 interface LandingTemplatePreviewProps {
   templateName: "modern" | "classic" | "creative" | "minimal" | "latex" | "starRover";
+  /** Zoom for thumbnail previews; default fits smaller cards. */
+  previewScale?: number;
 }
+
+const DEFAULT_PREVIEW_SCALE = 0.4;
 
 export const LandingTemplatePreview = ({
   templateName,
+  previewScale,
 }: LandingTemplatePreviewProps) => {
   // Create base sample data with template-specific profile image
   const baseSampleData = createSampleData(templateName);
@@ -424,7 +429,7 @@ export const LandingTemplatePreview = ({
   // Templates are typically A4 size, so we scale down significantly
   // Increased scale to make templates appear larger
   // Minimal template needs larger scale due to its compact design
-  const scale = templateName === "minimal" ? 0.40 : 0.40;
+  const scale = previewScale ?? DEFAULT_PREVIEW_SCALE;
 
   return (
     <div

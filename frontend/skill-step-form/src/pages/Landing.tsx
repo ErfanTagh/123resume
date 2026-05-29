@@ -15,6 +15,8 @@ import { getBlogPosts } from "@/lib/blogPosts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMemo } from "react";
 import { SEO } from "@/components/SEO";
+import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 
 const Landing = () => {
   const { language, t } = useLanguage();
@@ -27,7 +29,7 @@ const Landing = () => {
         description="Build your professional CV with our easy-to-use multi-step form. Create ATS-friendly resumes with multiple templates. Free CV builder with PDF export."
         keywords="CV builder, resume builder, create CV, professional resume, ATS resume, CV templates, resume templates, online CV maker"
       />
-      <div className="min-h-screen bg-background overflow-hidden">
+      <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative pt-28 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6">
         {/* Background Effects */}
@@ -83,6 +85,8 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      <TemplateShowcase />
 
       {/* Features Section */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30">
@@ -144,46 +148,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-              {t('landing.howItWorksTitle')}
-            </h2>
-            <p className="text-base sm:text-lg text-muted-foreground">
-              {t('landing.howItWorksSubtitle')}
-            </p>
-          </div>
-
-          <div className="space-y-8 sm:space-y-12">
-            {[
-              { step: 1, titleKey: "step1Title", descKey: "step1Desc" },
-              { step: 2, titleKey: "step2Title", descKey: "step2Desc" },
-              { step: 3, titleKey: "step3Title", descKey: "step3Desc" }
-            ].map((item, i) => (
-              <div key={item.step} className="flex items-start sm:items-center gap-4 sm:gap-8">
-                <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl sm:text-2xl font-bold">
-                  {item.step}
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-1">{t(`landing.${item.titleKey}`)}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">{t(`landing.${item.descKey}`)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12 sm:mt-16">
-            <Link to="/create/start">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-xl">
-                {t('landing.ctaStartBuildingNow')}
-                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HowItWorksSection />
 
       {/* Blog Section */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30">

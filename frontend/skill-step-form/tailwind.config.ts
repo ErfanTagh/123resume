@@ -118,6 +118,15 @@ export default {
             backgroundPosition: "-200% 0",
           },
         },
+        /** Landing “hired at” marquee — two identical halves, -50% = one loop. */
+        "hired-at-marquee": {
+          "0%": {
+            transform: "translateX(0)",
+          },
+          "100%": {
+            transform: "translateX(-50%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -125,6 +134,7 @@ export default {
         "pulse-dot": "pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "accordion-up": "accordion-up 0.2s ease-out",
         "score-shimmer-bg": "score-shimmer-bg 1.2s linear infinite",
+        "hired-at-marquee": "hired-at-marquee 55s linear infinite",
       },
     },
   },

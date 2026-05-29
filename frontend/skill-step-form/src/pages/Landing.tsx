@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useMemo } from "react";
 import { SEO } from "@/components/SEO";
 import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
+import { HiredAtSection } from "@/components/landing/HiredAtSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 
 const Landing = () => {
@@ -87,6 +88,8 @@ const Landing = () => {
       </section>
 
       <TemplateShowcase />
+
+      <HiredAtSection />
 
       {/* Features Section */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30">

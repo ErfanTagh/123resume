@@ -77,9 +77,11 @@ export const HiredAtSection = () => {
         </div>
         <h2
           id="landing-hired-at-heading"
-          className="mt-3 bg-gradient-to-r from-primary to-primary/75 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:mt-4 sm:text-5xl"
+          className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:mt-4 sm:text-5xl"
         >
-          {t("landing.hiredAtTitle")}
+          <span className="inline-block bg-gradient-to-r from-primary to-primary/75 bg-clip-text pb-1.5 text-transparent [-webkit-box-decoration-break:clone] [box-decoration-break:clone] leading-[1.25] sm:pb-2 sm:leading-[1.2]">
+            {t("landing.hiredAtTitle")}
+          </span>
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-lg font-medium leading-relaxed text-muted-foreground sm:mt-4 sm:text-xl md:max-w-3xl md:text-2xl md:leading-relaxed">
           {t("landing.hiredAtSubtitle")}

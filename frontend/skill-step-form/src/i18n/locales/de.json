@@ -79,6 +79,7 @@
     "hiredAtBadge": "Einblick",
     "hiredAtTitle": "Zielarbeitgeber & Institutionen",
     "hiredAtSubtitle": "Ein Querschnitt aus Forschung, Hochschulen und Wirtschaft — typische Organisationen, für die sich Nutzer:innen mit 123Resume vorbereiten.",
+    "hiredAtTestimonialsMarqueeLabel": "Laufende Nutzerstimmen",
     "featuresTitle": "Alles, was Sie zum Erfolg brauchen",
     "featuresSubtitle": "Unsere leistungsstarken Funktionen helfen Ihnen, den perfekten Lebenslauf im Handumdrehen zu erstellen",
     "featureMultipleTemplates": "Mehrere Vorlagen",
@@ -108,8 +109,18 @@
     "blogSectionTitle": "Lebenslauf-Tipps & Karriereberatung",
     "blogSectionSubtitle": "Expertenrat, der Ihnen hilft, schneller Ihren Traumjob zu finden",
     "viewAllArticles": "Alle Artikel anzeigen",
-    "testimonialsTitle": "Von Bewerbern geliebt",
-    "testimonialsSubtitle": "Schließen Sie sich Tausenden an, die ihren Traumjob gefunden haben"
+    "testimonial1Name": "Anna M. Bauer",
+    "testimonial1Quote": "Mit 123Resume hatte ich endlich einen Lebenslauf, der zu meinen Skills passt. Der PDF-Export war in Sekunden fertig – und die KI-Hinweise haben mir geholfen, meine Ergebnisse klarer zu formulieren.",
+    "testimonial2Name": "Jonas K.",
+    "testimonial2Quote": "Übersichtlich, schnell und ohne Designfrust. Den Builder würde ich jedem empfehlen, der unter Zeitdruck eine saubere Bewerbung braucht.",
+    "testimonial3Name": "Miriam Scholz",
+    "testimonial3Quote": "Die Vorlagen wirken professionell, nicht generisch. Besonders die ATS-Tipps haben mir ein gutes Gefühl bei Online-Bewerbungen gegeben.",
+    "testimonial4Name": "Felix Brandt",
+    "testimonial4Quote": "Ich konnte Versionen für verschiedene Stellen speichern und später feinjustieren – genau das, was ich mir gewünscht habe.",
+    "testimonial5Name": "Sarah O’Neill",
+    "testimonial5Quote": "Clear layout and helpful AI suggestions—my CV finally reads like a real story instead of a bullet list.",
+    "testimonial6Name": "Michael Tran",
+    "testimonial6Quote": "Exported my PDF in minutes. The step-by-step flow meant I didn’t miss anything important."
   },
   "resume": {
     "sections": {

@@ -15,7 +15,7 @@ function initialsFromName(name: string): string {
 
 /** Logo area inside the combined employer card (no own border — card wraps logo + name). */
 const LOGO_AREA =
-  "flex h-[5.25rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-t-2xl border-b border-primary/15 bg-gradient-to-br from-white via-primary/[0.06] to-sky-500/[0.08] px-2 shadow-inner dark:from-card dark:via-primary/[0.08] dark:to-indigo-950/35 sm:h-24 sm:px-2.5";
+  "flex h-[5.25rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-t-2xl border-b border-border bg-muted/30 px-2 shadow-inner dark:bg-muted/25 sm:h-24 sm:px-2.5";
 
 function remoteImgMaxClass(id: string): string {
   if (id === "amazon") return "max-h-[4.95rem] sm:max-h-[5.65rem]";

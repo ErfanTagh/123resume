@@ -134,7 +134,9 @@ export default {
         "pulse-dot": "pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "accordion-up": "accordion-up 0.2s ease-out",
         "score-shimmer-bg": "score-shimmer-bg 1.2s linear infinite",
-        "hired-at-marquee": "hired-at-marquee 55s linear infinite",
+        /** Row 1: employers. Row 2: testimonials (slightly slower, feels independent). */
+        "hired-at-marquee": "hired-at-marquee 72s linear infinite",
+        "hired-at-marquee-testimonials": "hired-at-marquee 92s linear infinite",
       },
     },
   },

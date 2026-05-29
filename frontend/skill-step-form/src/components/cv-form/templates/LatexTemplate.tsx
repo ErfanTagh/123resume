@@ -583,6 +583,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
             {/* Name + title */}
             <div style={{ flex: 1, minWidth: 0 }}>
+              {fullName ? (
               <h1 style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontSize: personalInfoTitleSizes.name,
@@ -593,8 +594,10 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                 margin: '0 0 5px 0',
                 textTransform: 'uppercase',
               }}>
-                {fullName || 'YOUR NAME HERE'}
+                {fullName}
               </h1>
+              ) : null}
+              {professionalTitle ? (
               <p style={{
                 fontSize: personalInfoBodySizes.title,
                 color: titleColor,
@@ -604,11 +607,13 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                 margin: 0,
                 opacity: 0.9,
               }}>
-                {professionalTitle || 'Your Professional Title'}
+                {professionalTitle}
               </p>
+              ) : null}
             </div>
 
             {/* Contact info — two column */}
+            {(personalInfo.website?.trim() || personalInfo.phone?.trim() || personalInfo.location?.trim() || personalInfo.email?.trim() || personalInfo.github?.trim() || personalInfo.linkedin?.trim()) && (
             <div style={{
               flexShrink: 0,
               display: 'flex',
@@ -617,28 +622,17 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
               paddingTop: '4px',
             }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {personalInfo.website
-                  ? renderIconText(Globe, personalInfo.website, personalInfo.website, t('resume.contactLinkShort.website'))
-                  : renderIconText(Globe, "yourwebsite.com", "#")}
-                {personalInfo.phone
-                  ? renderIconText(Phone, personalInfo.phone)
-                  : renderIconText(Phone, "+1 (555) 123-4567")}
-                {personalInfo.location
-                  ? renderIconText(MapPin, personalInfo.location)
-                  : renderIconText(MapPin, "City, Country")}
+                {personalInfo.website?.trim() && renderIconText(Globe, personalInfo.website, personalInfo.website, t('resume.contactLinkShort.website'))}
+                {personalInfo.phone?.trim() && renderIconText(Phone, personalInfo.phone)}
+                {personalInfo.location?.trim() && renderIconText(MapPin, personalInfo.location)}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {personalInfo.email
-                  ? renderIconText(Mail, personalInfo.email, `mailto:${personalInfo.email}`)
-                  : renderIconText(Mail, "your.email@example.com", "#")}
-                {personalInfo.github
-                  ? renderIconText(Github, personalInfo.github, personalInfo.github, t('resume.contactLinkShort.github'))
-                  : renderIconText(Github, "github.com/username", "#")}
-                {personalInfo.linkedin
-                  ? renderIconText(Linkedin, personalInfo.linkedin, personalInfo.linkedin, t('resume.contactLinkShort.linkedin'))
-                  : renderIconText(Linkedin, "linkedin.com/in/username", "#")}
+                {personalInfo.email?.trim() && renderIconText(Mail, personalInfo.email, `mailto:${personalInfo.email}`)}
+                {personalInfo.github?.trim() && renderIconText(Github, personalInfo.github, personalInfo.github, t('resume.contactLinkShort.github'))}
+                {personalInfo.linkedin?.trim() && renderIconText(Linkedin, personalInfo.linkedin, personalInfo.linkedin, t('resume.contactLinkShort.linkedin'))}
               </div>
             </div>
+            )}
           </div>
         </div>
 

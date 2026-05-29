@@ -64,7 +64,7 @@ export const TemplateCarouselPreviewNav = ({
 
   return (
     <div
-      className="absolute inset-x-0 top-0 z-40 flex pointer-events-none bottom-[var(--showcase-card-footer,9.75rem)]"
+      className="absolute inset-x-0 top-0 z-40 flex pointer-events-none bottom-[var(--showcase-footer-h,5.75rem)]"
       aria-hidden={false}
     >
       <button

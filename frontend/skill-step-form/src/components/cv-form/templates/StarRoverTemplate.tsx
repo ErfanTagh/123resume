@@ -580,6 +580,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px', marginBottom: '16px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {/* Name */}
+              {fullName ? (
               <h1 style={{
                 fontSize: sizes.name,
                 fontWeight: titleBold ? 900 : 700,
@@ -589,8 +590,9 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                 margin: '0 0 6px 0',
                 fontFamily: fontFamily,
               }}>
-                {fullName || 'YOUR NAME'}
+                {fullName}
               </h1>
+              ) : null}
               {/* Professional title */}
               {professionalTitle && (
                 <p style={{
@@ -638,14 +640,14 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
             borderTop: `0.5px solid ${sectionHeadingColor}25`,
           }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
-              {personalInfo.phone ? renderContactIcon(Phone, personalInfo.phone, `tel:${personalInfo.phone}`) : renderContactIcon(Phone, "+1 (555) 123-4567", "#")}
-              {personalInfo.email ? renderContactIcon(Mail, personalInfo.email, `mailto:${personalInfo.email}`) : renderContactIcon(Mail, "your.email@example.com", "#")}
-              {personalInfo.location ? renderContactIcon(MapPin, personalInfo.location) : renderContactIcon(MapPin, "City, Country")}
+              {personalInfo.phone?.trim() && renderContactIcon(Phone, personalInfo.phone, `tel:${personalInfo.phone}`)}
+              {personalInfo.email?.trim() && renderContactIcon(Mail, personalInfo.email, `mailto:${personalInfo.email}`)}
+              {personalInfo.location?.trim() && renderContactIcon(MapPin, personalInfo.location)}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
-              {personalInfo.linkedin ? renderContactIcon(Linkedin, personalInfo.linkedin, personalInfo.linkedin, t('resume.contactLinkShort.linkedin')) : renderContactIcon(Linkedin, "linkedin.com/in/username", "#")}
-              {personalInfo.github ? renderContactIcon(Github, personalInfo.github, personalInfo.github, t('resume.contactLinkShort.github')) : renderContactIcon(Github, "github.com/username", "#")}
-              {personalInfo.website ? renderContactIcon(Globe, personalInfo.website, personalInfo.website, t('resume.contactLinkShort.website')) : renderContactIcon(Globe, "yourwebsite.com", "#")}
+              {personalInfo.linkedin?.trim() && renderContactIcon(Linkedin, personalInfo.linkedin, personalInfo.linkedin, t('resume.contactLinkShort.linkedin'))}
+              {personalInfo.github?.trim() && renderContactIcon(Github, personalInfo.github, personalInfo.github, t('resume.contactLinkShort.github'))}
+              {personalInfo.website?.trim() && renderContactIcon(Globe, personalInfo.website, personalInfo.website, t('resume.contactLinkShort.website'))}
             </div>
           </div>
         </div>

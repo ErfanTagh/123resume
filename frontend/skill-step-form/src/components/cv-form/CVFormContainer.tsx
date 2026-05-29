@@ -11,7 +11,8 @@ import { ExperienceStep } from "./ExperienceStep";
 import { EducationStep } from "./EducationStep";
 import { SkillsStep } from "./SkillsStep";
 import { ReviewStep } from "./ReviewStep";
-import { CVPreview } from "./CVPreview";
+import { ResumePreviewPane } from "./ResumePreviewPane";
+import { ResumeCustomizeSidebar } from "./ResumeCustomizeSidebar";
 import { SignupOverlay } from "./SignupOverlay";
 import { cvFormSchema, CVFormData } from "./types";
 import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare } from "lucide-react";
@@ -36,7 +37,6 @@ interface CVFormContainerProps {
 
 export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [highestStepVisited, setHighestStepVisited] = useState(0); // Track the highest step number visited
   const [showSignupOverlay, setShowSignupOverlay] = useState(false);
   /** Latest server AI score after step navigation (Next / Previous / progress). Guests: undefined. */
   const [navResumeScore, setNavResumeScore] = useState<ResumeScore | undefined>(undefined);
@@ -236,107 +236,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
           },
         },
       },
-    };
-  };
-
-  // Merge form data with hint data for preview (show hints only for current step)
-  const getPreviewDataWithHints = (formData: CVFormData): CVFormData => {
-    // Only show hints when creating a new resume (no editId)
-    // Allow hints even if initialData exists (e.g., when coming from template selection)
-    if (editId) {
-      return formData;
-    }
-
-    const hintData = getTestProfile("freshGraduate");
-    if (!hintData) {
-      return formData;
-    }
-
-    // Helper to use hint if field is empty (only for current step)
-    const useHintIfEmpty = <T,>(value: T, hint: T, showHint: boolean): T => {
-      if (!showHint) {
-        // Don't show hint - return actual value (even if empty)
-        return value || (typeof value === 'string' ? '' : typeof value === 'object' && Array.isArray(value) ? [] : value) as T;
-      }
-      if (typeof value === 'string') {
-        return (value && value.trim() !== '') ? value : hint;
-      }
-      if (Array.isArray(value)) {
-        return value.length > 0 ? value : hint;
-      }
-      return value || hint;
-    };
-
-    // Show hints for personalInfo only when on step 0
-    const showPersonalInfoHints = currentStep === 0;
-    // Sample profile photo in preview only on a brand-new flow: step 0 and user has not
-    // advanced to later steps yet (avoids showing the stock photo after navigating back).
-    const showSampleProfilePhotoHint =
-      showPersonalInfoHints &&
-      highestStepVisited === 0 &&
-      !(formData.personalInfo?.profileImage?.trim());
-
-    const mergedPersonalInfo = {
-      firstName: useHintIfEmpty(formData.personalInfo?.firstName || "", hintData.personalInfo.firstName, showPersonalInfoHints),
-      lastName: useHintIfEmpty(formData.personalInfo?.lastName || "", hintData.personalInfo.lastName, showPersonalInfoHints),
-      professionalTitle: useHintIfEmpty(formData.personalInfo?.professionalTitle || "", hintData.personalInfo.professionalTitle || "", showPersonalInfoHints),
-      profileImage: showSampleProfilePhotoHint
-        ? (formData.personalInfo?.profileImage || "/resume-sample-3-optimized.jpg")
-        : (formData.personalInfo?.profileImage || ""),
-      email: useHintIfEmpty(formData.personalInfo?.email || "", hintData.personalInfo.email, showPersonalInfoHints),
-      phone: useHintIfEmpty(formData.personalInfo?.phone || "", hintData.personalInfo.phone || "", showPersonalInfoHints),
-      location: useHintIfEmpty(formData.personalInfo?.location || "", hintData.personalInfo.location || "", showPersonalInfoHints),
-      linkedin: useHintIfEmpty(formData.personalInfo?.linkedin || "", hintData.personalInfo.linkedin || "", showPersonalInfoHints),
-      github: formData.personalInfo?.github || "", // Don't show hint for GitHub - many users don't have it
-      website: formData.personalInfo?.website || "", // Don't show hint for website - many users don't have it
-      summary: useHintIfEmpty(formData.personalInfo?.summary || "", hintData.personalInfo.summary || "", showPersonalInfoHints),
-      interests: useHintIfEmpty(formData.personalInfo?.interests || [], hintData.personalInfo.interests || [], showPersonalInfoHints),
-    };
-
-    // Show hints for workExperience only when on step 1
-    const showWorkExperienceHints = currentStep === 1;
-    const mergedWorkExperience = showWorkExperienceHints && (!formData.workExperience || formData.workExperience.length === 0 ||
-      !formData.workExperience.some(exp => exp.position || exp.company))
-      ? (hintData.workExperience || [])
-      : (formData.workExperience || []);
-
-    // Show hints for education only when on step 2
-    const showEducationHints = currentStep === 2;
-    const mergedEducation = showEducationHints && (!formData.education || formData.education.length === 0 ||
-      !formData.education.some(edu => edu.degree || edu.institution))
-      ? (hintData.education || [])
-      : (formData.education || []);
-
-    // Show hints for projects only when on step 1
-    const showProjectsHints = currentStep === 1;
-    const mergedProjects = showProjectsHints && (!formData.projects || formData.projects.length === 0 ||
-      !formData.projects.some(proj => proj.name || proj.description))
-      ? (hintData.projects ? hintData.projects.slice(0, 1) : [])
-      : (formData.projects || []);
-
-    // Show hints for languages only when on step 3
-    const showLanguagesHints = currentStep === 3;
-    const mergedLanguages = showLanguagesHints && (!formData.languages || formData.languages.length === 0 ||
-      !formData.languages.some(lang => lang.language))
-      ? (hintData.languages || [])
-      : (formData.languages || []);
-
-    // Show hints for skills only when on step 3
-    const showSkillsHints = currentStep === 3;
-    const mergedSkills = showSkillsHints && (!formData.skills || formData.skills.length === 0 ||
-      !formData.skills.some(skill => skill.skill))
-      ? (hintData.skills || [])
-      : (formData.skills || []);
-
-    return {
-      ...formData,
-      personalInfo: mergedPersonalInfo,
-      workExperience: mergedWorkExperience,
-      education: mergedEducation,
-      projects: mergedProjects,
-      languages: mergedLanguages,
-      skills: mergedSkills,
-      certificates: formData.certificates || [],
     };
   };
 
@@ -645,7 +544,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     }
 
     setCurrentStep(stepIndex);
-    setHighestStepVisited(prev => Math.max(prev, stepIndex));
   };
 
   // Test data loader (dev only)
@@ -665,7 +563,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       };
       form.reset(normalizedProfile);
       setCurrentStep(0);
-      setHighestStepVisited(0);
       lastSuccessfulScorePayloadRef.current = null;
       scoreRequestIdRef.current = 0;
       setNavResumeScore(undefined);
@@ -691,7 +588,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       if (currentStep < steps.length - 1) {
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
-        setHighestStepVisited(prev => Math.max(prev, nextStep));
       }
     } else if (currentStep === 0) {
       toast({
@@ -1040,9 +936,31 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-                {/* Form Section - Takes 4 columns */}
-                <div className="lg:col-span-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                {/* Live preview only — left on desktop */}
+                <div className="hidden lg:col-span-5 lg:block lg:col-start-1">
+                  <ResumePreviewPane data={formDataWithSkills} />
+                </div>
+
+                {/* Customize tools + form — right on desktop */}
+                <div className="lg:col-span-7 lg:col-start-6">
+                  <ResumeCustomizeSidebar
+                    data={formDataWithSkills}
+                    serverResumeScore={navResumeScore}
+                    serverResumeScoreLoading={navResumeScoreLoading}
+                    onRequestAiResumeScore={
+                      user
+                        ? (o) => {
+                            logResumeScore("ui:customize-score-request", { opts: o ?? {} });
+                            fetchAiResumeScoreIfDirty(o);
+                          }
+                        : undefined
+                    }
+                    onTemplateChange={(template) => form.setValue("template", template)}
+                    onSectionOrderChange={(sectionOrder) => form.setValue("sectionOrder", sectionOrder)}
+                    onStylingChange={(styling) => form.setValue("styling", styling)}
+                    currentStep={currentStep}
+                  />
                   <Card className="p-8 shadow-elevated">
                     <ProgressIndicator
                       currentStep={currentStep}
@@ -1163,27 +1081,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                       </div>
                     </form>
                   </Card>
-                </div>
-
-                {/* Right Sidebar - Always Visible Preview */}
-                <div className="hidden lg:block lg:col-span-4">
-                  <CVPreview
-                    data={getPreviewDataWithHints(formDataWithSkills)}
-                    serverResumeScore={navResumeScore}
-                    serverResumeScoreLoading={navResumeScoreLoading}
-                    onRequestAiResumeScore={
-                      user
-                        ? (o) => {
-                            logResumeScore("ui:preview-score-tab-request", { opts: o ?? {} });
-                            fetchAiResumeScoreIfDirty(o);
-                          }
-                        : undefined
-                    }
-                    onTemplateChange={(template) => form.setValue("template", template)}
-                    onSectionOrderChange={(sectionOrder) => form.setValue("sectionOrder", sectionOrder)}
-                    onStylingChange={(styling) => form.setValue("styling", styling)}
-                    currentStep={currentStep}
-                  />
                 </div>
               </div>
             </>

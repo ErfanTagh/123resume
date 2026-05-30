@@ -11,11 +11,11 @@ type WorkExperienceLike = {
 };
 
 /**
- * Normalize work experience bullets for resume templates.
- * Handles form shape `{ responsibility: "..." }` and legacy/parser shape `["bullet", ...]`.
+ * Responsibility bullets only — ignores `description`.
+ * Use with a separate `description` paragraph (Modern-style) so role summary + bullets both show.
  */
-export function getWorkExperienceBullets(exp: WorkExperienceLike): string[] {
-  const fromResponsibilities =
+export function getWorkExperienceResponsibilityOnly(exp: WorkExperienceLike): string[] {
+  return (
     exp.responsibilities
       ?.map((entry) => {
         if (typeof entry === "string") {
@@ -26,8 +26,16 @@ export function getWorkExperienceBullets(exp: WorkExperienceLike): string[] {
         }
         return "";
       })
-      .filter(Boolean) ?? [];
+      .filter(Boolean) ?? []
+  );
+}
 
+/**
+ * Normalize work experience bullets for resume templates.
+ * Handles form shape `{ responsibility: "..." }` and legacy/parser shape `["bullet", ...]`.
+ */
+export function getWorkExperienceBullets(exp: WorkExperienceLike): string[] {
+  const fromResponsibilities = getWorkExperienceResponsibilityOnly(exp);
   if (fromResponsibilities.length > 0) {
     return fromResponsibilities;
   }

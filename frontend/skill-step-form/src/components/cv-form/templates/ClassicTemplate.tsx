@@ -6,6 +6,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 interface ClassicTemplateProps {
   data: CVFormData;
@@ -149,24 +150,22 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
                         </span>
                       )}
                     </div>
-                    {((exp.responsibilities && exp.responsibilities.length > 0) || exp.description) && (
+                    {exp.description?.trim() && (
+                      <p
+                        className="mt-1.5 whitespace-pre-wrap"
+                        style={{ fontSize: workExperienceBodySizes.sm, color: workExperienceStyling.bodyColor, lineHeight: '1.6' }}
+                      >
+                        {exp.description}
+                      </p>
+                    )}
+                    {getWorkExperienceResponsibilityOnly(exp).length > 0 && (
                       <ul className="space-y-1 mt-1.5" style={{ fontSize: workExperienceBodySizes.sm, color: workExperienceStyling.bodyColor, lineHeight: '1.6' }}>
-                        {exp.responsibilities && exp.responsibilities.length > 0
-                          ? exp.responsibilities.map((resp, i) => (
-                            resp.responsibility && (
-                              <li key={i} className="flex gap-3">
-                                <span style={{ color: workExperienceStyling.bodyColor, opacity: 0.5 }}>•</span>
-                                <span className="flex-1">{resp.responsibility}</span>
-                              </li>
-                            )
-                          ))
-                          : exp.description?.split('\n').filter(line => line.trim()).map((line, i) => (
-                            <li key={i} className="flex gap-3">
-                              <span style={{ color: workExperienceStyling.bodyColor, opacity: 0.5 }}>•</span>
-                              <span className="flex-1">{line.trim()}</span>
-                            </li>
-                          ))
-                        }
+                        {getWorkExperienceResponsibilityOnly(exp).map((line, i) => (
+                          <li key={i} className="flex gap-3">
+                            <span style={{ color: workExperienceStyling.bodyColor, opacity: 0.5 }}>•</span>
+                            <span className="flex-1">{line}</span>
+                          </li>
+                        ))}
                       </ul>
                     )}
                     {exp.technologies && exp.technologies.length > 0 && (

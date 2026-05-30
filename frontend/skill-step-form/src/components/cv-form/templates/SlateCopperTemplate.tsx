@@ -7,7 +7,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
-import { getWorkExperienceBullets } from "@/lib/workExperienceBullets";
+import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 /** Light rail — same family as Tailwind slate-100; keeps sidebar readable with schema text colors */
 const SIDEBAR_BG = "#f1f5f9";
@@ -239,9 +239,14 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                         />
                         {exp.location ? ` · ${exp.location}` : ""}
                       </p>
-                      {getWorkExperienceBullets(exp).length > 0 && (
+                      {exp.description?.trim() && (
+                        <p className="mt-1 whitespace-pre-wrap leading-snug" style={{ fontSize: fsWE.body, color: textColor }}>
+                          {exp.description}
+                        </p>
+                      )}
+                      {getWorkExperienceResponsibilityOnly(exp).length > 0 && (
                         <ul className="sc-two-col-bullets mt-1 space-y-1 pl-0">
-                          {getWorkExperienceBullets(exp).map((line, i) => (
+                          {getWorkExperienceResponsibilityOnly(exp).map((line, i) => (
                             <li key={i} className="leading-snug" style={{ fontSize: fsWE.body, color: textColor }}>
                               {line}
                             </li>

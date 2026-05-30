@@ -6,7 +6,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
-import { getWorkExperienceBullets } from "@/lib/workExperienceBullets";
+import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 interface StarRoverTemplateProps {
   data: CVFormData;
@@ -325,7 +325,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
               {workExperience.map((exp, index) => {
                 if (!exp.position && !exp.company) return null;
                 const dateRange = formatDateRangeStar(exp.startDate, exp.endDate);
-                const responsibilities = getWorkExperienceBullets(exp);
+                const responsibilityBullets = getWorkExperienceResponsibilityOnly(exp);
                 return (
                   <div key={index}>
                     {/* Company line */}
@@ -361,8 +361,21 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                       </span>
                       {dateRange && <DateBadge text={dateRange} color={workExperienceStyling.bodyColor} />}
                     </div>
-                    {responsibilities.length > 0 && (
-                      <BulletList items={responsibilities} color={workExperienceStyling.bodyColor} sizePx={workExperienceBodySizes.sm} />
+                    {exp.description?.trim() && (
+                      <p
+                        style={{
+                          fontSize: workExperienceBodySizes.sm,
+                          color: workExperienceStyling.bodyColor,
+                          lineHeight: 1.55,
+                          marginTop: '4px',
+                          whiteSpace: 'pre-wrap',
+                        }}
+                      >
+                        {exp.description}
+                      </p>
+                    )}
+                    {responsibilityBullets.length > 0 && (
+                      <BulletList items={responsibilityBullets} color={workExperienceStyling.bodyColor} sizePx={workExperienceBodySizes.sm} />
                     )}
                     {exp.competencies && exp.competencies.length > 0 && (
                       <p style={{ fontSize: workExperienceBodySizes.xs, color: workExperienceStyling.bodyColor, opacity: 0.7, marginTop: '4px' }}>

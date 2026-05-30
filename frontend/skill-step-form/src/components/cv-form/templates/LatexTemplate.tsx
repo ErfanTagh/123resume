@@ -5,7 +5,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
-import { getWorkExperienceBullets } from "@/lib/workExperienceBullets";
+import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 interface LatexTemplateProps {
   data: CVFormData;
@@ -374,7 +374,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
               {workExperience.map((exp, index) => {
                 if (!exp.position && !exp.company) return null;
                 const dateRange = formatDateRangeLatex(exp.startDate, exp.endDate);
-                const responsibilities = getWorkExperienceBullets(exp);
+                const responsibilityBullets = getWorkExperienceResponsibilityOnly(exp);
                 const technologies = exp.technologies
                   ? exp.technologies.map(t => typeof t === 'string' ? t : t.technology).filter(Boolean)
                   : [];
@@ -403,8 +403,21 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                           )}
                         </div>
                       </div>
-                      {responsibilities.length > 0 && (
-                        <BulletList items={responsibilities} color={workExperienceStyling.bodyColor} sizePx={workExperienceBodySizes.body} />
+                      {exp.description?.trim() && (
+                        <p
+                          style={{
+                            fontSize: workExperienceBodySizes.body,
+                            color: workExperienceStyling.bodyColor,
+                            lineHeight: 1.5,
+                            marginTop: '4px',
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          {exp.description}
+                        </p>
+                      )}
+                      {responsibilityBullets.length > 0 && (
+                        <BulletList items={responsibilityBullets} color={workExperienceStyling.bodyColor} sizePx={workExperienceBodySizes.body} />
                       )}
                       {technologies.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '5px' }}>

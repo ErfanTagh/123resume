@@ -7,6 +7,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 interface CreativeTemplateProps {
   data: CVFormData;
@@ -232,31 +233,35 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                           </span>
                         )}
                       </div>
-                      {((exp.responsibilities && exp.responsibilities.length > 0) || exp.description) && (
-                        <ul 
-                          className="space-y-1 mt-1.5" 
-                          style={{ 
-                            fontSize: workExperienceBodySizes.sm, 
-                            color: workExperienceStyling.bodyColor, 
-                            lineHeight: '1.6' 
+                      {exp.description?.trim() && (
+                        <p
+                          className="mt-1.5 whitespace-pre-wrap"
+                          style={{
+                            fontSize: workExperienceBodySizes.sm,
+                            color: workExperienceStyling.bodyColor,
+                            lineHeight: '1.6',
                           }}
                         >
-                          {exp.responsibilities && exp.responsibilities.length > 0
-                            ? exp.responsibilities.map((resp, i) => (
-                              resp.responsibility && (
-                                <li key={i} className="flex gap-2.5">
-                                  <span style={{ color: accentColor }}>▸</span>
-                                  <span className="flex-1" style={{ opacity: 0.9 }}>{resp.responsibility}</span>
-                                </li>
-                              )
-                            ))
-                            : exp.description?.split('\n').filter(line => line.trim()).map((line, i) => (
-                              <li key={i} className="flex gap-2.5">
-                                <span style={{ color: accentColor }}>▸</span>
-                                <span className="flex-1" style={{ opacity: 0.9 }}>{line.trim()}</span>
-                              </li>
-                            ))
-                          }
+                          {exp.description}
+                        </p>
+                      )}
+                      {getWorkExperienceResponsibilityOnly(exp).length > 0 && (
+                        <ul
+                          className="space-y-1 mt-1.5"
+                          style={{
+                            fontSize: workExperienceBodySizes.sm,
+                            color: workExperienceStyling.bodyColor,
+                            lineHeight: '1.6',
+                          }}
+                        >
+                          {getWorkExperienceResponsibilityOnly(exp).map((line, i) => (
+                            <li key={i} className="flex gap-2.5">
+                              <span style={{ color: accentColor }}>▸</span>
+                              <span className="flex-1" style={{ opacity: 0.9 }}>
+                                {line}
+                              </span>
+                            </li>
+                          ))}
                         </ul>
                       )}
                       {exp.technologies && exp.technologies.length > 0 && (

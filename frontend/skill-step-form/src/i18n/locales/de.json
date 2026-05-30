@@ -64,6 +64,8 @@
     "templateLatexDesc": "Akademisch & technisch",
     "templateStarRover": "Star Rover",
     "templateStarRoverDesc": "Modern professionell mit Marine-Akzenten",
+    "templateSlateCopper": "Schiefer & Kupfer",
+    "templateSlateCopperDesc": "Zweispaltiges Editorial-Layout — Schiefer-Sidebar, Kupfer-Akzente",
     "templateLabel": "Vorlage",
     "chooseThisTemplate": "Diese Vorlage verwenden",
     "templatesSectionTitle": "Professionelle Vorlagen für Ihren Traumjob",
@@ -389,6 +391,7 @@
       "minimal": "Minimalistisch",
       "latex": "LaTeX",
       "starRover": "Star Rover",
+      "slateCopper": "Schiefer & Kupfer",
       "selectTemplate": "Vorlage auswählen"
     },
     "tabs": {

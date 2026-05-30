@@ -398,7 +398,7 @@ export interface ResumeData {
     skill: string;
   }>;
   sectionOrder?: string[];
-  template?: "modern" | "classic" | "minimal" | "creative" | "latex" | "starRover";
+  template?: "modern" | "classic" | "minimal" | "creative" | "latex" | "starRover" | "slateCopper";
   styling?: {
     fontFamily?: string;
     fontSize?: "small" | "medium" | "large";

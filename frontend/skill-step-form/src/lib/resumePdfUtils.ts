@@ -8,6 +8,7 @@ import { MinimalTemplate } from '@/components/cv-form/templates/MinimalTemplate'
 import { CreativeTemplate } from '@/components/cv-form/templates/CreativeTemplate';
 import { LatexTemplate } from '@/components/cv-form/templates/LatexTemplate';
 import { StarRoverTemplate } from '@/components/cv-form/templates/StarRoverTemplate';
+import { SlateCopperTemplate } from '@/components/cv-form/templates/SlateCopperTemplate';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import i18n from '@/i18n/config';
 import { formatProficiency as formatProficiencyShared } from '@/lib/languageProficiency';
@@ -1011,6 +1012,9 @@ function renderTemplateToHTML(resume: Resume): Promise<string> {
         case 'starRover':
           templateComponent = React.createElement(StarRoverTemplate, { data: formData });
           break;
+        case 'slateCopper':
+          templateComponent = React.createElement(SlateCopperTemplate, { data: formData });
+          break;
         case 'modern':
         default:
           templateComponent = React.createElement(ModernTemplate, { data: formData });
@@ -1155,6 +1159,9 @@ export async function downloadResumePDF(
         break;
       case 'starRover':
         templateComponent = React.createElement(StarRoverTemplate, { data: formData });
+        break;
+      case 'slateCopper':
+        templateComponent = React.createElement(SlateCopperTemplate, { data: formData });
         break;
       case 'modern':
       default:

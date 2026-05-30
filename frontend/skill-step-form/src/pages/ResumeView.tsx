@@ -19,6 +19,7 @@ import { MinimalTemplate } from '@/components/cv-form/templates/MinimalTemplate'
 import { CreativeTemplate } from '@/components/cv-form/templates/CreativeTemplate';
 import { LatexTemplate } from '@/components/cv-form/templates/LatexTemplate';
 import { StarRoverTemplate } from '@/components/cv-form/templates/StarRoverTemplate';
+import { SlateCopperTemplate } from '@/components/cv-form/templates/SlateCopperTemplate';
 import { resumeToCvFormData } from '@/lib/resumeToCvFormData';
 import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
 import { SEO } from '@/components/SEO';
@@ -174,6 +175,8 @@ export default function ResumeView() {
         return <LatexTemplate data={formData} />;
       case 'starRover':
         return <StarRoverTemplate data={formData} />;
+      case 'slateCopper':
+        return <SlateCopperTemplate data={formData} />;
       case 'modern':
       default:
         return <ModernTemplate data={formData} />;

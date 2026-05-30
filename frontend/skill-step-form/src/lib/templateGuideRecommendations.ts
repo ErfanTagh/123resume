@@ -80,7 +80,7 @@ export function getTemplateRecommendation(
     return {
       template: "classic",
       reasonKey: "reasonAtsGeneral",
-      alternates: withoutPrimary("classic", ["modern", "minimal", "latex"]),
+      alternates: withoutPrimary("classic", ["modern", "minimal", "slateCopper"]),
     };
   }
 
@@ -96,7 +96,7 @@ export function getTemplateRecommendation(
     return {
       template: "modern",
       reasonKey: "reasonMidBalanced",
-      alternates: withoutPrimary("modern", ["classic", "minimal", "latex"]),
+      alternates: withoutPrimary("modern", ["classic", "minimal", "slateCopper"]),
     };
   }
   if (isVerySenior) {

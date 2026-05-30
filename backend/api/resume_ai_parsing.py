@@ -247,6 +247,7 @@ def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
         "creative",
         "latex",
         "starRover",
+        "slateCopper",
     ):
         base["template"] = tpl
 

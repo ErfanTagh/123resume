@@ -10,6 +10,7 @@ import { MinimalTemplate } from "./templates/MinimalTemplate";
 import { CreativeTemplate } from "./templates/CreativeTemplate";
 import { LatexTemplate } from "./templates/LatexTemplate";
 import { StarRoverTemplate } from "./templates/StarRoverTemplate";
+import { SlateCopperTemplate } from "./templates/SlateCopperTemplate";
 import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 interface SignupOverlayProps {
@@ -36,6 +37,8 @@ export const SignupOverlay = ({ resumeData, onClose }: SignupOverlayProps) => {
         return <LatexTemplate data={displayData} />;
       case "starRover":
         return <StarRoverTemplate data={displayData} />;
+      case "slateCopper":
+        return <SlateCopperTemplate data={displayData} />;
       case "modern":
       default:
         return <ModernTemplate data={displayData} />;

@@ -5,6 +5,7 @@ import { CreativeTemplate } from "@/components/cv-form/templates/CreativeTemplat
 import { MinimalTemplate } from "@/components/cv-form/templates/MinimalTemplate";
 import { LatexTemplate } from "@/components/cv-form/templates/LatexTemplate";
 import { StarRoverTemplate } from "@/components/cv-form/templates/StarRoverTemplate";
+import { SlateCopperTemplate } from "@/components/cv-form/templates/SlateCopperTemplate";
 import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 // Helper function to get profile image based on template (rotate through 4 images)
@@ -16,6 +17,7 @@ const getProfileImageForTemplate = (templateName: string): string => {
     minimal: "/resume-sample-4-optimized.jpg",    // Black woman
     latex: "/resume-sample-1-optimized.jpg",      // East Asian man (reuse)
     starRover: "/resume-sample-2-optimized.jpg",  // Caucasian man (reuse)
+    slateCopper: "/resume-sample-3-optimized.jpg",
   };
   return imageMap[templateName] || "/resume-sample-1-optimized.jpg";
 };
@@ -239,7 +241,14 @@ const createSampleData = (templateName: string): CVFormData => ({
 });
 
 interface LandingTemplatePreviewProps {
-  templateName: "modern" | "classic" | "creative" | "minimal" | "latex" | "starRover";
+  templateName:
+    | "modern"
+    | "classic"
+    | "creative"
+    | "minimal"
+    | "latex"
+    | "starRover"
+    | "slateCopper";
   /** Zoom for thumbnail previews; default fits smaller cards. */
   previewScale?: number;
 }
@@ -466,6 +475,7 @@ export const LandingTemplatePreview = ({
             {templateName === "minimal" && <MinimalTemplate data={displayData} />}
             {templateName === "latex" && <LatexTemplate data={displayData} />}
             {templateName === "starRover" && <StarRoverTemplate data={displayData} />}
+            {templateName === "slateCopper" && <SlateCopperTemplate data={displayData} />}
           </div>
         </div>
       </div>

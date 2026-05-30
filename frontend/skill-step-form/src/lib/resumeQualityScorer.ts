@@ -178,7 +178,10 @@ const calculateFormatting = (data: CVFormData): number => {
   const maxScore = 10;
 
   // Template selection (2 points)
-  if (data.template && ["modern", "classic", "minimal", "creative"].includes(data.template)) {
+  if (
+    data.template &&
+    ["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper"].includes(data.template)
+  ) {
     score += 2;
   }
 

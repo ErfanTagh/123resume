@@ -16,4 +16,5 @@ export const LANDING_TEMPLATE_CATALOG: LandingTemplateCatalogItem[] = [
   { key: "minimal", nameKey: "templateMinimal", badges: ["ats"] },
   { key: "creative", nameKey: "templateCreative", badges: ["new"] },
   { key: "latex", nameKey: "templateLatex", badges: ["european"] },
+  { key: "slateCopper", nameKey: "templateSlateCopper", badges: ["ats"] },
 ];

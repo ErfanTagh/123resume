@@ -64,6 +64,8 @@
     "templateLatexDesc": "Academic & Technical Style",
     "templateStarRover": "Star Rover",
     "templateStarRoverDesc": "Modern Professional with Navy Accents",
+    "templateSlateCopper": "Slate & Copper",
+    "templateSlateCopperDesc": "Two-column editorial layout — slate sidebar, copper accents",
     "templateLabel": "Template",
     "chooseThisTemplate": "Use this template",
     "templatesSectionTitle": "Professional templates for your dream job",
@@ -386,6 +388,7 @@
       "minimal": "Minimal",
       "latex": "LaTeX",
       "starRover": "Star Rover",
+      "slateCopper": "Slate & Copper",
       "selectTemplate": "Select Template"
     },
     "tabs": {

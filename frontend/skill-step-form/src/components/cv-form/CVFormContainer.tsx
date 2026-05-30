@@ -29,7 +29,11 @@ import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import {
+  RESUME_ACCENT_BLUE,
+  RESUME_BODY_GRAY,
+  RESUME_TITLE_GRAY,
+} from "@/lib/resumeTemplatePalette";
 
 interface CVFormContainerProps {
   initialData?: CVFormData;
@@ -104,7 +108,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     return () => window.removeEventListener('popstate', handlePopState);
   }, [currentStep, templateSelected, editId, initialData]);
 
-  /** Section heading / accent — same blue as LaTeX Vorlage (`linkColor`) for every template */
+  /** Section heading / accent — same blue as other templates (`linkColor` family). */
   const getTemplateDefaultHeadingColor = (_template: string): string => RESUME_ACCENT_BLUE;
 
   // Get template-specific default for personalInfo section heading color
@@ -887,7 +891,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                   { nameKey: 'templateCreative', descKey: 'templateCreativeDesc', key: 'creative' as const },
                   { nameKey: 'templateMinimal', descKey: 'templateMinimalDesc', key: 'minimal' as const },
                   { nameKey: 'templateLatex', descKey: 'templateLatexDesc', key: 'latex' as const },
-                  { nameKey: 'templateStarRover', descKey: 'templateStarRoverDesc', key: 'starRover' as const }
+                  { nameKey: 'templateStarRover', descKey: 'templateStarRoverDesc', key: 'starRover' as const },
+                  { nameKey: 'templateSlateCopper', descKey: 'templateSlateCopperDesc', key: 'slateCopper' as const },
                 ].map((template) => {
                   const isSelected = form.watch("template") === template.key;
                   return (

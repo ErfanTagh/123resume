@@ -4,6 +4,7 @@ import { MinimalTemplate } from "./templates/MinimalTemplate";
 import { CreativeTemplate } from "./templates/CreativeTemplate";
 import { LatexTemplate } from "./templates/LatexTemplate";
 import { StarRoverTemplate } from "./templates/StarRoverTemplate";
+import { SlateCopperTemplate } from "./templates/SlateCopperTemplate";
 import type { CVFormData } from "./types";
 
 export function renderResumeTemplate(data: CVFormData) {
@@ -18,6 +19,8 @@ export function renderResumeTemplate(data: CVFormData) {
       return <LatexTemplate data={data} />;
     case "starRover":
       return <StarRoverTemplate data={data} />;
+    case "slateCopper":
+      return <SlateCopperTemplate data={data} />;
     case "modern":
     default:
       return <ModernTemplate data={data} />;

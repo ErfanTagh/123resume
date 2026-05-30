@@ -134,7 +134,7 @@ const CreateResume = () => {
       
       // If template param is provided, set initialData with that template
       if (templateParam) {
-        const validTemplates = ['modern', 'classic', 'creative', 'minimal', 'latex', 'starRover'];
+        const validTemplates = ['modern', 'classic', 'creative', 'minimal', 'latex', 'starRover', 'slateCopper'];
         const template = validTemplates.includes(templateParam) ? templateParam : 'modern';
         const dataWithTemplate = createEmptyCVFormData();
         dataWithTemplate.template = template as CVFormData['template'];

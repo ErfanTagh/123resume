@@ -107,7 +107,9 @@ export const cvFormSchema = z.object({
     })
   ).optional(),  // 🔧 Made array optional
   sectionOrder: z.array(z.string()).optional(),
-  template: z.enum(["modern", "classic", "minimal", "creative", "latex", "starRover"]).default("modern"),
+  template: z
+    .enum(["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper"])
+    .default("modern"),
   styling: z.object({
     fontFamily: z.string().optional(),
     fontSize: z.enum(["small", "medium", "large"]).optional(),
@@ -127,4 +129,11 @@ export const cvFormSchema = z.object({
 });
 export type CVFormData = z.infer<typeof cvFormSchema>;
 
-export type CVTemplate = "modern" | "classic" | "minimal" | "creative" | "latex" | "starRover";
+export type CVTemplate =
+  | "modern"
+  | "classic"
+  | "minimal"
+  | "creative"
+  | "latex"
+  | "starRover"
+  | "slateCopper";

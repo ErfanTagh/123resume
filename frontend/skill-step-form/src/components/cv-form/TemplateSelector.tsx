@@ -3,7 +3,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CVTemplate } from "./types";
-import { FileText, Sparkles, Minimize2, Palette, Code, Star, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  FileText,
+  Sparkles,
+  Minimize2,
+  Palette,
+  Code,
+  Star,
+  Columns2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TemplateSelectorProps {
@@ -53,6 +63,13 @@ const getTemplates = (t: (key: string) => string) => [
     description: t('landing.templateStarRoverDesc'),
     icon: Star,
     preview: "Clean design with distinctive styling",
+  },
+  {
+    id: "slateCopper" as CVTemplate,
+    name: t('resume.templates.slateCopper'),
+    description: t('landing.templateSlateCopperDesc'),
+    icon: Columns2,
+    preview: "Two-column editorial layout with slate sidebar",
   },
 ];
 

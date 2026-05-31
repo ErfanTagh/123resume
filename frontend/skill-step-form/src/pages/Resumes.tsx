@@ -310,6 +310,7 @@ export default function Resumes() {
         skills: fullResume.skills,
         template: fullResume.template,
         sectionOrder: fullResume.sectionOrder,
+        styling: fullResume.styling,
         completenessScore: fullResume.completenessScore,
         clarityScore: fullResume.clarityScore,
         formattingScore: fullResume.formattingScore,

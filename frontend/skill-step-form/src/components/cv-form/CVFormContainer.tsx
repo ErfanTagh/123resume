@@ -440,14 +440,16 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   }, [initialData?.template]);
 
   // When opening an existing resume, sync API data into the form once it is loaded.
+  const initialDataSyncKey = editId && initialData ? editId : null;
   useEffect(() => {
-    if (!editId || !initialData) return;
+    if (!initialDataSyncKey || !initialData) return;
     form.reset(getDefaultValues());
     logResumeScore("form:reset-from-initialData", {
-      editId,
+      editId: initialDataSyncKey,
       payloadSummary: summarizeResumePayloadForScore(getDefaultValues()),
     });
-  }, [editId, initialData, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset once per loaded resume id, not every initialData reference
+  }, [initialDataSyncKey, form]);
 
   // Reset styling to defaults when template changes
   // Use useLayoutEffect to ensure styling is set before browser paints

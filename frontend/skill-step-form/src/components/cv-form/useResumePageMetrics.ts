@@ -42,6 +42,31 @@ function measurePages(previewRef: RefObject<HTMLDivElement | null>) {
   return { pageCount: count, pageBreakPositions: breaks };
 }
 
+function breaksEqual(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+/** Page-break overlays are siblings inside the wrapper; ignore their DOM churn. */
+function isPreviewOverlayMutation(record: MutationRecord): boolean {
+  const overlayClass = (el: Element | null) =>
+    el?.classList?.contains("page-break-line") ||
+    el?.classList?.contains("page-number-indicator");
+
+  if (overlayClass(record.target instanceof Element ? record.target : null)) {
+    return true;
+  }
+
+  const nodes = [...Array.from(record.addedNodes), ...Array.from(record.removedNodes)];
+  return (
+    nodes.length > 0 &&
+    nodes.every(
+      (node) =>
+        node instanceof Element &&
+        (overlayClass(node) || node.querySelector(".page-break-line, .page-number-indicator") !== null),
+    )
+  );
+}
+
 export function useResumePageMetrics(
   previewRef: RefObject<HTMLDivElement | null>,
   scrollContainerRef: RefObject<HTMLDivElement | null>,
@@ -55,6 +80,7 @@ export function useResumePageMetrics(
 
   useLayoutEffect(() => {
     let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let mutationDebounceId: ReturnType<typeof setTimeout> | null = null;
     let retryCount = 0;
     const maxRetries = 10;
     const retryInterval = 100;
@@ -62,8 +88,10 @@ export function useResumePageMetrics(
     const applyMeasurement = () => {
       const result = measurePages(previewRef);
       if (!result) return false;
-      setPageCount(result.pageCount);
-      setPageBreakPositions(result.pageBreakPositions);
+      setPageCount((prev) => (prev === result.pageCount ? prev : result.pageCount));
+      setPageBreakPositions((prev) =>
+        breaksEqual(prev, result.pageBreakPositions) ? prev : result.pageBreakPositions,
+      );
       return true;
     };
 
@@ -73,27 +101,33 @@ export function useResumePageMetrics(
         retryCount++;
         retryTimeoutId = setTimeout(attemptCalculation, retryInterval);
       } else if (!success) {
-        setPageCount(1);
-        setPageBreakPositions([]);
+        setPageCount((prev) => (prev === 1 ? prev : 1));
+        setPageBreakPositions((prev) => (prev.length === 0 ? prev : []));
       } else {
         retryCount = 0;
       }
     };
 
     const wrapperElement = previewRef.current?.querySelector(".resume-content-wrapper");
+    const templateRoot = wrapperElement?.querySelector(".resume-page-container") as HTMLElement | null;
     let resizeObserver: ResizeObserver | null = null;
     let mutationObserver: MutationObserver | null = null;
 
-    if (wrapperElement) {
+    const observeTarget = templateRoot ?? wrapperElement;
+    if (observeTarget) {
       resizeObserver = new ResizeObserver(() => {
         retryCount = 0;
         attemptCalculation();
       });
-      resizeObserver.observe(wrapperElement);
+      resizeObserver.observe(observeTarget);
+    }
 
-      mutationObserver = new MutationObserver(() => {
+    if (wrapperElement) {
+      mutationObserver = new MutationObserver((records) => {
+        if (records.every(isPreviewOverlayMutation)) return;
         retryCount = 0;
-        setTimeout(attemptCalculation, 50);
+        if (mutationDebounceId) clearTimeout(mutationDebounceId);
+        mutationDebounceId = setTimeout(attemptCalculation, 50);
       });
       mutationObserver.observe(wrapperElement, {
         childList: true,
@@ -113,6 +147,7 @@ export function useResumePageMetrics(
 
     return () => {
       if (retryTimeoutId) clearTimeout(retryTimeoutId);
+      if (mutationDebounceId) clearTimeout(mutationDebounceId);
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
       window.removeEventListener("resize", handleResize);
@@ -122,7 +157,7 @@ export function useResumePageMetrics(
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || pageCount <= 1) {
-      setCurrentPage(1);
+      setCurrentPage((prev) => (prev === 1 ? prev : 1));
       return;
     }
 
@@ -132,7 +167,7 @@ export function useResumePageMetrics(
         Math.max(1, Math.floor(scrollTop / PAGE_HEIGHT_PX) + 1),
         pageCount,
       );
-      setCurrentPage(currentPageNum);
+      setCurrentPage((prev) => (prev === currentPageNum ? prev : currentPageNum));
     };
 
     scrollContainer.addEventListener("scroll", handleScroll);

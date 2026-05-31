@@ -36,7 +36,6 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
   const currentStyling = form.watch("styling");
   
   useLayoutEffect(() => {
-    // Default styling values that match template defaults
     const defaultStyling = {
       titleColor: RESUME_TITLE_GRAY,
       textColor: RESUME_BODY_GRAY,
@@ -48,16 +47,39 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
       headingBold: true,
     };
 
-    // If styling is missing or incomplete, initialize it
-    if (!currentStyling || !currentStyling.titleColor || !currentStyling.textColor || !currentStyling.headingColor || !currentStyling.fontSize) {
-      form.setValue("styling", {
+    const titleColor = currentStyling?.titleColor?.trim();
+    const textColor = currentStyling?.textColor?.trim();
+    const headingColor = currentStyling?.headingColor?.trim();
+    const fontSize = currentStyling?.fontSize;
+
+    // Empty strings from API must not override defaults (that caused infinite setValue loops).
+    if (titleColor && textColor && headingColor && fontSize) {
+      return;
+    }
+
+    form.setValue(
+      "styling",
+      {
         ...defaultStyling,
         ...currentStyling,
-        // Preserve section-specific styling if it exists
+        titleColor: titleColor || defaultStyling.titleColor,
+        textColor: textColor || defaultStyling.textColor,
+        headingColor: headingColor || defaultStyling.headingColor,
+        fontSize: fontSize || defaultStyling.fontSize,
+        linkColor: currentStyling?.linkColor?.trim() || defaultStyling.linkColor,
+        fontFamily: currentStyling?.fontFamily?.trim() || defaultStyling.fontFamily,
         sectionStyling: currentStyling?.sectionStyling,
-      }, { shouldValidate: false, shouldDirty: false });
-    }
-  }, [currentTemplate, currentStyling, form]); // Re-run when template or styling changes
+      },
+      { shouldValidate: false, shouldDirty: false },
+    );
+  }, [
+    currentTemplate,
+    currentStyling?.titleColor,
+    currentStyling?.textColor,
+    currentStyling?.headingColor,
+    currentStyling?.fontSize,
+    form,
+  ]);
 
   // Initialize image preview from form value (avoiding setState during render)
   useEffect(() => {

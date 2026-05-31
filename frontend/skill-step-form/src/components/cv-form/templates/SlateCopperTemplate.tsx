@@ -27,7 +27,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const SIDEBAR_SECTION_KEYS = new Set(["skills", "languages", "certificates"]);
+const SIDEBAR_SECTION_KEYS = new Set(["skills", "languages", "certificates", "interests"]);
 
 interface SlateCopperTemplateProps {
   data: CVFormData;
@@ -230,15 +230,18 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                           </span>
                         )}
                       </div>
-                      <p style={{ fontSize: fsWE.org, color: textColor }}>
-                        <ProjectLinkedTitle
-                          name={exp.company || ""}
-                          link={exp.link}
-                          inheritColor
-                          anchorStyle={{ fontSize: fsWE.org, color: textColor }}
-                        />
-                        {exp.location ? ` · ${exp.location}` : ""}
-                      </p>
+                      {(exp.company?.trim() || hasWebLink(exp.link) || exp.location) && (
+                        <p style={{ fontSize: fsWE.org, color: textColor }}>
+                          <ProjectLinkedTitle
+                            name={exp.company?.trim() || t("resume.contactLinkShort.website")}
+                            link={exp.link}
+                            className="sc-entry-link"
+                            inheritColor={false}
+                            anchorStyle={{ fontSize: fsWE.org }}
+                          />
+                          {exp.location ? ` · ${exp.location}` : ""}
+                        </p>
+                      )}
                       {exp.description?.trim() && (
                         <p className="mt-1 whitespace-pre-wrap leading-snug" style={{ fontSize: fsWE.body, color: textColor }}>
                           {exp.description}
@@ -252,6 +255,24 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                             </li>
                           ))}
                         </ul>
+                      )}
+                      {exp.technologies && exp.technologies.length > 0 && (
+                        <p className="mt-1" style={{ fontSize: fsWE.org, color: textColor, opacity: 0.9 }}>
+                          <span style={{ fontWeight: 500 }}>{t("resume.sections.technologies")}:</span>{" "}
+                          {exp.technologies
+                            .map((tech) => (typeof tech === "string" ? tech : tech.technology))
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+                      {exp.competencies && exp.competencies.length > 0 && (
+                        <p className="mt-1" style={{ fontSize: fsWE.org, color: textColor, opacity: 0.9 }}>
+                          <span style={{ fontWeight: 500 }}>{t("resume.labels.keyCompetencies")}:</span>{" "}
+                          {exp.competencies
+                            .map((c) => (typeof c === "string" ? c : c.competency))
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
                       )}
                     </div>
                   ),
@@ -284,18 +305,45 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                           </span>
                         )}
                       </div>
-                      <p style={{ fontSize: fsEd.org, color: textColor }}>
-                        <ProjectLinkedTitle
-                          name={edu.institution || ""}
-                          link={edu.link}
-                          inheritColor
-                          anchorStyle={{ fontSize: fsEd.org, color: textColor }}
-                        />
-                        {edu.location ? ` · ${edu.location}` : ""}
-                      </p>
+                      {(edu.institution?.trim() || hasWebLink(edu.link) || edu.location) && (
+                        <p style={{ fontSize: fsEd.org, color: textColor }}>
+                          <ProjectLinkedTitle
+                            name={edu.institution?.trim() || t("resume.contactLinkShort.website")}
+                            link={edu.link}
+                            className="sc-entry-link"
+                            inheritColor={false}
+                            anchorStyle={{ fontSize: fsEd.org }}
+                          />
+                          {edu.location ? ` · ${edu.location}` : ""}
+                        </p>
+                      )}
                       {edu.field ? (
                         <p style={{ fontSize: fsEd.body, color: textColor }}>{edu.field}</p>
                       ) : null}
+                      {edu.keyCourses && edu.keyCourses.length > 0 && (
+                        <p className="mt-1" style={{ fontSize: fsEd.org, color: textColor, opacity: 0.9 }}>
+                          <span style={{ fontWeight: 500 }}>{t("resume.labels.keyCourses")}:</span>{" "}
+                          {edu.keyCourses
+                            .map((c) => (typeof c === "string" ? c : c.course))
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+                      {edu.descriptions && edu.descriptions.length > 0 && (
+                        <ul className="sc-two-col-bullets mt-1 space-y-1 pl-0">
+                          {edu.descriptions
+                            .filter((d) => d?.description?.trim())
+                            .map((d, i) => (
+                              <li
+                                key={i}
+                                className="leading-snug"
+                                style={{ fontSize: fsEd.body, color: textColor }}
+                              >
+                                {d.description!.trim()}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
                     </div>
                   ),
               )}
@@ -314,7 +362,13 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                     <div key={index} className="space-y-1">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="font-medium" style={{ fontSize: fsPr.entry, color: titleColor }}>
-                          {proj.name}
+                          <ProjectLinkedTitle
+                            name={proj.name}
+                            link={proj.link}
+                            className="sc-entry-link"
+                            inheritColor={false}
+                            anchorStyle={{ fontSize: fsPr.entry, fontWeight: 500 }}
+                          />
                         </h3>
                         {(proj.startDate || proj.endDate) && (
                           <span className="shrink-0 whitespace-nowrap" style={{ fontSize: fs.date, color: META_GRAY }}>
@@ -340,20 +394,30 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                             ))}
                         </ul>
                       ) : null}
+                      {proj.highlights && proj.highlights.length > 0 && (
+                        <ul className="sc-two-col-bullets mt-1 space-y-1 pl-0">
+                          {proj.highlights
+                            .filter((h) => h?.highlight?.trim())
+                            .map((h, i) => (
+                              <li key={i} className="leading-snug" style={{ fontSize: fsPr.body, color: textColor }}>
+                                {h.highlight!.trim()}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                      {proj.technologies && proj.technologies.length > 0 && (
+                        <p className="mt-1" style={{ fontSize: fsPr.org, color: textColor, opacity: 0.9 }}>
+                          <span style={{ fontWeight: 500 }}>{t("resume.sections.technologies")}:</span>{" "}
+                          {proj.technologies
+                            .map((tech) => (typeof tech === "string" ? tech : tech.technology))
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
                     </div>
                   ),
               )}
             </div>
-          </div>
-        ) : null;
-
-      case "interests":
-        return personalInfo.interests?.some((i) => i.interest?.trim()) ? (
-          <div key="interests" data-resume-section="true">
-            {mainSectionHeading(t("resume.sections.interests"), personalInfoTitleColor)}
-            <p style={{ fontSize: fs.body, color: textColor, lineHeight: 1.6 }}>
-              {personalInfo.interests.map((i) => i.interest).filter(Boolean).join(" · ")}
-            </p>
           </div>
         ) : null;
 
@@ -399,6 +463,19 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           </div>
         ) : null;
 
+      case "interests":
+        return personalInfo.interests?.some((i) => i.interest?.trim()) ? (
+          <div key="interests" data-resume-section="true">
+            {sidebarSectionHeading(t("resume.sections.interests"), headingColor)}
+            <p style={{ fontSize: fsPIBody.body, color: personalInfoBodyColor, lineHeight: 1.55 }}>
+              {personalInfo.interests
+                .map((i) => i.interest?.trim())
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+        ) : null;
+
       case "certificates":
         return certificates.some((c) => c.name) ? (
           <div key="certificates" data-resume-section="true">
@@ -409,12 +486,34 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                   c.name && (
                     <div key={i}>
                       <p style={{ fontSize: fsCert.body, color: certificatesStyling.bodyColor, fontWeight: 500 }}>
-                        {c.name}
-                        {c.issueDate ? ` · ${c.issueDate}` : ""}
+                        {hasWebLink(c.url) ? (
+                          <a
+                            href={normalizeExternalUrl(c.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sc-entry-link no-underline"
+                            style={{ color: linkColor, textDecoration: "underline" }}
+                          >
+                            {c.name}
+                          </a>
+                        ) : (
+                          c.name
+                        )}
                       </p>
                       {c.organization ? (
                         <p style={{ fontSize: fsCert.org, color: certificatesStyling.bodyColor, opacity: 0.88 }}>
                           {c.organization}
+                        </p>
+                      ) : null}
+                      {(c.issueDate || c.expirationDate) && (
+                        <p style={{ fontSize: fsCert.org, color: certificatesStyling.bodyColor, opacity: 0.75 }}>
+                          {c.issueDate}
+                          {c.expirationDate ? ` – ${c.expirationDate}` : ""}
+                        </p>
+                      )}
+                      {c.credentialId ? (
+                        <p style={{ fontSize: fsCert.org, color: certificatesStyling.bodyColor, opacity: 0.75 }}>
+                          ID: {c.credentialId}
                         </p>
                       ) : null}
                     </div>
@@ -447,6 +546,17 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
         .sc-two-col-root a.sc-resume-link:hover,
         .sc-two-col-root a.sc-resume-link:focus-visible {
           color: color-mix(in srgb, var(--sc-link) 78%, #0f172a) !important;
+        }
+        .sc-two-col-root .sc-entry-link {
+          color: var(--sc-link);
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+        @media print {
+          .sc-two-col-root .sc-entry-link {
+            color: var(--sc-link) !important;
+            text-decoration: underline !important;
+          }
         }
         .resume-page-container.sc-two-col {
           padding-top: 24px !important;

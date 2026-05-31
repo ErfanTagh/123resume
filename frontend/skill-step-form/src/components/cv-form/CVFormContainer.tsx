@@ -29,6 +29,11 @@ import { feedbackAPI } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TemplateShowcaseBadge } from "@/components/landing/TemplateShowcaseBadge";
+import {
+  LANDING_TEMPLATE_CATALOG,
+  landingTemplateDescKey,
+} from "@/lib/landingTemplateCatalog";
 import {
   RESUME_ACCENT_BLUE,
   RESUME_BODY_GRAY,
@@ -887,15 +892,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {[
-                  { nameKey: 'templateModern', descKey: 'templateModernDesc', key: 'modern' as const },
-                  { nameKey: 'templateClassic', descKey: 'templateClassicDesc', key: 'classic' as const },
-                  { nameKey: 'templateCreative', descKey: 'templateCreativeDesc', key: 'creative' as const },
-                  { nameKey: 'templateMinimal', descKey: 'templateMinimalDesc', key: 'minimal' as const },
-                  { nameKey: 'templateLatex', descKey: 'templateLatexDesc', key: 'latex' as const },
-                  { nameKey: 'templateStarRover', descKey: 'templateStarRoverDesc', key: 'starRover' as const },
-                  { nameKey: 'templateSlateCopper', descKey: 'templateSlateCopperDesc', key: 'slateCopper' as const },
-                ].map((template) => {
+                {LANDING_TEMPLATE_CATALOG.map((template) => {
                   const isSelected = form.watch("template") === template.key;
                   return (
                     <div
@@ -918,11 +915,18 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                         </div>
                       </div>
                       <div className="px-3 pt-4 pb-4 sm:px-4 sm:pt-5 sm:pb-5 flex flex-col gap-2 min-h-[6.5rem] sm:min-h-[7rem] flex-shrink-0">
+                        {template.badges.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 flex-shrink-0">
+                            {template.badges.map((badgeId) => (
+                              <TemplateShowcaseBadge key={badgeId} badgeId={badgeId} />
+                            ))}
+                          </div>
+                        )}
                         <h3 className="font-bold text-base sm:text-lg flex-shrink-0 leading-snug" style={{ color: 'hsl(215 25% 15%)' }}>
                           {t(`landing.${template.nameKey}`)} {t('landing.templateLabel')}
                         </h3>
                         <p className="text-xs sm:text-sm font-medium flex-shrink-0 line-clamp-2 leading-snug" style={{ color: 'hsl(214 95% 45%)' }}>
-                          {t(`landing.${template.descKey}`)}
+                          {t(`landing.${landingTemplateDescKey(template.nameKey)}`)}
                         </p>
                         {isSelected && (
                           <div className="flex items-center gap-2 text-primary text-sm font-semibold flex-shrink-0 mt-1 pt-3 border-t border-border/70">

@@ -15,6 +15,10 @@ import { cn } from "@/lib/utils";
 
 type PanelId = "templates" | "settings" | "score";
 
+/** Scrollable body when a tool tab is open — taller than the old 300px cap so score/settings are readable. */
+const ACTIVE_PANEL_CLASS =
+  "min-h-[min(40vh,340px)] max-h-[min(62vh,540px)] overflow-y-auto border-primary/15 bg-muted/15 p-3 sm:min-h-[min(44vh,380px)] sm:max-h-[min(68vh,580px)] sm:p-4";
+
 export const ResumeCustomizeSidebar = ({
   data,
   serverResumeScore,
@@ -71,8 +75,8 @@ export const ResumeCustomizeSidebar = ({
             variant={panel === id ? "default" : "outline"}
             size="sm"
             className={cn(
-              "h-auto flex-col gap-1 px-2 py-2.5 text-[11px] font-semibold leading-tight",
-              panel === id && "shadow-sm",
+              "h-auto flex-col gap-1 px-2 py-2.5 text-[11px] font-semibold leading-tight sm:text-xs",
+              panel === id && "py-3 shadow-sm ring-1 ring-primary/20",
             )}
             onClick={() => togglePanel(id)}
             aria-pressed={panel === id}
@@ -84,7 +88,7 @@ export const ResumeCustomizeSidebar = ({
       </div>
 
       {panel === "templates" && (
-        <Card className="max-h-[min(38vh,300px)] overflow-y-auto border-primary/15 bg-muted/15 p-3 sm:p-4">
+        <Card className={ACTIVE_PANEL_CLASS}>
           <TemplateSelector
             selected={template}
             onSelect={(selected: CVTemplate) => onTemplateChange?.(selected)}
@@ -93,7 +97,7 @@ export const ResumeCustomizeSidebar = ({
       )}
 
       {panel === "settings" && (
-        <Card className="max-h-[min(38vh,300px)] space-y-4 overflow-y-auto border-primary/15 bg-muted/15 p-3 sm:p-4">
+        <Card className={cn(ACTIVE_PANEL_CLASS, "space-y-4")}>
           <StylingSettings
             data={data}
             currentStep={currentStep}
@@ -107,7 +111,7 @@ export const ResumeCustomizeSidebar = ({
       )}
 
       {panel === "score" && (
-        <Card className="max-h-[min(38vh,300px)] overflow-y-auto border-primary/15 bg-muted/15 p-3 sm:p-4">
+        <Card className={ACTIVE_PANEL_CLASS}>
           <CVRating
             onAnalyze={user ? () => onRequestAiResumeScore?.({ force: true }) : undefined}
             isAnalyzing={!!user && !!serverResumeScoreLoading}

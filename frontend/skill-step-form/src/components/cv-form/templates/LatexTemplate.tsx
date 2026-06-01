@@ -679,9 +679,9 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                       <p key={`${group.name}-${index}`} style={{ fontSize: skillsBodySizes.xs, color: skillsStyling.bodyColor, lineHeight: 1.8, margin: 0 }}>
                         <span style={{
                           fontSize: "0.62rem",
-                          fontWeight: 600,
-                          color: skillsStyling.bodyColor,
-                          opacity: 0.78,
+                          fontWeight: 700,
+                          color: titleColor,
+                          opacity: 0.95,
                           textTransform: 'none',
                           letterSpacing: '0.02em',
                         }}>

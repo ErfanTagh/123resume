@@ -438,7 +438,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             <div className="space-y-1" style={{ fontSize: fsSk.body, color: skillsStyling.bodyColor }}>
               {groupedSkills.map((group, i) => (
                 <div key={`${group.name}-${i}`}>
-                  <p style={{ fontWeight: 500, color: headingColor, fontSize: fsSk.xs, lineHeight: 1.2, opacity: 0.82 }}>
+                  <p style={{ fontWeight: 700, color: titleColor, fontSize: fsSk.xs, lineHeight: 1.2, opacity: 0.95 }}>
                     {group.name}
                   </p>
                   <p style={{ color: skillsStyling.bodyColor, lineHeight: 1.35 }}>

@@ -501,7 +501,7 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
                     lineHeight: '1.7'
                   }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: sizes.xs, opacity: 0.82 }}>{group.name}: </span>
+                  <span style={{ fontWeight: 700, fontSize: sizes.xs, color: titleColor, opacity: 0.95 }}>{group.name}: </span>
                   {group.skills.join(" • ")}
                 </p>
               ))}

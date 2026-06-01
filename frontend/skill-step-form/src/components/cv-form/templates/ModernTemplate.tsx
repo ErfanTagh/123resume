@@ -585,9 +585,9 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
                   <p
                     style={{
                       fontSize: "0.62rem",
-                      color: skillsStyling.bodyColor,
-                      fontWeight: 600,
-                      opacity: 0.8,
+                      color: titleColor,
+                      fontWeight: 700,
+                      opacity: 0.95,
                       marginBottom: "4px",
                       letterSpacing: "0.02em",
                     }}

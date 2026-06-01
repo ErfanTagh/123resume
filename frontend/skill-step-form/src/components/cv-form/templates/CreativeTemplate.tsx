@@ -637,10 +637,10 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                     <p
                       style={{
                         fontSize: "0.62rem",
-                        color: skillsStyling.bodyColor,
-                        fontWeight: 600,
+                        color: titleColor,
+                        fontWeight: 700,
                         marginBottom: "4px",
-                        opacity: 0.8,
+                        opacity: 0.95,
                         letterSpacing: "0.02em",
                       }}
                     >

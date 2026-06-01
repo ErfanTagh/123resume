@@ -493,7 +493,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                   key={`${group.name}-${index}`}
                   style={{ fontSize: skillsBodySizes.sm, color: skillsStyling.bodyColor, lineHeight: 1.7, margin: 0, wordBreak: 'break-word' }}
                 >
-                  <span style={{ fontWeight: 700, marginRight: '6px', opacity: 0.75, textTransform: 'none', letterSpacing: '0.02em', fontSize: '0.62rem' }}>
+                  <span style={{ fontWeight: 700, marginRight: '6px', color: titleColor, opacity: 0.95, textTransform: 'none', letterSpacing: '0.02em', fontSize: '0.62rem' }}>
                     {group.name}:
                   </span>
                   {group.skills.map((item, itemIndex) => (

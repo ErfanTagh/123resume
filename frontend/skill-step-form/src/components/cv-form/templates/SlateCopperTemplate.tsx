@@ -618,7 +618,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                   src={personalInfo.profileImage}
                   alt=""
                   className="block h-full w-full"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 50%" }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "60% 50%" }}
                   loading="lazy"
                   decoding="async"
                 />

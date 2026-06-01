@@ -636,11 +636,12 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                   <div key={`${group.name}-${index}`}>
                     <p
                       style={{
-                        fontSize: skillsBodySizes.xs,
+                        fontSize: "0.62rem",
                         color: skillsStyling.bodyColor,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         marginBottom: "4px",
-                        opacity: 0.85,
+                        opacity: 0.8,
+                        letterSpacing: "0.02em",
                       }}
                     >
                       {group.name}

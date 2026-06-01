@@ -584,12 +584,12 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
                 <div key={`${group.name}-${index}`}>
                   <p
                     style={{
-                      fontSize: skillsBodySizes.xs,
+                      fontSize: "0.62rem",
                       color: skillsStyling.bodyColor,
                       fontWeight: 600,
-                      opacity: 0.85,
+                      opacity: 0.8,
                       marginBottom: "4px",
-                      letterSpacing: "0.03em",
+                      letterSpacing: "0.02em",
                     }}
                   >
                     {group.name}

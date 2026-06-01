@@ -175,7 +175,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const sidebarBlockStart = (showDivider: boolean) =>
     showDivider ? (
       <div
-        className="mb-4 mt-4 border-t pt-4"
+        className="mb-3 mt-3 border-t pt-2.5"
         style={{ borderColor: hexToRgba(linkColor, 0.35) }}
         aria-hidden
       />
@@ -438,7 +438,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             <div className="space-y-1" style={{ fontSize: fsSk.body, color: skillsStyling.bodyColor }}>
               {groupedSkills.map((group, i) => (
                 <div key={`${group.name}-${i}`}>
-                  <p style={{ fontWeight: 500, color: headingColor, fontSize: fsSk.org, lineHeight: 1.25 }}>
+                  <p style={{ fontWeight: 500, color: headingColor, fontSize: fsSk.xs, lineHeight: 1.2, opacity: 0.82 }}>
                     {group.name}
                   </p>
                   <p style={{ color: skillsStyling.bodyColor, lineHeight: 1.35 }}>

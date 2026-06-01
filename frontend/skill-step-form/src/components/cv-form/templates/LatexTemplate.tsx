@@ -678,12 +678,12 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                     {groupedSkills.map((group, index) => (
                       <p key={`${group.name}-${index}`} style={{ fontSize: skillsBodySizes.xs, color: skillsStyling.bodyColor, lineHeight: 1.8, margin: 0 }}>
                         <span style={{
-                          fontSize: skillsBodySizes.xs,
-                          fontWeight: 700,
+                          fontSize: "0.62rem",
+                          fontWeight: 600,
                           color: skillsStyling.bodyColor,
-                          opacity: 0.7,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
+                          opacity: 0.78,
+                          textTransform: 'none',
+                          letterSpacing: '0.02em',
                         }}>
                           {group.name}:
                         </span>

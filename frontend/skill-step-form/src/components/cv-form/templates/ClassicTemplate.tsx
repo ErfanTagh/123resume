@@ -323,7 +323,7 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
             <div className="space-y-1">
               {groupedSkills.map((group, index) => (
                 <p key={`${group.name}-${index}`} style={{ fontSize: skillsBodySizes.sm, color: skillsStyling.bodyColor, lineHeight: '1.7' }}>
-                  <span style={{ fontWeight: 600 }}>{group.name}: </span>
+                  <span style={{ fontWeight: 600, fontSize: skillsBodySizes.xs, opacity: 0.82 }}>{group.name}: </span>
                   {group.skills.join(" • ")}
                 </p>
               ))}

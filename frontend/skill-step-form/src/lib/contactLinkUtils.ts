@@ -14,3 +14,29 @@ export function normalizeExternalUrl(raw: string): string {
 export function hasWebLink(url: string | undefined | null): url is string {
   return typeof url === 'string' && url.trim().length > 0;
 }
+
+const DEFAULT_PROFILE_LINKS = new Set([
+  "linkedin.com/in/emilychen",
+  "github.com/yourusername",
+  "github.com/ihrbenutzername",
+  "yourwebsite.com",
+  "ihrewebsite.de",
+]);
+
+function normalizeLinkForComparison(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/+$/, "");
+}
+
+/**
+ * Some users save form placeholders as real values.
+ * Exclude known defaults so templates don't render fake links.
+ */
+export function hasMeaningfulProfileLink(url: string | undefined | null): url is string {
+  if (!hasWebLink(url)) return false;
+  return !DEFAULT_PROFILE_LINKS.has(normalizeLinkForComparison(url));
+}

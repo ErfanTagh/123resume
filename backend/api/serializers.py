@@ -181,6 +181,11 @@ class SkillSerializer(serializers.Serializer):
     skill = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
 
+class SkillGroupSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=120, required=False, allow_blank=True)
+    skills = SkillSerializer(many=True, required=False)
+
+
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True, source='_id')
     name = serializers.CharField(max_length=200, required=False, allow_blank=True)
@@ -191,6 +196,7 @@ class ResumeSerializer(serializers.Serializer):
     certificates = CertificateSerializer(many=True, required=False)
     languages = LanguageSerializer(many=True, required=False)
     skills = SkillSerializer(many=True, required=False)
+    skill_groups = SkillGroupSerializer(many=True, required=False)
     template = serializers.CharField(max_length=50, required=False, allow_blank=True)
     section_order = serializers.ListField(
         child=serializers.CharField(max_length=100),

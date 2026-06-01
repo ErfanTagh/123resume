@@ -106,6 +106,16 @@ export const cvFormSchema = z.object({
       skill: z.string().optional(),  // 🔧 Changed to optional
     })
   ).optional(),  // 🔧 Made array optional
+  skillGroups: z.array(
+    z.object({
+      name: z.string().optional(),
+      skills: z.array(
+        z.object({
+          skill: z.string().optional(),
+        }),
+      ).optional(),
+    }),
+  ).optional(),
   sectionOrder: z.array(z.string()).optional(),
   template: z
     .enum(["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper"])

@@ -66,6 +66,28 @@ function normalizeCertificatesFromResume(resume: Resume | Record<string, unknown
   });
 }
 
+function normalizeSkillGroupsFromResume(
+  resume: Resume | Record<string, unknown>,
+): NonNullable<CVFormData["skillGroups"]> {
+  const r = resume as Record<string, unknown>;
+  const raw = r.skillGroups ?? r.skill_groups;
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map((group) => {
+    const g = group as Record<string, unknown>;
+    const groupSkillsRaw = g.skills;
+    const groupSkills = Array.isArray(groupSkillsRaw)
+      ? groupSkillsRaw.map((skillRow) => {
+          const row = skillRow as Record<string, unknown>;
+          return { skill: pickStr(row.skill) || undefined };
+        })
+      : [];
+    return {
+      name: pickStr(g.name) || undefined,
+      skills: groupSkills,
+    };
+  });
+}
+
 /**
  * Convert backend Resume (styling snake_case or camelCase) to CVFormData for templates.
  */
@@ -174,6 +196,7 @@ export function resumeToCvFormData(resume: Resume): CVFormData {
     projects: normalizeProjectsFromResume(resume),
     certificates: normalizeCertificatesFromResume(resume),
     skills: resume.skills || [],
+    skillGroups: normalizeSkillGroupsFromResume(resume),
     languages: resume.languages || [],
     sectionOrder:
       ((resume.sectionOrder as string[] | undefined) ?? (r.section_order as string[] | undefined)) || [],

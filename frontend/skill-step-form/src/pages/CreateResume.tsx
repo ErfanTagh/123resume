@@ -62,6 +62,7 @@ const createEmptyCVFormData = (): CVFormData => ({
   certificates: [],
   languages: [{ language: "", proficiency: "" }],
   skills: [{ skill: "" }],
+  skillGroups: [{ name: "", skills: [{ skill: "" }] }],
   sectionOrder: DEFAULT_SECTION_ORDER,
   template: "modern",
   styling: {
@@ -105,6 +106,10 @@ const mapResumeToCVFormData = (resume: Resume): CVFormData => {
         : base.languages,
     skills:
       mapped.skills && mapped.skills.length > 0 ? mapped.skills : base.skills,
+    skillGroups:
+      mapped.skillGroups && mapped.skillGroups.length > 0
+        ? mapped.skillGroups
+        : base.skillGroups,
     sectionOrder:
       mapped.sectionOrder && mapped.sectionOrder.length > 0
         ? mapped.sectionOrder

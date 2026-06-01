@@ -184,6 +184,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       certificates: [],
       languages: [],
       skills: [],
+      skillGroups: [{ name: "", skills: [{ skill: "" }] }],
       sectionOrder: ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"],
       template: "modern" as const,
       // IMPORTANT: do NOT pre-populate sectionStyling for personalInfo.
@@ -226,6 +227,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         : defaults.education,
       languages: Array.isArray(initialData.languages) ? initialData.languages : defaults.languages,
       skills: Array.isArray(initialData.skills) ? initialData.skills : defaults.skills,
+      skillGroups: Array.isArray(initialData.skillGroups) && initialData.skillGroups.length > 0
+        ? initialData.skillGroups
+        : defaults.skillGroups,
       projects: Array.isArray(initialData.projects) ? initialData.projects : defaults.projects,
       certificates: Array.isArray(initialData.certificates) ? initialData.certificates : defaults.certificates,
       styling: {

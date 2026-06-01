@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 
@@ -13,7 +14,7 @@ interface ModernTemplateProps {
 
 export const ModernTemplate = ({ data }: ModernTemplateProps) => {
   const { t, language } = useLanguage();
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
@@ -108,6 +109,7 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
   const languagesBodySizes = fontSizeMap[languagesStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
 
   const getHeadingClassName = () => "mb-2 pb-1 border-b-2";
 
@@ -563,7 +565,7 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
         ) : null;
 
       case "skills":
-        return skills.some(s => s.skill) ? (
+        return groupedSkills.length > 0 ? (
           <div key="skills" data-resume-section="true">
             <h2 
               className={getHeadingClassName()} 
@@ -577,22 +579,38 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
             >
               {t('resume.sections.skills').toUpperCase()}
             </h2>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {skills.map((s, index) => (
-                s.skill && (
-                  <span 
-                    key={index} 
-                    className="px-2.5 py-1 rounded-full font-medium" 
-                    style={{ 
-                      fontSize: skillsBodySizes.xs, 
-                      color: skillsStyling.bodyColor, 
-                      backgroundColor: `${skillsStyling.bodyColor}15`,
-                      letterSpacing: '0.01em'
+            <div className="space-y-2 mt-2">
+              {groupedSkills.map((group, index) => (
+                <div key={`${group.name}-${index}`}>
+                  <p
+                    style={{
+                      fontSize: skillsBodySizes.xs,
+                      color: skillsStyling.bodyColor,
+                      fontWeight: 600,
+                      opacity: 0.85,
+                      marginBottom: "4px",
+                      letterSpacing: "0.03em",
                     }}
                   >
-                    {s.skill}
-                  </span>
-                )
+                    {group.name}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.skills.map((item, itemIndex) => (
+                      <span
+                        key={`${group.name}-${itemIndex}`}
+                        className="px-2.5 py-1 rounded-full font-medium"
+                        style={{
+                          fontSize: skillsBodySizes.xs,
+                          color: skillsStyling.bodyColor,
+                          backgroundColor: `${skillsStyling.bodyColor}15`,
+                          letterSpacing: '0.01em'
+                        }}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

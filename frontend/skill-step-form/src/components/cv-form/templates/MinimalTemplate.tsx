@@ -4,6 +4,7 @@ import { formatDateRange } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
@@ -28,7 +29,7 @@ const SectionHeading = ({ title, fontSize, color }: { title: string; fontSize: s
 
 export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
   const { t, language } = useLanguage();
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
@@ -120,6 +121,7 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
   const languagesBodySizes = fontSizeMap[languagesStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
 
   const renderSection = (sectionKey: string) => {
     switch (sectionKey) {
@@ -485,19 +487,25 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
         ) : null;
 
       case "skills":
-        return skills.some(s => s.skill) ? (
+        return groupedSkills.length > 0 ? (
           <div key="skills">
             <SectionHeading title={t('resume.sections.skills') || 'Skills'} fontSize={skillsTitleSizes.heading} color={skillsStyling.titleColor} />
-            <p 
-              className="leading-relaxed" 
-              style={{ 
-                fontSize: sizes.sm, 
-                color: skillsStyling.bodyColor,
-                lineHeight: '1.7'
-              }}
-            >
-              {skills.filter(s => s.skill).map(s => s.skill).join(" • ")}
-            </p>
+            <div className="space-y-1">
+              {groupedSkills.map((group, index) => (
+                <p
+                  key={`${group.name}-${index}`}
+                  className="leading-relaxed"
+                  style={{
+                    fontSize: sizes.sm,
+                    color: skillsStyling.bodyColor,
+                    lineHeight: '1.7'
+                  }}
+                >
+                  <span style={{ fontWeight: 600 }}>{group.name}: </span>
+                  {group.skills.join(" • ")}
+                </p>
+              ))}
+            </div>
           </div>
         ) : null;
 

@@ -104,6 +104,7 @@ def resume_list(request):
                     'certificates': resume_doc.get('certificates', []),
                     'languages': resume_doc.get('languages', []),
                     'skills': resume_doc.get('skills', []),
+                    'skill_groups': resume_doc.get('skill_groups', []),
                     'template': resume_doc.get('template', 'modern'),
                     'section_order': resume_doc.get('section_order', [
                         'summary',
@@ -224,6 +225,7 @@ def resume_list(request):
                     'certificates': data.get('certificates', []),
                     'languages': data.get('languages', []),
                     'skills': data.get('skills', []),
+                    'skill_groups': data.get('skill_groups', []),
                     'template': data.get('template', 'modern'),
                     'section_order': data.get('section_order', [
                         'summary',
@@ -268,6 +270,7 @@ def resume_list(request):
                     'certificates': created_doc.get('certificates', []),
                     'languages': created_doc.get('languages', []),
                     'skills': created_doc.get('skills', []),
+                    'skill_groups': created_doc.get('skill_groups', []),
                     'template': created_doc.get('template', 'modern'),
                     'section_order': created_doc.get('section_order', [
                         'summary',
@@ -611,6 +614,7 @@ def _resume_dict_from_doc(resume_doc):
         'certificates': _doc_certificates(resume_doc),
         'languages': resume_doc.get('languages', []),
         'skills': resume_doc.get('skills', []),
+        'skill_groups': resume_doc.get('skill_groups', []),
         'template': resume_doc.get('template', 'modern'),
         'section_order': resume_doc.get(
             'section_order',

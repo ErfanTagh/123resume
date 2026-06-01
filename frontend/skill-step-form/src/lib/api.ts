@@ -397,6 +397,10 @@ export interface ResumeData {
   skills?: Array<{
     skill: string;
   }>;
+  skillGroups?: Array<{
+    name?: string;
+    skills?: Array<{ skill?: string }>;
+  }>;
   sectionOrder?: string[];
   template?: "modern" | "classic" | "minimal" | "creative" | "latex" | "starRover" | "slateCopper";
   styling?: {

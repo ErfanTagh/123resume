@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
@@ -13,7 +14,7 @@ interface LatexTemplateProps {
 
 export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const { t } = useLanguage();
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "skills", "projects", "education", "workExperience", "certificates", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
@@ -100,6 +101,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
   const languagesBodySizes = fontSizeMap[languagesStyling.bodySize];
 
@@ -650,7 +652,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
         <div style={{ padding: '0 32px' }}>
 
           {/* Summary + Skills */}
-          {(personalInfo.summary || (skills && skills.length > 0 && skills.some(s => s.skill))) && (
+          {(personalInfo.summary || groupedSkills.length > 0) && (
             <div style={{ marginBottom: '22px' }}>
               {personalInfo.summary && personalInfo.summary.trim() && (
                 <div style={{ marginBottom: '14px' }}>
@@ -669,31 +671,34 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                 </div>
               )}
 
-              {skills && skills.length > 0 && skills.some(s => s.skill) && (
+              {groupedSkills.length > 0 && (
                 <div>
                   <SectionHeading label={t('resume.sections.skills').toUpperCase()} color={sectionHeadingColor} sizes={skillsTitleSizes} />
-                  <div style={{ paddingLeft: '14%', display: 'flex', gap: '8px', alignItems: 'baseline', flexWrap: 'wrap' }}>
-                    <span style={{
-                      fontSize: skillsBodySizes.xs,
-                      fontWeight: 700,
-                      color: skillsStyling.bodyColor,
-                      flexShrink: 0,
-                      opacity: 0.7,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}>
-                      {t('resume.sections.skills')}:
-                    </span>
-                    <span style={{ fontSize: skillsBodySizes.xs, color: skillsStyling.bodyColor, lineHeight: 1.8 }}>
-                      {skills.filter(s => s.skill).map((s, i, arr) => (
-                        <span key={i}>
-                          {s.skill}
-                          {i < arr.length - 1 && (
-                            <span style={{ color: sectionHeadingColor, padding: '0 5px', opacity: 0.5 }}>·</span>
-                          )}
+                  <div style={{ paddingLeft: '14%', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    {groupedSkills.map((group, index) => (
+                      <p key={`${group.name}-${index}`} style={{ fontSize: skillsBodySizes.xs, color: skillsStyling.bodyColor, lineHeight: 1.8, margin: 0 }}>
+                        <span style={{
+                          fontSize: skillsBodySizes.xs,
+                          fontWeight: 700,
+                          color: skillsStyling.bodyColor,
+                          opacity: 0.7,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}>
+                          {group.name}:
                         </span>
-                      ))}
-                    </span>
+                        <span style={{ marginLeft: '6px' }}>
+                          {group.skills.map((item, itemIndex) => (
+                            <span key={`${group.name}-${itemIndex}`}>
+                              {item}
+                              {itemIndex < group.skills.length - 1 && (
+                                <span style={{ color: sectionHeadingColor, padding: '0 5px', opacity: 0.5 }}>·</span>
+                              )}
+                            </span>
+                          ))}
+                        </span>
+                      </p>
+                    ))}
                   </div>
                 </div>
               )}

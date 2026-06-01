@@ -5,6 +5,7 @@ import { formatDateRange } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
@@ -15,7 +16,7 @@ interface CreativeTemplateProps {
 
 export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
   const { t, language } = useLanguage();
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
@@ -114,6 +115,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
   const languagesBodySizes = fontSizeMap[languagesStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
 
   // Section icon mapping
   const sectionIcons = {
@@ -613,7 +615,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
         ) : null;
 
       case "skills":
-        return skills.some(s => s.skill) ? (
+        return groupedSkills.length > 0 ? (
           <div key="skills">
             <div className="relative pl-5 border-l-[3px]" style={{ borderColor: accentColor }}>
               <div className="flex items-center gap-2 mb-2.5">
@@ -629,22 +631,37 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                   {t('resume.sections.skills')}
                 </h2>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {skills.map((s, index) => (
-                  s.skill && (
-                    <span 
-                      key={index} 
-                      className="px-2.5 py-1 rounded-lg font-semibold" 
-                      style={{ 
-                        fontSize: skillsBodySizes.xs, 
-                        color: skillsStyling.bodyColor, 
-                        backgroundColor: `${skillsStyling.bodyColor}12`,
-                        letterSpacing: '0.01em'
+              <div className="space-y-2">
+                {groupedSkills.map((group, index) => (
+                  <div key={`${group.name}-${index}`}>
+                    <p
+                      style={{
+                        fontSize: skillsBodySizes.xs,
+                        color: skillsStyling.bodyColor,
+                        fontWeight: 700,
+                        marginBottom: "4px",
+                        opacity: 0.85,
                       }}
                     >
-                      {s.skill}
-                    </span>
-                  )
+                      {group.name}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.skills.map((item, itemIndex) => (
+                        <span
+                          key={`${group.name}-${itemIndex}`}
+                          className="px-2.5 py-1 rounded-lg font-semibold"
+                          style={{
+                            fontSize: skillsBodySizes.xs,
+                            color: skillsStyling.bodyColor,
+                            backgroundColor: `${skillsStyling.bodyColor}12`,
+                            letterSpacing: '0.01em'
+                          }}
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

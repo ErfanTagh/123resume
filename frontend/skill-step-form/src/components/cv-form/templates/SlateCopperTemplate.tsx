@@ -4,7 +4,8 @@ import { Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { formatProficiency } from "@/lib/languageProficiency";
-import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { hasMeaningfulProfileLink, hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
@@ -43,6 +44,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
     certificates,
     languages,
     skills,
+    skillGroups,
     sectionOrder,
     styling,
   } = data;
@@ -144,6 +146,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const fsSk = fontSizeMap[skillsStyling.bodySize];
   const fsLang = fontSizeMap[languagesStyling.bodySize];
   const fsCert = fontSizeMap[certificatesStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t("resume.sections.skills"));
 
   const mainSectionHeading = (label: string, color: string) => (
     <h2
@@ -429,19 +432,21 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const renderSidebarSection = (sectionKey: string): ReactNode => {
     switch (sectionKey) {
       case "skills":
-        return skills.some((s) => s.skill?.trim()) ? (
+        return groupedSkills.length > 0 ? (
           <div key="skills" data-resume-section="true">
             {sidebarSectionHeading(t("resume.sections.skills"), headingColor)}
-            <ul className="space-y-1" style={{ fontSize: fsSk.body, color: skillsStyling.bodyColor }}>
-              {skills.map(
-                (s, i) =>
-                  s.skill?.trim() && (
-                    <li key={i} style={{ color: skillsStyling.bodyColor }}>
-                      {s.skill.trim()}
-                    </li>
-                  ),
-              )}
-            </ul>
+            <div className="space-y-1" style={{ fontSize: fsSk.body, color: skillsStyling.bodyColor }}>
+              {groupedSkills.map((group, i) => (
+                <div key={`${group.name}-${i}`}>
+                  <p style={{ fontWeight: 500, color: headingColor, fontSize: fsSk.org, lineHeight: 1.25 }}>
+                    {group.name}
+                  </p>
+                  <p style={{ color: skillsStyling.bodyColor, lineHeight: 1.35 }}>
+                    {group.skills.join(" · ")}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         ) : null;
 
@@ -557,6 +562,19 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             color: var(--sc-link) !important;
             text-decoration: underline !important;
           }
+          .sc-two-col-root [data-resume-section="true"],
+          .sc-two-col-root .sc-sidebar-contact,
+          .sc-two-col-root .sc-sidebar-section {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-column-break-inside: avoid !important;
+          }
+          .sc-two-col-root .sc-sidebar-contact h3,
+          .sc-two-col-root .sc-sidebar-section h3 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+            -webkit-column-break-after: avoid !important;
+          }
         }
         .resume-page-container.sc-two-col {
           padding-top: 24px !important;
@@ -592,12 +610,14 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             }}
           >
             {personalInfo.profileImage?.trim() ? (
-              <div className="mx-auto mb-4 w-24 overflow-hidden rounded-md border-2" style={{ borderColor: linkColor }}>
+              <div
+                className="mx-auto mb-4 h-28 w-24 overflow-hidden rounded-md border-2"
+                style={{ borderColor: linkColor }}
+              >
                 <img
                   src={personalInfo.profileImage}
                   alt=""
-                  className="h-28 w-full object-cover"
-                  style={{ objectPosition: "50% 40%" }}
+                  className="block h-full w-full object-cover object-center"
                   loading="lazy"
                   decoding="async"
                 />
@@ -624,7 +644,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             ) : null}
 
             {sidebarBlockStart(true)}
-            <div>
+            <div className="sc-sidebar-contact" data-resume-section="true">
               {sidebarSectionHeading(t("resume.sections.contact"), headingColor)}
               <div className="space-y-2" style={{ fontSize: fs.body, color: textColor }}>
                 {personalInfo.email ? (
@@ -645,7 +665,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                     <span>{personalInfo.location}</span>
                   </div>
                 ) : null}
-                {personalInfo.linkedin && hasWebLink(personalInfo.linkedin) ? (
+                {hasMeaningfulProfileLink(personalInfo.linkedin) ? (
                   <a
                     href={normalizeExternalUrl(personalInfo.linkedin)}
                     target="_blank"
@@ -657,7 +677,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                     <span className="break-all">{t("resume.contactLinkShort.linkedin")}</span>
                   </a>
                 ) : null}
-                {personalInfo.github && hasWebLink(personalInfo.github) ? (
+                {hasMeaningfulProfileLink(personalInfo.github) ? (
                   <a
                     href={normalizeExternalUrl(personalInfo.github)}
                     target="_blank"
@@ -669,7 +689,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                     <span className="break-all">{t("resume.contactLinkShort.github")}</span>
                   </a>
                 ) : null}
-                {personalInfo.website && hasWebLink(personalInfo.website) ? (
+                {hasMeaningfulProfileLink(personalInfo.website) ? (
                   <a
                     href={normalizeExternalUrl(personalInfo.website)}
                     target="_blank"
@@ -688,7 +708,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
               const node = renderSidebarSection(key);
               if (!node) return null;
               return (
-                <div key={key}>
+                <div key={key} className="sc-sidebar-section" data-resume-section="true">
                   {sidebarBlockStart(true)}
                   {node}
                 </div>

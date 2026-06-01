@@ -4,6 +4,7 @@ import { formatMonthYear } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
+import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
@@ -14,7 +15,7 @@ interface StarRoverTemplateProps {
 
 export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
   const { t, language } = useLanguage();
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "education", "workExperience", "projects", "certificates", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
@@ -103,6 +104,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
   const languagesBodySizes = fontSizeMap[languagesStyling.bodySize];
+  const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
 
   const formatDateRangeStar = (startDate: string | undefined, endDate: string | undefined): string => {
     if (!startDate && !endDate) return '';
@@ -234,7 +236,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
     switch (sectionKey) {
       case "summary":
         return personalInfo.summary && personalInfo.summary.trim() ? (
-          <div key="summary">
+          <div key="summary" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.summary').toUpperCase()} color={sectionHeadingColor} sizePx={personalInfoTitleSizes.heading} />
             <p style={{
               fontSize: personalInfoBodySizes.baseText,
@@ -251,14 +253,14 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
 
       case "education":
         return education && education.length > 0 && education.some(e => e.degree || e.institution) ? (
-          <div key="education">
+          <div key="education" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.education').toUpperCase()} color={sectionHeadingColor} sizePx={educationTitleSizes.heading} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {education.map((edu, index) => {
                 if (!edu.degree && !edu.institution) return null;
                 const dateRange = formatDateRangeStar(edu.startDate, edu.endDate);
                 return (
-                  <div key={index}>
+                  <div key={index} className="sr-entry">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '2px' }}>
                       <span style={{ fontSize: educationBodySizes.baseText, fontWeight: 700, color: educationStyling.bodyColor, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                         {edu.institution ? (
@@ -319,7 +321,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
 
       case "workExperience":
         return workExperience && workExperience.length > 0 && workExperience.some(e => e.position || e.company) ? (
-          <div key="workExperience">
+          <div key="workExperience" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.experience').toUpperCase()} color={sectionHeadingColor} sizePx={workExperienceTitleSizes.heading} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {workExperience.map((exp, index) => {
@@ -327,7 +329,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                 const dateRange = formatDateRangeStar(exp.startDate, exp.endDate);
                 const responsibilityBullets = getWorkExperienceResponsibilityOnly(exp);
                 return (
-                  <div key={index}>
+                  <div key={index} className="sr-entry">
                     {/* Company line */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '1px' }}>
                       <span style={{ fontSize: workExperienceBodySizes.baseText, fontWeight: 700, color: workExperienceStyling.bodyColor, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -392,7 +394,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
 
       case "projects":
         return projects && projects.length > 0 && projects.some(p => p.name) ? (
-          <div key="projects">
+          <div key="projects" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.projects').toUpperCase()} color={sectionHeadingColor} sizePx={projectsTitleSizes.heading} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {projects.map((proj, index) => {
@@ -402,7 +404,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                   ? proj.technologies.map(t => typeof t === 'string' ? t : t.technology).filter(Boolean)
                   : [];
                 return (
-                  <div key={index}>
+                  <div key={index} className="sr-entry">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '2px' }}>
                       <span style={{ fontSize: projectsBodySizes.baseText, fontWeight: 700, color: projectsStyling.bodyColor, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                         <ProjectLinkedTitle
@@ -439,14 +441,14 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
 
       case "certificates":
         return certificates && certificates.length > 0 && certificates.some(c => c.name) ? (
-          <div key="certificates">
+          <div key="certificates" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.certifications').toUpperCase()} color={sectionHeadingColor} sizePx={certificatesTitleSizes.heading} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {certificates.map((cert, index) => {
                 if (!cert.name) return null;
                 const dateRange = formatDateRangeStar(cert.issueDate, cert.expirationDate);
                 return (
-                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                  <div key={index} className="sr-entry" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
                     <div>
                       <span style={{ fontSize: certificatesBodySizes.baseText, color: certificatesStyling.bodyColor, fontWeight: 600 }}>
                         {hasWebLink(cert.url) ? (
@@ -482,26 +484,33 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
         ) : null;
 
       case "skills":
-        return skills && skills.length > 0 && skills.some(s => s.skill) ? (
-          <div key="skills">
+        return groupedSkills.length > 0 ? (
+          <div key="skills" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.skills').toUpperCase()} color={sectionHeadingColor} sizePx={skillsTitleSizes.heading} />
-            <p style={{ fontSize: skillsBodySizes.sm, color: skillsStyling.bodyColor, lineHeight: 1.8, margin: 0, wordBreak: 'break-word' }}>
-              <span style={{ fontWeight: 700, marginRight: '6px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: skillsBodySizes.xs }}>
-                {t('resume.sections.skills')}:
-              </span>
-              {skills.filter(s => s.skill).map((s, i, arr) => (
-                <span key={i}>
-                  {s.skill}
-                  {i < arr.length - 1 && <span style={{ opacity: 0.35, margin: '0 5px' }}>·</span>}
-                </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              {groupedSkills.map((group, index) => (
+                <p
+                  key={`${group.name}-${index}`}
+                  style={{ fontSize: skillsBodySizes.sm, color: skillsStyling.bodyColor, lineHeight: 1.7, margin: 0, wordBreak: 'break-word' }}
+                >
+                  <span style={{ fontWeight: 700, marginRight: '6px', opacity: 0.75, textTransform: 'none', letterSpacing: '0.02em', fontSize: '0.62rem' }}>
+                    {group.name}:
+                  </span>
+                  {group.skills.map((item, itemIndex) => (
+                    <span key={`${group.name}-${itemIndex}`}>
+                      {item}
+                      {itemIndex < group.skills.length - 1 && <span style={{ opacity: 0.35, margin: '0 5px' }}>·</span>}
+                    </span>
+                  ))}
+                </p>
               ))}
-            </p>
+            </div>
           </div>
         ) : null;
 
       case "languages":
         return languages && languages.length > 0 && languages.some(l => l.language) ? (
-          <div key="languages">
+          <div key="languages" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.languages').toUpperCase()} color={sectionHeadingColor} sizePx={languagesTitleSizes.heading} />
             <p style={{ fontSize: languagesBodySizes.sm, color: languagesStyling.bodyColor, lineHeight: 1.8, margin: 0, wordBreak: 'break-word' }}>
               <span style={{ fontWeight: 700, marginRight: '6px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: languagesBodySizes.xs }}>
@@ -522,7 +531,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
 
       case "interests":
         return personalInfo.interests && personalInfo.interests.length > 0 && personalInfo.interests.some(i => i.interest) ? (
-          <div key="interests">
+          <div key="interests" className="sr-section" data-resume-section="true">
             <SectionHeading label={t('resume.sections.interests').toUpperCase()} color={sectionHeadingColor} sizePx={personalInfoTitleSizes.heading} />
             <p style={{ fontSize: personalInfoBodySizes.sm, color: personalInfoBodyColor, lineHeight: 1.8, margin: 0, wordBreak: 'break-word' }}>
               <span style={{ fontWeight: 700, marginRight: '6px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: personalInfoBodySizes.xs }}>
@@ -564,9 +573,12 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
             width: 210mm;
             margin: 0 auto;
           }
-          div[style*="margin-bottom"], div[style*="gap"] {
+          .resume-page-container .sr-section,
+          .resume-page-container .sr-entry,
+          .resume-page-container [data-resume-section="true"] {
             page-break-inside: avoid;
             break-inside: avoid;
+            -webkit-column-break-inside: avoid;
           }
           .resume-spacer {
             flex: 1 1 auto !important;
@@ -674,14 +686,6 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
         <style>{`
           .page-number-footer { display: none; }
           @media print {
-            @page {
-              margin-bottom: 18mm;
-              @bottom-center {
-                content: counter(page);
-                font-size: 9px;
-                color: #9ca3af;
-              }
-            }
             .page-number-footer { display: none !important; }
           }
         `}</style>

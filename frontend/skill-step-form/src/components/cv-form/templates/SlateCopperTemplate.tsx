@@ -611,7 +611,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           >
             {personalInfo.profileImage?.trim() ? (
               <div
-                className="mx-auto mb-4 h-28 w-24 overflow-hidden rounded-md border-2"
+                className="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full border-2"
                 style={{ borderColor: linkColor }}
               >
                 <img

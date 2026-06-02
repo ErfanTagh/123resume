@@ -77,9 +77,17 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const textColor = styling?.textColor || RESUME_BODY_GRAY;
   const linkColor = styling?.linkColor || RESUME_ACCENT_BLUE;
 
+  const profilePhotoTrimmed = personalInfo.profileImage?.trim() ?? "";
+  const profilePhotoDisplayName = [personalInfo.firstName, personalInfo.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   const rootCssVars = {
     "--sc-link": linkColor,
     "--sc-heading": headingColor,
+    ...(profilePhotoTrimmed
+      ? { ["--sc-profile-photo-url" as string]: `url(${JSON.stringify(profilePhotoTrimmed)})` }
+      : {}),
   } as CSSProperties;
 
   const getSectionStyling = (sectionName: string) => {
@@ -557,10 +565,45 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           text-decoration: underline;
           text-underline-offset: 2px;
         }
+        /* Circular avatar via background-image: avoids global print img { height: auto } breaking object-fit */
+        .sc-two-col-root {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .sc-two-col-root .sc-profile-photo {
+          width: 96px;
+          height: 96px;
+          box-sizing: border-box;
+          flex-shrink: 0;
+          border-radius: 9999px;
+          overflow: hidden;
+          background-image: var(--sc-profile-photo-url, none);
+          background-size: cover;
+          background-position: center center;
+          background-repeat: no-repeat;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
         @media print {
           .sc-two-col-root .sc-entry-link {
             color: var(--sc-link) !important;
             text-decoration: underline !important;
+          }
+          .sc-two-col-root .sc-profile-photo {
+            background-image: var(--sc-profile-photo-url, none) !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          @media (prefers-color-scheme: dark) {
+            .sc-two-col-root .sc-profile-photo {
+              background-image: var(--sc-profile-photo-url, none) !important;
+              background-size: cover !important;
+              background-position: center center !important;
+              background-repeat: no-repeat !important;
+            }
           }
           .sc-two-col-root [data-resume-section="true"],
           .sc-two-col-root .sc-sidebar-contact,
@@ -609,20 +652,25 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
               borderRight: `1.5px solid ${hexToRgba(linkColor, 0.22)}`,
             }}
           >
-            {personalInfo.profileImage?.trim() ? (
+            {profilePhotoTrimmed ? (
               <div
-                className="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full border-2"
-                style={{ borderColor: linkColor }}
-              >
-                <img
-                  src={personalInfo.profileImage}
-                  alt=""
-                  className="block h-full w-full"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "60% 50%" }}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
+                className="sc-profile-photo mx-auto mb-4 border-2 border-solid"
+                style={{
+                  borderColor: linkColor,
+                  backgroundImage: `url(${JSON.stringify(profilePhotoTrimmed)})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center center",
+                  backgroundRepeat: "no-repeat",
+                  WebkitPrintColorAdjust: "exact",
+                  printColorAdjust: "exact" as CSSProperties["printColorAdjust"],
+                }}
+                role="img"
+                aria-label={
+                  profilePhotoDisplayName
+                    ? `${t("resume.labels.profileImage")}: ${profilePhotoDisplayName}`
+                    : t("resume.labels.profileImage")
+                }
+              />
             ) : null}
 
             <h1

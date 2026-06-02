@@ -447,6 +447,18 @@
     page-break-inside: avoid;
     display: block;
   }
+
+  /* Slate & Copper: avatar is a div with inline background-image (not <img>) so global img rules do not apply.
+     background-size/position/repeat are enforced here in case any global rule resets the background shorthand. */
+  .sc-two-col-root .sc-profile-photo {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    /* background-image is set as inline style — do NOT reset it here */
+  }
   
   /* Edge: Fix flexbox issues */
   .resume-container,
@@ -462,6 +474,22 @@
     * {
       background: white !important;
       color: black !important;
+    }
+
+    /* Keep Slate & Copper profile photo visible.
+       `* { background: white !important }` resets background-image on all elements including divs.
+       This rule has specificity (0,2,0) vs (0,0,0) for `*`, so it wins among !important declarations. */
+    .sc-two-col-root .sc-profile-photo {
+      background-image: var(--sc-profile-photo-url, none) !important;
+      background-size: cover !important;
+      background-position: center center !important;
+      background-repeat: no-repeat !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    /* Prevent the sidebar background color from being wiped to white in dark mode */
+    .sc-two-col-root aside {
+      background-color: #f1f5f9 !important;
     }
     
     body,

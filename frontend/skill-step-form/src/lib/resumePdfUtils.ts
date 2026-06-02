@@ -15,8 +15,7 @@ import { formatProficiency as formatProficiencyShared } from '@/lib/languageProf
 import { formatDateRange, formatMonthYear } from '@/lib/dateFormatter';
 import { hasWebLink, normalizeExternalUrl } from '@/lib/contactLinkUtils';
 import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
-
-/**
+import { SLATE_COPPER_PROFILE_OBJECT_POSITION } from '@/lib/slateCopperConstants';
  * Sanitize filename for filesystem compatibility
  * Removes invalid characters, replaces spaces with dashes, and ensures .pdf extension
  */
@@ -856,6 +855,25 @@ async function downloadPDFFromHTML(
       max-width: 100%;
       height: auto;
     }
+    /* Slate & Copper profile: must follow generic img rule — higher specificity + !important vs resume-print */
+    .sc-two-col-root .sc-profile-photo img.sc-profile-photo-img {
+      width: 96px !important;
+      height: 96px !important;
+      min-width: 96px !important;
+      min-height: 96px !important;
+      max-width: 96px !important;
+      max-height: 96px !important;
+      object-fit: cover !important;
+      object-position: var(--sc-profile-object-position, ${SLATE_COPPER_PROFILE_OBJECT_POSITION}) !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    /* Slate & Copper: PDF HTML has mx-auto stripped — center avatar via scoped rule */
+    .sc-two-col-root aside .sc-profile-photo {
+      margin-left: auto !important;
+      margin-right: auto !important;
+      align-self: center !important;
+    }
   </style>
 </head>
 <body>
@@ -1239,6 +1257,8 @@ export async function downloadResumePDF(
 
     // Strip margin classes that create side margins (mx-auto, max-w-*, etc.)
     // Replace them to remove the margin/width constraints
+    // Note: Slate & Copper profile photo is centered via .sc-two-col-root aside .sc-profile-photo
+    // in template + resume-print + PDF shell CSS — do not rely on mx-auto surviving this pass.
     resumeHTML = resumeHTML.replace(/\s*mx-auto\s*/g, ' ');
     resumeHTML = resumeHTML.replace(/\s*max-w-[^\s"]+\s*/g, ' ');
     resumeHTML = resumeHTML.replace(/\s*mx-\d+\s*/g, ' ');
@@ -1303,6 +1323,7 @@ export async function downloadResumePDFFromElement(
 
     let resumeHTML = htmlElement.innerHTML;
 
+    // Same mx-auto strip as downloadResumePDF — Slate profile centers via scoped CSS, not mx-auto.
     resumeHTML = resumeHTML.replace(/\s*mx-auto\s*/g, ' ');
     resumeHTML = resumeHTML.replace(/\s*max-w-[^\s"]+\s*/g, ' ');
     resumeHTML = resumeHTML.replace(/\s*mx-\d+\s*/g, ' ');

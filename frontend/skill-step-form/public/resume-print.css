@@ -448,16 +448,30 @@
     display: block;
   }
 
-  /* Slate & Copper: avatar is a div with inline background-image (not <img>) so global img rules do not apply.
-     background-size/position/repeat are enforced here in case any global rule resets the background shorthand. */
-  .sc-two-col-root .sc-profile-photo {
+  /* Slate & Copper: beat global print img { height: auto; max-width: 100% } for circular crop */
+  .sc-two-col-root .sc-profile-photo img.sc-profile-photo-img {
+    width: 96px !important;
+    height: 96px !important;
+    min-width: 96px !important;
+    min-height: 96px !important;
+    max-width: 96px !important;
+    max-height: 96px !important;
+    object-fit: cover !important;
+    /* Fallback must match src/lib/slateCopperConstants.ts SLATE_COPPER_PROFILE_OBJECT_POSITION */
+    object-position: var(--sc-profile-object-position, 55% 50%) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    /* background-image is set as inline style — do NOT reset it here */
+  }
+
+  /* Slate & Copper: center avatar in sidebar (PDF pipeline strips mx-auto from serialized HTML) */
+  .sc-two-col-root aside .sc-profile-photo {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   
   /* Edge: Fix flexbox issues */
@@ -469,25 +483,14 @@
   
   /* ==================== DARK MODE OVERRIDE ==================== */
   
-  /* Force light mode - critical for Safari/Firefox dark mode */
+  /* Force light mode - critical for Safari/Firefox dark mode.
+     Use background-color only so we do not reset background-image (e.g. Slate profile photo). */
   @media (prefers-color-scheme: dark) {
     * {
-      background: white !important;
+      background-color: white !important;
       color: black !important;
     }
 
-    /* Keep Slate & Copper profile photo visible.
-       `* { background: white !important }` resets background-image on all elements including divs.
-       This rule has specificity (0,2,0) vs (0,0,0) for `*`, so it wins among !important declarations. */
-    .sc-two-col-root .sc-profile-photo {
-      background-image: var(--sc-profile-photo-url, none) !important;
-      background-size: cover !important;
-      background-position: center center !important;
-      background-repeat: no-repeat !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    /* Prevent the sidebar background color from being wiped to white in dark mode */
     .sc-two-col-root aside {
       background-color: #f1f5f9 !important;
     }
@@ -496,7 +499,7 @@
     .resume-container,
     .resume-header,
     .resume-main {
-      background: white !important;
+      background-color: white !important;
       color: black !important;
     }
     

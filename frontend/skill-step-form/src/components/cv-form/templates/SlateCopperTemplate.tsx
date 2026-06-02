@@ -9,6 +9,7 @@ import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
+import { SLATE_COPPER_PROFILE_OBJECT_POSITION } from "@/lib/slateCopperConstants";
 
 /** Light rail — same family as Tailwind slate-100; keeps sidebar readable with schema text colors */
 const SIDEBAR_BG = "#f1f5f9";
@@ -85,9 +86,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const rootCssVars = {
     "--sc-link": linkColor,
     "--sc-heading": headingColor,
-    ...(profilePhotoTrimmed
-      ? { ["--sc-profile-photo-url" as string]: `url(${JSON.stringify(profilePhotoTrimmed)})` }
-      : {}),
+    "--sc-profile-object-position": SLATE_COPPER_PROFILE_OBJECT_POSITION,
   } as CSSProperties;
 
   const getSectionStyling = (sectionName: string) => {
@@ -565,22 +564,28 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           text-decoration: underline;
           text-underline-offset: 2px;
         }
-        /* Circular avatar via background-image: avoids global print img { height: auto } breaking object-fit */
+        /* Circular avatar: <img> inside fixed box; print uses !important overrides (resume-print + PDF shell) */
         .sc-two-col-root {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        .sc-two-col-root .sc-profile-photo {
-          width: 96px;
-          height: 96px;
+        /* Center avatar in sidebar without Tailwind mx-auto: PDF export strips "mx-auto" from HTML (resumePdfUtils). */
+        .sc-two-col-root aside .sc-profile-photo {
           box-sizing: border-box;
           flex-shrink: 0;
-          border-radius: 9999px;
-          overflow: hidden;
-          background-image: var(--sc-profile-photo-url, none);
-          background-size: cover;
-          background-position: center center;
-          background-repeat: no-repeat;
+          margin-left: auto;
+          margin-right: auto;
+          align-self: center;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .sc-two-col-root .sc-profile-photo-img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          max-width: none;
+          object-fit: cover;
+          object-position: var(--sc-profile-object-position);
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
@@ -589,21 +594,22 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             color: var(--sc-link) !important;
             text-decoration: underline !important;
           }
-          .sc-two-col-root .sc-profile-photo {
-            background-image: var(--sc-profile-photo-url, none) !important;
-            background-size: cover !important;
-            background-position: center center !important;
-            background-repeat: no-repeat !important;
+          .sc-two-col-root aside .sc-profile-photo {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            align-self: center !important;
+          }
+          .sc-two-col-root .sc-profile-photo-img {
+            width: 96px !important;
+            height: 96px !important;
+            min-width: 96px !important;
+            min-height: 96px !important;
+            max-width: 96px !important;
+            max-height: 96px !important;
+            object-fit: cover !important;
+            object-position: var(--sc-profile-object-position) !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-          }
-          @media (prefers-color-scheme: dark) {
-            .sc-two-col-root .sc-profile-photo {
-              background-image: var(--sc-profile-photo-url, none) !important;
-              background-size: cover !important;
-              background-position: center center !important;
-              background-repeat: no-repeat !important;
-            }
           }
           .sc-two-col-root [data-resume-section="true"],
           .sc-two-col-root .sc-sidebar-contact,
@@ -654,23 +660,24 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           >
             {profilePhotoTrimmed ? (
               <div
-                className="sc-profile-photo mx-auto mb-4 border-2 border-solid"
-                style={{
-                  borderColor: linkColor,
-                  backgroundImage: `url(${JSON.stringify(profilePhotoTrimmed)})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center center",
-                  backgroundRepeat: "no-repeat",
-                  WebkitPrintColorAdjust: "exact",
-                  printColorAdjust: "exact" as CSSProperties["printColorAdjust"],
-                }}
+                className="sc-profile-photo mb-4 flex h-24 w-24 shrink-0 overflow-hidden rounded-full"
+                style={{ boxShadow: `0 0 0 2px ${linkColor}` }}
                 role="img"
                 aria-label={
                   profilePhotoDisplayName
                     ? `${t("resume.labels.profileImage")}: ${profilePhotoDisplayName}`
                     : t("resume.labels.profileImage")
                 }
-              />
+              >
+                <img
+                  src={profilePhotoTrimmed}
+                  alt=""
+                  className="sc-profile-photo-img h-full w-full max-w-none object-cover"
+                  style={{ objectPosition: SLATE_COPPER_PROFILE_OBJECT_POSITION }}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             ) : null}
 
             <h1

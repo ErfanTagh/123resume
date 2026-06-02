@@ -25,16 +25,19 @@ type SkillGroupValue = NonNullable<CVFormData["skillGroups"]>[number];
 
 function flattenSkillsFromGroups(skillGroups: CVFormData["skillGroups"]): NonNullable<CVFormData["skills"]> {
   if (!Array.isArray(skillGroups)) return [];
-  return skillGroups
-    .map((group) => {
-      const groupName = group?.name?.trim() || "";
-      const groupedSkills = (group?.skills || [])
-        .map((row) => row?.skill?.trim() || "")
-        .filter(Boolean);
-      if (!groupName || groupedSkills.length === 0) return null;
-      return { skill: `${groupName}: ${groupedSkills.join(", ")}` };
-    })
-    .filter((row): row is { skill: string } => !!row);
+  const allSkills = skillGroups
+    .flatMap((group) => (group?.skills || []))
+    .map((row) => row?.skill?.trim() || "")
+    .filter(Boolean);
+  const uniqueSkills: string[] = [];
+  const seen = new Set<string>();
+  for (const item of allSkills) {
+    const key = item.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniqueSkills.push(item);
+  }
+  return uniqueSkills.map((skill) => ({ skill }));
 }
 
 const SkillGroupCard = ({

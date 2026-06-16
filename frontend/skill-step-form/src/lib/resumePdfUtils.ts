@@ -9,6 +9,7 @@ import { CreativeTemplate } from '@/components/cv-form/templates/CreativeTemplat
 import { LatexTemplate } from '@/components/cv-form/templates/LatexTemplate';
 import { StarRoverTemplate } from '@/components/cv-form/templates/StarRoverTemplate';
 import { SlateCopperTemplate } from '@/components/cv-form/templates/SlateCopperTemplate';
+import { PrismTemplate } from '@/components/cv-form/templates/PrismTemplate';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import i18n from '@/i18n/config';
 import { formatProficiency as formatProficiencyShared } from '@/lib/languageProficiency';
@@ -16,6 +17,8 @@ import { formatDateRange, formatMonthYear } from '@/lib/dateFormatter';
 import { hasWebLink, normalizeExternalUrl } from '@/lib/contactLinkUtils';
 import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
 import { SLATE_COPPER_PROFILE_OBJECT_POSITION } from '@/lib/slateCopperConstants';
+
+/**
  * Sanitize filename for filesystem compatibility
  * Removes invalid characters, replaces spaces with dashes, and ensures .pdf extension
  */
@@ -1033,6 +1036,9 @@ function renderTemplateToHTML(resume: Resume): Promise<string> {
         case 'slateCopper':
           templateComponent = React.createElement(SlateCopperTemplate, { data: formData });
           break;
+        case 'prism':
+          templateComponent = React.createElement(PrismTemplate, { data: formData });
+          break;
         case 'modern':
         default:
           templateComponent = React.createElement(ModernTemplate, { data: formData });
@@ -1180,6 +1186,9 @@ export async function downloadResumePDF(
         break;
       case 'slateCopper':
         templateComponent = React.createElement(SlateCopperTemplate, { data: formData });
+        break;
+      case 'prism':
+        templateComponent = React.createElement(PrismTemplate, { data: formData });
         break;
       case 'modern':
       default:

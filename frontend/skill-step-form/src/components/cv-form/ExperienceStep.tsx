@@ -13,7 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { PowerSkillsAutocomplete } from "@/components/PowerSkillsAutocomplete";
-import { SectionStylingControls } from "./SectionStylingControls";
+
 
 interface ExperienceStepProps {
   form: UseFormReturn<CVFormData>;
@@ -484,11 +484,6 @@ export const ProjectsStep = ({ form }: ExperienceStepProps) => {
         </div>
 
         {/* Section Styling Controls */}
-        <SectionStylingControls
-          form={form}
-          sectionName="projects"
-          sectionLabel={t('resume.labels.projectsTitle') || 'Projects'}
-        />
 
         {projectFields.length === 0 && (
           <div className="text-center py-8 border-2 border-dashed rounded-lg mb-4">
@@ -567,11 +562,6 @@ export const ExperienceStep = ({ form }: ExperienceStepProps) => {
         </div>
 
         {/* Section Styling Controls */}
-        <SectionStylingControls
-          form={form}
-          sectionName="workExperience"
-          sectionLabel={t('resume.steps.workExperience') || 'Work Experience'}
-        />
 
         {workFields.map((field, index) => (
           <div key={field.id} className="p-6 border rounded-lg bg-card space-y-4 relative mb-4">

@@ -45,6 +45,7 @@
     "startFree": "Start Free"
   },
   "landing": {
+    "seoNavAria": "Site pages",
     "badge": "AI-Powered Resume Builder",
     "headline1": "Build Your Dream",
     "headline2": "Resume in Minutes",
@@ -66,6 +67,8 @@
     "templateStarRoverDesc": "Modern Professional with Navy Accents",
     "templateSlateCopper": "Slate & Copper",
     "templateSlateCopperDesc": "Two-column editorial layout — slate sidebar, copper accents",
+    "templatePrism": "Prism",
+    "templatePrismDesc": "Geometric angular header with bold blue accent shapes",
     "templateLabel": "Template",
     "chooseThisTemplate": "Use this template",
     "templatesSectionTitle": "Professional templates for your dream job",
@@ -122,7 +125,41 @@
     "testimonial5Name": "Sarah O’Neill",
     "testimonial5Quote": "KI-Tipps waren manchmal treffend, manchmal egal. Insgesamt hilfreich.",
     "testimonial6Name": "Shirin Hosseini",
-    "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off."
+    "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off.",
+    "featureTabs": {
+      "title": "Everything you need to get hired",
+      "subtitle": "Build a polished resume, publish a personal website, and manage every version — all in one place.",
+      "builder": {
+        "tab": "Resume Builder",
+        "eyebrow": "Resume Builder",
+        "heading": "Create a standout resume in minutes",
+        "desc": "Our guided, step-by-step builder helps you write each section while a live preview updates as you type.",
+        "point1": "Guided step-by-step wizard — no formatting headaches",
+        "point2": "8 professionally designed, ATS-friendly templates",
+        "point3": "Live preview so you always see the final result",
+        "cta": "Start building"
+      },
+      "portfolio": {
+        "tab": "Portfolio Website",
+        "eyebrow": "Portfolio Website",
+        "heading": "Turn your resume into a personal website",
+        "desc": "Publish a shareable personal page from your resume in one click — perfect for sharing with recruiters.",
+        "point1": "Go live with a single click — no code required",
+        "point2": "Your own shareable link to send anywhere",
+        "point3": "Multiple color themes to match your style",
+        "cta": "Create your website"
+      },
+      "manage": {
+        "tab": "Manage Resumes",
+        "eyebrow": "Manage Resumes",
+        "heading": "All your resumes in one place",
+        "desc": "Save unlimited versions, get an AI quality score for each, and tailor a copy for every job you apply to.",
+        "point1": "Save and organize unlimited resume versions",
+        "point2": "AI quality score on every resume",
+        "point3": "Duplicate and tailor for each application",
+        "cta": "Go to my resumes"
+      }
+    }
   },
   "resume": {
     "sections": {

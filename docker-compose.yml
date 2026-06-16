@@ -56,6 +56,8 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:8000/api
+      # Vite dev proxy runs inside this container — use Compose service name, not 127.0.0.1
+      - VITE_BACKEND_URL=http://backend:8000
     # npm ci: clean install from lockfile so Rollup optional @rollup/rollup-linux-* bins match the container OS/arch
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
     depends_on:

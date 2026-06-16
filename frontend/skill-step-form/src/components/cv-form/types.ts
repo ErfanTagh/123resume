@@ -118,7 +118,7 @@ export const cvFormSchema = z.object({
   ).optional(),
   sectionOrder: z.array(z.string()).optional(),
   template: z
-    .enum(["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper"])
+    .enum(["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper", "prism"])
     .default("modern"),
   styling: z.object({
     fontFamily: z.string().optional(),
@@ -146,4 +146,5 @@ export type CVTemplate =
   | "creative"
   | "latex"
   | "starRover"
-  | "slateCopper";
+  | "slateCopper"
+  | "prism";

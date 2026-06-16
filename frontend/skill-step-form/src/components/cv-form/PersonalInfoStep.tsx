@@ -3,7 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Upload, X, User, Camera, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Upload, X, User, Camera, ChevronDown, ChevronUp, Globe, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CVFormData } from "./types";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { ResumeUpload } from "./ResumeUpload";
@@ -11,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { ProfessionalTitleAutocomplete } from "@/components/ProfessionalTitleAutocomplete";
-import { SectionStylingControls } from "./SectionStylingControls";
+
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 
 interface PersonalInfoStepProps {
@@ -19,7 +25,7 @@ interface PersonalInfoStepProps {
 }
 
 export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { fields: interestFields, append: appendInterest, remove: removeInterest } = useFieldArray({
     control: form.control,
     name: "personalInfo.interests",
@@ -206,15 +212,40 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
       </div>
 
       {/* Section Styling Controls */}
-      <SectionStylingControls
-        form={form}
-        sectionName="personalInfo"
-        sectionLabel={t('resume.steps.personalInfo') || 'Personal Info'}
-      />
 
       {/* Resume Upload Option */}
       <ResumeUpload onDataParsed={handleDataParsed} />
       <Separator />
+
+      {/* Language picker pill — sets the resume output language */}
+      <div className="flex items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Globe className="h-4 w-4 shrink-0" />
+              {language === 'de' ? 'Deutsch' : language === 'es' ? 'Español' : language === 'fa' ? 'فارسی' : 'English'}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[160px]">
+            {[
+              { code: 'en', label: 'English' },
+              { code: 'de', label: 'Deutsch' },
+            ].map(({ code, label }) => (
+              <DropdownMenuItem
+                key={code}
+                onClick={() => setLanguage(code as any)}
+                className="flex items-center justify-between gap-3 cursor-pointer"
+              >
+                <span>{label}</span>
+                {language === code && <Check className="h-4 w-4 text-primary shrink-0" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">

@@ -12,8 +12,9 @@ export default defineConfig(({ mode }) => ({
       // Production uses VITE_API_URL env var set at build time (see docker-compose.prod.yml)
       // Proxy API requests to backend in development
       '/api': {
-        // In Docker, use 'backend' service name; can override with VITE_BACKEND_URL env var
-        target: process.env.VITE_BACKEND_URL || 'http://backend:8000',
+        // Default: backend on the host (docker compose maps 8000:8000, or runserver on machine).
+        // In Docker Compose, set VITE_BACKEND_URL=http://backend:8000 on the frontend service.
+        target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
       },

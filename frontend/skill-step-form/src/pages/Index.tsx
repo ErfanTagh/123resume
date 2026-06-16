@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,27 @@ const Index = () => {
             {t('pages.dashboard.subtitle')}
           </p>
         </div>
+
+        <nav
+          className="mb-10 flex flex-wrap justify-center gap-x-5 gap-y-2 border-b border-border/60 pb-8 text-sm text-muted-foreground"
+          aria-label={t('landing.seoNavAria')}
+        >
+          <Link to="/templates" className="hover:text-primary hover:underline">
+            {t('footer.templates')}
+          </Link>
+          <Link to="/pricing" className="hover:text-primary hover:underline">
+            {t('footer.pricing')}
+          </Link>
+          <Link to="/blog" className="hover:text-primary hover:underline">
+            {t('footer.blog')}
+          </Link>
+          <Link to="/about" className="hover:text-primary hover:underline">
+            {t('footer.aboutUs')}
+          </Link>
+          <Link to="/contact" className="hover:text-primary hover:underline">
+            {t('footer.contact')}
+          </Link>
+        </nav>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-8 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/create/start')}>

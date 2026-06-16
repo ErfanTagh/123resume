@@ -660,7 +660,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
           >
             {profilePhotoTrimmed ? (
               <div
-                className="sc-profile-photo mb-4 flex h-24 w-24 shrink-0 overflow-hidden rounded-full"
+                className="sc-profile-photo mb-4 flex h-28 w-28 shrink-0 overflow-hidden rounded-full"
                 style={{ boxShadow: `0 0 0 2px ${linkColor}` }}
                 role="img"
                 aria-label={

@@ -5,6 +5,7 @@ import { CreativeTemplate } from "./templates/CreativeTemplate";
 import { LatexTemplate } from "./templates/LatexTemplate";
 import { StarRoverTemplate } from "./templates/StarRoverTemplate";
 import { SlateCopperTemplate } from "./templates/SlateCopperTemplate";
+import { PrismTemplate } from "./templates/PrismTemplate";
 import type { CVFormData } from "./types";
 
 export function renderResumeTemplate(data: CVFormData) {
@@ -21,6 +22,8 @@ export function renderResumeTemplate(data: CVFormData) {
       return <StarRoverTemplate data={data} />;
     case "slateCopper":
       return <SlateCopperTemplate data={data} />;
+    case "prism":
+      return <PrismTemplate data={data} />;
     case "modern":
     default:
       return <ModernTemplate data={data} />;

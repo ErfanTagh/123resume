@@ -569,15 +569,15 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
           padding: '28px 32px 22px 32px',
           marginBottom: '22px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
 
             {/* Profile image — only when set */}
             {personalInfo.profileImage?.trim() ? (
               <div style={{ flexShrink: 0 }}>
                 <div style={{
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '4px',
+                  width: '110px',
+                  height: '110px',
+                  borderRadius: '50%',
                   overflow: 'hidden',
                   border: `2px solid ${sectionHeadingColor}30`,
                   boxShadow: `0 2px 12px ${sectionHeadingColor}20`,

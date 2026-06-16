@@ -10,7 +10,8 @@ export interface LandingTemplateCatalogItem {
 
 /** Display order for landing / templates pages (matches marketing priority). */
 export const LANDING_TEMPLATE_CATALOG: LandingTemplateCatalogItem[] = [
-  { key: "slateCopper", nameKey: "templateSlateCopper", badges: ["recommended", "new"] },
+  { key: "prism", nameKey: "templatePrism", badges: ["new"] },
+  { key: "slateCopper", nameKey: "templateSlateCopper", badges: ["recommended"] },
   { key: "modern", nameKey: "templateModern", badges: ["ats"] },
   { key: "classic", nameKey: "templateClassic", badges: ["ats"] },
   { key: "starRover", nameKey: "templateStarRover", badges: ["ats"] },

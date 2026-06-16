@@ -6,18 +6,20 @@ import { MinimalTemplate } from "@/components/cv-form/templates/MinimalTemplate"
 import { LatexTemplate } from "@/components/cv-form/templates/LatexTemplate";
 import { StarRoverTemplate } from "@/components/cv-form/templates/StarRoverTemplate";
 import { SlateCopperTemplate } from "@/components/cv-form/templates/SlateCopperTemplate";
+import { PrismTemplate } from "@/components/cv-form/templates/PrismTemplate";
 import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 
 // Helper function to get profile image based on template (rotate through 4 images)
 const getProfileImageForTemplate = (templateName: string): string => {
   const imageMap: Record<string, string> = {
-    modern: "/resume-sample-1-optimized.jpg",    // East Asian man
-    classic: "/resume-sample-2-optimized.jpg",     // Caucasian man
-    creative: "/resume-sample-3-optimized.jpg",    // Woman (Hispanic/Latina)
-    minimal: "/resume-sample-4-optimized.jpg",    // Black woman
-    latex: "/resume-sample-1-optimized.jpg",      // East Asian man (reuse)
-    starRover: "/resume-sample-2-optimized.jpg",  // Caucasian man (reuse)
+    modern: "/resume-sample-1-optimized.jpg",
+    classic: "/resume-sample-2-optimized.jpg",
+    creative: "/resume-sample-3-optimized.jpg",
+    minimal: "/resume-sample-4-optimized.jpg",
+    latex: "/resume-sample-1-optimized.jpg",
+    starRover: "/resume-sample-2-optimized.jpg",
     slateCopper: "/resume-sample-3-optimized.jpg",
+    prism: "/resume-sample-4-optimized.jpg",
   };
   return imageMap[templateName] || "/resume-sample-1-optimized.jpg";
 };
@@ -248,7 +250,8 @@ interface LandingTemplatePreviewProps {
     | "minimal"
     | "latex"
     | "starRover"
-    | "slateCopper";
+    | "slateCopper"
+    | "prism";
   /** Zoom for thumbnail previews; default fits smaller cards. */
   previewScale?: number;
 }
@@ -476,6 +479,7 @@ export const LandingTemplatePreview = ({
             {templateName === "latex" && <LatexTemplate data={displayData} />}
             {templateName === "starRover" && <StarRoverTemplate data={displayData} />}
             {templateName === "slateCopper" && <SlateCopperTemplate data={displayData} />}
+            {templateName === "prism" && <PrismTemplate data={displayData} />}
           </div>
         </div>
       </div>

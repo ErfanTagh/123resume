@@ -51,7 +51,10 @@ With Docker:
 docker compose down      # stop
 ```
 
-Without Docker:
+Without Docker (frontend on your machine, API via Vite proxy):
+
+- Start MongoDB (or point `MONGODB_CONNECTION_STRING` in root `.env` at a running instance), then run the backend on **port 8000**.
+- The dev server proxies `/api` to **`http://127.0.0.1:8000`** by default. Override with `VITE_BACKEND_URL` if your API runs elsewhere.
 
 ```bash
 # Backend

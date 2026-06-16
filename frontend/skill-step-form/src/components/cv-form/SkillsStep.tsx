@@ -9,7 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { CVFormData } from "./types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageAutocomplete } from "@/components/LanguageAutocomplete";
-import { SectionStylingControls } from "./SectionStylingControls";
+
 import {
   KNOWN_PROFICIENCY_KEYS,
   ProficiencyKey,
@@ -173,11 +173,6 @@ export const SkillsStep = ({ form }: SkillsStepProps) => {
         </div>
 
         {/* Section Styling Controls */}
-        <SectionStylingControls 
-          form={form} 
-          sectionName="skills" 
-          sectionLabel={t('resume.steps.skills') || 'Skills'} 
-        />
 
         <div className="space-y-4 mb-4">
           {skillGroupFields.map((groupField, index) => (

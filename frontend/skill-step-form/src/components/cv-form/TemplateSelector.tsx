@@ -11,6 +11,7 @@ import {
   Code,
   Star,
   Columns2,
+  Triangle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -54,6 +55,10 @@ const TEMPLATE_META: Record<
   latex: {
     icon: Code,
     preview: "Professional LaTeX-inspired layout",
+  },
+  prism: {
+    icon: Triangle,
+    preview: "Geometric angular header with blue accent shapes",
   },
 };
 

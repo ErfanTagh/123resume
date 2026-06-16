@@ -28,6 +28,7 @@ const TEMPLATE_TITLE_KEY: Record<CVTemplate, string> = {
   latex: "templateLatex",
   starRover: "templateStarRover",
   slateCopper: "templateSlateCopper",
+  prism: "templatePrism",
 };
 
 const TEMPLATE_DESC_KEY: Record<CVTemplate, string> = {
@@ -38,6 +39,7 @@ const TEMPLATE_DESC_KEY: Record<CVTemplate, string> = {
   latex: "templateLatexDesc",
   starRover: "templateStarRoverDesc",
   slateCopper: "templateSlateCopperDesc",
+  prism: "templatePrismDesc",
 };
 
 const CreateResumeGuide = () => {

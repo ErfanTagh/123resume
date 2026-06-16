@@ -58,7 +58,6 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
   };
 
   const hasGlobalStyling = styling.fontFamily || styling.fontSize || styling.titleColor || styling.titleBold || styling.headingColor || styling.headingBold || styling.textColor || styling.linkColor;
-  const hasSectionStyling = styling.sectionStyling && Object.keys(styling.sectionStyling).length > 0;
 
   return (
     <Card className="p-6 space-y-6">
@@ -77,7 +76,7 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
             variant="ghost"
             size="default"
             onClick={resetAllStyling}
-            disabled={!hasGlobalStyling && !hasSectionStyling}
+            disabled={!hasGlobalStyling}
             className="gap-2 text-sm text-blue-600 hover:text-blue-700"
           >
             <RotateCcw className="h-4 w-4" />

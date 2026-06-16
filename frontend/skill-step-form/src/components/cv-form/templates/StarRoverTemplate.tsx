@@ -599,7 +599,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
           borderBottom: `2px solid ${sectionHeadingColor}`,
         }}>
           {/* Top row: name block + photo */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', marginBottom: '16px' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {/* Name */}
               {fullName ? (
@@ -636,8 +636,9 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
             {personalInfo.profileImage?.trim() ? (
               <div style={{
                 flexShrink: 0,
-                width: '88px',
-                height: '88px',
+                width: '110px',
+                height: '110px',
+                borderRadius: '50%',
                 overflow: 'hidden',
                 border: `2px solid ${sectionHeadingColor}`,
               }}>

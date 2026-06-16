@@ -2,6 +2,23 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+/** Canonical host for SEO (apex only — www redirects here in nginx). */
+const CANONICAL_ORIGIN = 'https://123resume.de';
+
+function toCanonicalPublicUrl(href: string): string {
+  try {
+    const u = new URL(href, CANONICAL_ORIGIN);
+    if (u.hostname === 'www.123resume.de') {
+      u.hostname = '123resume.de';
+    }
+    u.protocol = 'https:';
+    u.hash = '';
+    return u.toString();
+  } catch {
+    return href;
+  }
+}
+
 interface SEOProps {
   title?: string;
   description?: string;
@@ -35,7 +52,8 @@ export const SEO = ({
 }: SEOProps) => {
   const location = useLocation();
   const { language } = useLanguage();
-  const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+  const rawUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+  const canonicalUrl = toCanonicalPublicUrl(rawUrl || `${CANONICAL_ORIGIN}/`);
   
   // Generate breadcrumbs from pathname if not provided
   const generateBreadcrumbsFromPath = (pathname: string): Array<{ name: string; url: string }> => {
@@ -121,7 +139,7 @@ export const SEO = ({
     updateMetaTag('og:description', description, true);
     updateMetaTag('og:type', type, true);
     updateMetaTag('og:image', image, true);
-    updateMetaTag('og:url', currentUrl, true);
+    updateMetaTag('og:url', canonicalUrl, true);
     updateMetaTag('og:site_name', '123Resume', true);
     // Update og:locale based on current language
     updateMetaTag('og:locale', language === 'de' ? 'de_DE' : 'en_US', true);
@@ -141,7 +159,7 @@ export const SEO = ({
       canonical.setAttribute('rel', 'canonical');
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute('href', currentUrl);
+    canonical.setAttribute('href', canonicalUrl);
 
     // Hreflang tags for multi-language support (German/English)
     // Since we use client-side language switching, same URL serves both languages
@@ -157,9 +175,9 @@ export const SEO = ({
     };
 
     // Add hreflang tags for English, German, and x-default (fallback)
-    updateHreflangTag('en', currentUrl);
-    updateHreflangTag('de', currentUrl);
-    updateHreflangTag('x-default', currentUrl); // Default/fallback language
+    updateHreflangTag('en', canonicalUrl);
+    updateHreflangTag('de', canonicalUrl);
+    updateHreflangTag('x-default', canonicalUrl); // Default/fallback language
 
     // Robots meta tag
     if (noindex) {
@@ -347,7 +365,7 @@ export const SEO = ({
       
       structuredDataScript.textContent = JSON.stringify(combinedData);
     }
-  }, [title, description, keywords, image, currentUrl, type, noindex, location.pathname, structuredData, author, publishedTime, modifiedTime, language, finalBreadcrumbs, faqs]);
+  }, [title, description, keywords, image, canonicalUrl, type, noindex, location.pathname, structuredData, author, publishedTime, modifiedTime, language, finalBreadcrumbs, faqs]);
 
   return null;
 };

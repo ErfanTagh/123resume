@@ -45,6 +45,7 @@
     "startFree": "Kostenlos starten"
   },
   "landing": {
+    "seoNavAria": "Seiten",
     "badge": "KI-gestützter Lebenslauf-Builder",
     "headline1": "Erstellen Sie Ihren Traum",
     "headline2": "Lebenslauf in Minuten",
@@ -66,6 +67,8 @@
     "templateStarRoverDesc": "Modern professionell mit Marine-Akzenten",
     "templateSlateCopper": "Schiefer & Kupfer",
     "templateSlateCopperDesc": "Zweispaltiges Editorial-Layout — Schiefer-Sidebar, Kupfer-Akzente",
+    "templatePrism": "Prisma",
+    "templatePrismDesc": "Geometrischer Kopfbereich mit kühnen blauen Akzentformen",
     "templateLabel": "Vorlage",
     "chooseThisTemplate": "Diese Vorlage verwenden",
     "templatesSectionTitle": "Professionelle Vorlagen für Ihren Traumjob",
@@ -122,7 +125,41 @@
     "testimonial5Name": "Sarah O’Neill",
     "testimonial5Quote": "KI-Tipps waren manchmal treffend, manchmal egal. Insgesamt hilfreich.",
     "testimonial6Name": "Shirin Hosseini",
-    "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off."
+    "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off.",
+    "featureTabs": {
+      "title": "Alles, was du für deine Bewerbung brauchst",
+      "subtitle": "Erstelle einen überzeugenden Lebenslauf, veröffentliche eine persönliche Website und verwalte jede Version — alles an einem Ort.",
+      "builder": {
+        "tab": "Lebenslauf-Editor",
+        "eyebrow": "Lebenslauf-Editor",
+        "heading": "Erstelle in Minuten einen herausragenden Lebenslauf",
+        "desc": "Unser geführter Schritt-für-Schritt-Editor hilft dir bei jedem Abschnitt — mit Live-Vorschau, während du tippst.",
+        "point1": "Geführter Schritt-für-Schritt-Assistent — kein Formatierungsstress",
+        "point2": "8 professionell gestaltete, ATS-freundliche Vorlagen",
+        "point3": "Live-Vorschau — du siehst immer das Endergebnis",
+        "cta": "Jetzt starten"
+      },
+      "portfolio": {
+        "tab": "Portfolio-Website",
+        "eyebrow": "Portfolio-Website",
+        "heading": "Mach aus deinem Lebenslauf eine persönliche Website",
+        "desc": "Veröffentliche mit einem Klick eine teilbare persönliche Seite aus deinem Lebenslauf — ideal für Recruiter.",
+        "point1": "Mit nur einem Klick online — ganz ohne Code",
+        "point2": "Dein eigener teilbarer Link für überallhin",
+        "point3": "Mehrere Farbthemen passend zu deinem Stil",
+        "cta": "Website erstellen"
+      },
+      "manage": {
+        "tab": "Lebensläufe verwalten",
+        "eyebrow": "Lebensläufe verwalten",
+        "heading": "Alle deine Lebensläufe an einem Ort",
+        "desc": "Speichere unbegrenzt viele Versionen, erhalte für jede einen KI-Qualitätsscore und passe für jede Bewerbung eine Kopie an.",
+        "point1": "Unbegrenzt viele Versionen speichern und organisieren",
+        "point2": "KI-Qualitätsscore für jeden Lebenslauf",
+        "point3": "Duplizieren und für jede Bewerbung anpassen",
+        "cta": "Zu meinen Lebensläufen"
+      }
+    }
   },
   "resume": {
     "sections": {

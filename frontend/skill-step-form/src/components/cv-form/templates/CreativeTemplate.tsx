@@ -949,7 +949,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
             {personalInfo.profileImage?.trim() ? (
               <div className="flex-shrink-0">
                 <div 
-                  className="w-20 h-20 rounded-xl overflow-hidden shadow-lg border-[3px]" 
+                  className="w-28 h-28 rounded-full overflow-hidden shadow-lg border-[3px]" 
                   style={{ borderColor: accentColor }}
                 >
                   <img

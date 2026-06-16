@@ -422,7 +422,7 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
           {/* Profile image — only when user uploaded one (no placeholder on later steps) */}
           {personalInfo.profileImage?.trim() ? (
             <div className="flex justify-center mb-4">
-              <div className="w-28 h-28 rounded-full border-2 border-foreground overflow-hidden flex-shrink-0">
+              <div className="w-32 h-32 rounded-full border-2 border-foreground overflow-hidden flex-shrink-0">
                 <img
                   src={personalInfo.profileImage}
                   alt={`Professional profile photo of ${personalInfo.firstName} ${personalInfo.lastName}${personalInfo.professionalTitle ? `, ${personalInfo.professionalTitle}` : ''}${personalInfo.location ? ` from ${personalInfo.location}` : ''}`}

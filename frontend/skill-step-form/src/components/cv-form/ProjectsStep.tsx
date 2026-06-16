@@ -8,7 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { CVFormData } from "./types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
-import { SectionStylingControls } from "./SectionStylingControls";
+
 
 interface ProjectsStepProps {
   form: UseFormReturn<CVFormData>;
@@ -150,11 +150,6 @@ export const ProjectsStep = ({ form }: ProjectsStepProps) => {
       </div>
 
       {/* Section Styling Controls */}
-      <SectionStylingControls 
-        form={form} 
-        sectionName="projects" 
-        sectionLabel={t('resume.labels.projectsTitle') || 'Projects'} 
-      />
 
       {fields.length === 0 && (
         <div className="text-center py-8 border-2 border-dashed rounded-lg">

@@ -837,7 +837,7 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
             {/* Compact profile image — only when set */}
             {personalInfo.profileImage?.trim() ? (
               <div className="flex-shrink-0">
-                <div className="w-20 h-20 rounded-md border-2 overflow-hidden" style={{ borderColor: linkColor }}>
+                <div className="w-28 h-28 rounded-full border-2 overflow-hidden" style={{ borderColor: linkColor }}>
                   <img
                     src={personalInfo.profileImage}
                     alt={`Professional profile photo of ${personalInfo.firstName} ${personalInfo.lastName}${personalInfo.professionalTitle ? `, ${personalInfo.professionalTitle}` : ''}${personalInfo.location ? ` from ${personalInfo.location}` : ''}`}

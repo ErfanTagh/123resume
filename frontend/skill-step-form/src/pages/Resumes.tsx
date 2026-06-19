@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { resumeAPI, Resume, ResumeData } from '@/lib/api';
 import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
+import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
 import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -73,7 +74,7 @@ const generateDefaultResumeName = (resume: Resume): string => {
   return parts.length > 0 ? parts.join('-') : 'Untitled Resume';
 };
 
-const RESUMES_TABS = ['resumes', 'job-matching', 'portfolio'] as const;
+const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio'] as const;
 type ResumesTab = (typeof RESUMES_TABS)[number];
 
 export default function Resumes() {
@@ -373,7 +374,11 @@ export default function Resumes() {
               },
               {
                 id: 'job-matching',
-                label: t('pages.resumes.tabs.jobMatching') || 'AI Job Matching',
+                label: t('pages.resumes.tabs.jobMatching') || 'Job matching & cover letter',
+              },
+              {
+                id: 'job-tracker',
+                label: t('pages.resumes.tabs.jobTracker') || 'Job tracker',
               },
               {
                 id: 'portfolio',
@@ -615,6 +620,13 @@ export default function Resumes() {
             className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
           >
             <JobMatchingPanel resumes={resumes} isLoadingResumes={isLoading} />
+          </TabsContent>
+
+          <TabsContent
+            value="job-tracker"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <JobTrackerPanel resumes={resumes} />
           </TabsContent>
 
           <TabsContent

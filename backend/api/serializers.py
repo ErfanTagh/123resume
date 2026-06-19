@@ -188,7 +188,7 @@ class SkillGroupSerializer(serializers.Serializer):
 
 class ResumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True, source='_id')
-    name = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    name = serializers.CharField(max_length=200, required=False, allow_blank=True, allow_null=True)
     personal_info = PersonalInfoSerializer()
     work_experience = WorkExperienceSerializer(many=True, required=False, allow_empty=True)
     education = EducationSerializer(many=True, required=False, allow_empty=True)
@@ -229,4 +229,35 @@ class BlogPostSerializer(serializers.Serializer):
     language = serializers.CharField(max_length=10, default='en')
     published = serializers.BooleanField(default=False, required=False)
     scheduled_publish_at = serializers.DateTimeField(required=False, allow_null=True)
+
+
+class JobApplicationSerializer(serializers.Serializer):
+    job_title = serializers.CharField(max_length=300)
+    company = serializers.CharField(max_length=300)
+    contact_person = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    contact_email = serializers.EmailField(required=False, allow_blank=True)
+    job_link = serializers.CharField(max_length=2000, required=False, allow_blank=True)
+    resume_id = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    cover_letter = serializers.CharField(max_length=6000, required=False, allow_blank=True)
+    job_description = serializers.CharField(max_length=12000, required=False, allow_blank=True)
+    status = serializers.ChoiceField(
+        choices=[
+            "saved",
+            "applied",
+            "interviewing",
+            "offer",
+            "rejected",
+            "withdrawn",
+        ],
+        required=False,
+        default="applied",
+    )
+    applied_at = serializers.DateTimeField(required=False, allow_null=True)
+    notes = serializers.CharField(max_length=4000, required=False, allow_blank=True)
+    match_percentage = serializers.IntegerField(
+        required=False, allow_null=True, min_value=0, max_value=100
+    )
+
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 

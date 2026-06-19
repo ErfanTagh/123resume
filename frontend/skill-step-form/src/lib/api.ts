@@ -156,9 +156,30 @@ const handleResponse = async (response: Response, retryFn?: () => Promise<Respon
       throw new Error('Your session has expired. Please log in again.');
     }
     
-    // Provide more detailed error message
-    const errorMessage = error.error || error.detail || error.message || `HTTP ${response.status}: ${response.statusText}`;
-    throw new Error(errorMessage);
+    // Provide more detailed error message (including DRF serializer field errors)
+    let errorMessage =
+      error.error || error.detail || error.message || `HTTP ${response.status}: ${response.statusText}`;
+    if (typeof errorMessage === "object") {
+      try {
+        errorMessage = JSON.stringify(errorMessage);
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+    } else if (
+      !error.error &&
+      !error.detail &&
+      !error.message &&
+      error &&
+      typeof error === "object" &&
+      Object.keys(error).length > 0
+    ) {
+      try {
+        errorMessage = JSON.stringify(error);
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+    }
+    throw new Error(String(errorMessage));
   }
   const data = await response.json();
   // Convert snake_case response to camelCase
@@ -514,6 +535,35 @@ export interface Resume extends ResumeData {
   publicProfileTheme?: PublicProfileThemeId;
 }
 
+export type JobApplicationStatus =
+  | 'saved'
+  | 'applied'
+  | 'interviewing'
+  | 'offer'
+  | 'rejected'
+  | 'withdrawn';
+
+export interface JobApplicationData {
+  jobTitle: string;
+  company: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  jobLink?: string;
+  resumeId?: string;
+  coverLetter?: string;
+  jobDescription?: string;
+  status?: JobApplicationStatus;
+  appliedAt?: string;
+  notes?: string;
+  matchPercentage?: number;
+}
+
+export interface JobApplication extends JobApplicationData {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Sort resumes for “My resumes”: newest created first, then newest updated. */
 export function compareResumesNewestFirst(a: Resume, b: Resume): number {
   const ts = (v: string | undefined) => {
@@ -738,6 +788,109 @@ export const resumeAPI = {
   },
 
   /**
+   * Generate a tailored cover letter from a saved resume and job posting (DeepSeek).
+   */
+  generateCoverLetter: async (
+    resumeId: string,
+    jobTitle: string,
+    jobDescription: string,
+    options?: { outputLanguage?: "en" | "de" },
+  ): Promise<{
+    resume_id: string;
+    job_title: string;
+    cover_letter: string;
+  }> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/resumes/${resumeId}/cover-letter/`, {
+        method: "POST",
+        headers: createHeaders(true),
+        body: JSON.stringify({
+          title: jobTitle,
+          description: jobDescription,
+          ...(options?.outputLanguage === "de" || options?.outputLanguage === "en"
+            ? { outputLanguage: options.outputLanguage }
+            : {}),
+        }),
+      });
+    const response = await makeRequest();
+    const raw = (await handleResponse(response, makeRequest)) as Record<string, unknown>;
+    return {
+      resume_id: String(raw.resumeId ?? raw.resume_id ?? ""),
+      job_title: String(raw.jobTitle ?? raw.job_title ?? ""),
+      cover_letter: String(raw.coverLetter ?? raw.cover_letter ?? ""),
+    };
+  },
+
+  /**
+   * Incremental resume tailoring suggestions for a target job (~20% per round).
+   */
+  getTailorSuggestions: async (
+    resumeId: string,
+    input: {
+      title: string;
+      description: string;
+      round?: number;
+      currentMatchPercentage?: number;
+      skipIds?: string[];
+      outputLanguage?: "en" | "de";
+    },
+  ): Promise<{
+    resumeId: string;
+    suggestions: Array<{
+      id: string;
+      section: string;
+      label: string;
+      before: string;
+      after: string;
+      apply: Record<string, unknown>;
+    }>;
+    round: number;
+    maxRounds: number;
+    currentMatchPercentage: number;
+    projectedMatchPercentage: number;
+    roundTargetBoost: number;
+  }> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/resumes/${resumeId}/tailor/`, {
+        method: "POST",
+        headers: createHeaders(true),
+        body: JSON.stringify({
+          title: input.title,
+          description: input.description,
+          round: input.round,
+          currentMatchPercentage: input.currentMatchPercentage,
+          skipIds: input.skipIds,
+          ...(input.outputLanguage === "de" || input.outputLanguage === "en"
+            ? { outputLanguage: input.outputLanguage }
+            : {}),
+        }),
+      });
+    const response = await makeRequest();
+    const raw = (await handleResponse(response, makeRequest)) as Record<string, unknown>;
+    const suggestions = Array.isArray(raw.suggestions) ? raw.suggestions : [];
+    return {
+      resumeId: String(raw.resumeId ?? raw.resume_id ?? resumeId),
+      suggestions: suggestions as Array<{
+        id: string;
+        section: string;
+        label: string;
+        before: string;
+        after: string;
+        apply: Record<string, unknown>;
+      }>,
+      round: Number(raw.round ?? 1),
+      maxRounds: Number(raw.maxRounds ?? raw.max_rounds ?? 5),
+      currentMatchPercentage: Number(
+        raw.currentMatchPercentage ?? raw.current_match_percentage ?? 0,
+      ),
+      projectedMatchPercentage: Number(
+        raw.projectedMatchPercentage ?? raw.projected_match_percentage ?? 0,
+      ),
+      roundTargetBoost: Number(raw.roundTargetBoost ?? raw.round_target_boost ?? 20),
+    };
+  },
+
+  /**
    * Parse resume text (extracted from PDF on frontend) and return structured data
    * This uses better PDF extraction (react-pdftotext) on the frontend
    */
@@ -756,6 +909,58 @@ export const resumeAPI = {
     
     // Convert snake_case back to camelCase
     return snakeToCamelObject(parsedData);
+  },
+};
+
+// ============================================
+// Job Application Tracker
+// ============================================
+
+export const jobApplicationAPI = {
+  getAll: async (): Promise<JobApplication[]> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/job-applications/`, {
+        headers: createHeaders(true),
+        cache: 'no-store',
+      });
+    const response = await makeRequest();
+    const data = await handleResponse(response, makeRequest);
+    return Array.isArray(data) ? (data as JobApplication[]) : [];
+  },
+
+  create: async (payload: JobApplicationData): Promise<JobApplication> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/job-applications/`, {
+        method: 'POST',
+        headers: createHeaders(true),
+        body: JSON.stringify(camelToSnakeObject(payload)),
+      });
+    const response = await makeRequest();
+    return handleResponse(response, makeRequest) as Promise<JobApplication>;
+  },
+
+  update: async (id: string, payload: Partial<JobApplicationData>): Promise<JobApplication> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/job-applications/${id}/`, {
+        method: 'PUT',
+        headers: createHeaders(true),
+        body: JSON.stringify(camelToSnakeObject(payload)),
+      });
+    const response = await makeRequest();
+    return handleResponse(response, makeRequest) as Promise<JobApplication>;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/job-applications/${id}/`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+      });
+    const response = await makeRequest();
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { error?: string }).error || 'Failed to delete application');
+    }
   },
 };
 
@@ -796,6 +1001,7 @@ export const healthAPI = {
 export default {
   auth: authAPI,
   resume: resumeAPI,
+  jobApplication: jobApplicationAPI,
   blogPost: blogPostAPI,
   health: healthAPI,
 };

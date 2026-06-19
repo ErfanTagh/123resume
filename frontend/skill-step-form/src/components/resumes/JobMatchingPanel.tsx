@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Target, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CoverLetterSection } from "@/components/resumes/CoverLetterSection";
+import { ResumeTailorSection } from "@/components/resumes/ResumeTailorSection";
 
 interface MatchResult {
   resume_id: string;
@@ -51,6 +53,7 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
 
   const [selectedResumeId, setSelectedResumeId] = useState<string>("");
   const [jobTitle, setJobTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +61,9 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
 
   const effectiveResumeId =
     selectedResumeId || (resumes.length > 0 ? resumes[0].id : "");
+
+  const selectedResume = resumes.find((r) => r.id === effectiveResumeId);
+  const coverLetterDownloadName = selectedResume ? resumeLabel(selectedResume) : undefined;
 
   const handleMatch = async () => {
     if (!effectiveResumeId) {
@@ -121,7 +127,7 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
     <div className="space-y-6">
       <p className="text-sm max-w-2xl font-medium text-sky-900/90 dark:text-sky-100/90 leading-relaxed">
         {t("pages.resumes.jobMatching.subtitle") ||
-          "Compare a saved resume with a job description and get a match score."}
+          "Compare a saved resume with a job description, get a match score, and generate a cover letter."}
       </p>
 
       {error && (
@@ -207,6 +213,17 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="job-company" className="text-emerald-800 dark:text-emerald-200 font-medium">
+                {t("pages.resumes.jobMatching.companyOptional") || "Company (optional)"}
+              </Label>
+              <Input
+                id="job-company"
+                placeholder={t("pages.resumes.jobMatching.companyPlaceholder") || "e.g. Acme Corp"}
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="job-description" className="text-emerald-800 dark:text-emerald-200 font-medium">
                 {t("pages.resumes.jobMatching.jobDescriptionRequired") || "Job description *"}
               </Label>
@@ -276,6 +293,22 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
           </CardContent>
         </Card>
       )}
+
+      <ResumeTailorSection
+        resumeId={effectiveResumeId}
+        jobTitle={jobTitle}
+        jobDescription={jobDescription}
+        companyName={companyName}
+        currentMatchPercentage={matchResult?.match_percentage}
+        resumeLabel={coverLetterDownloadName}
+      />
+
+      <CoverLetterSection
+        resumeId={effectiveResumeId}
+        jobTitle={jobTitle}
+        jobDescription={jobDescription}
+        downloadName={coverLetterDownloadName}
+      />
     </div>
   );
 }

@@ -29,11 +29,16 @@ urlpatterns = [
     # Public hosted profile (no auth)
     path('public/resume/<str:pk>/', views.public_resume_detail, name='public-resume-detail'),
 
+    path('job-applications/', views.job_application_list, name='job-application-list'),
+    path('job-applications/<str:pk>/', views.job_application_detail, name='job-application-detail'),
+
     # Resume endpoints (protected)
     path('resumes/', views.resume_list, name='resume-list'),
     path('resumes/parse/', views.parse_resume, name='resume-parse'),  # Must come before <str:pk> pattern
     path('resumes/<str:resume_id>/pdf/', views.generate_resume_pdf, name='resume-pdf'),
     path('resumes/<str:resume_id>/match/', views.match_resume_to_job, name='resume-match'),
+    path('resumes/<str:resume_id>/cover-letter/', views.generate_resume_cover_letter, name='resume-cover-letter'),
+    path('resumes/<str:resume_id>/tailor/', views.tailor_resume_suggestions, name='resume-tailor'),
     path('resumes/<str:pk>/public-profile/', views.resume_public_profile_toggle, name='resume-public-profile-toggle'),
     path('resumes/<str:pk>/', views.resume_detail, name='resume-detail'),
     

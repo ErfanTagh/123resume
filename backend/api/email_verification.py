@@ -492,3 +492,181 @@ def _send_with_mailgun(
         print(f"Mailgun send failed: {e}")
         return False
 
+
+def _job_tools_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+We've been busy improving 123Resume, and wanted to share what's new for you.
+
+JOB MATCHING & COVER LETTER
+• Compare your saved resume against any job description and get a match score
+• Generate a tailored cover letter with AI (English or German)
+• Choose the cover letter language independently of the site language
+
+TAILOR YOUR RESUME TO A JOB
+• Get AI suggestions to align your resume with a specific posting
+• Review each change side by side before accepting or declining
+• Improve match step by step (~20% per round), then download a tailored PDF
+
+JOB TRACKER
+• Track applications in one place: company, contact person, job link, status
+• Record which resume version and cover letter you used for each application
+
+SMARTER AI IN THE BUILDER
+• Suggest with AI for work experience bullet points
+• Improve with AI for role summaries, professional summary, and project descriptions
+
+Log in at https://123resume.de → My Resumes to try the new tabs:
+• Job matching & cover letter
+• Job tracker
+
+If anything doesn't load, refresh the page or try again in a moment.
+
+Thank you for using 123Resume.
+
+Best regards,
+Erfan
+123Resume — https://123resume.de
+
+---
+
+Hallo {greet},
+
+wir haben 123Resume weiter verbessert und möchten Ihnen die Neuerungen kurz vorstellen.
+
+STELLENABGLEICH & ANSCHREIBEN
+• Gespeicherten Lebenslauf mit einer Stellenbeschreibung vergleichen und einen Übereinstimmungswert erhalten
+• Passendes Anschreiben per KI erstellen (Englisch oder Deutsch)
+• Sprache des Anschreibens unabhängig von der Oberflächensprache wählen
+
+LEBENSLAUF AN STELLE ANPASSEN
+• KI-Vorschläge, um den Lebenslauf gezielt auf eine Stelle auszurichten
+• Jede Änderung im Vergleich prüfen und übernehmen oder ablehnen
+• Schrittweise verbessern (~20 % pro Runde), dann angepasstes PDF herunterladen
+
+BEWERBUNGSÜBERSICHT
+• Bewerbungen an einem Ort verwalten: Unternehmen, Ansprechpartner, Link, Status
+• Dokumentieren, welche Lebenslauf-Version und welches Anschreiben Sie verwendet haben
+
+INTELLIGENTERE KI IM EDITOR
+• Mit KI vorschlagen für Tätigkeitsbeschreibungen
+• Mit KI verbessern für Rollen-Zusammenfassungen, Profil und Projekte
+
+Einloggen unter https://123resume.de → Meine Lebensläufe, neue Registerkarten:
+• Stellenabgleich & Anschreiben
+• Bewerbungsübersicht
+
+Falls etwas nicht lädt: Seite neu laden oder kurz später erneut versuchen.
+
+Vielen Dank, dass Sie 123Resume nutzen.
+
+Mit freundlichen Grüßen,
+Erfan
+123Resume — https://123resume.de
+"""
+
+
+def _job_tools_announcement_html(greet: str) -> str:
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What's new on 123Resume</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background: #eff6ff; margin: 0; padding: 0;">
+  <table role="presentation" style="width:100%;border-collapse:collapse;background:#eff6ff;">
+    <tr><td style="padding:24px 12px;">
+      <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(37,99,235,0.12);">
+        <tr>
+          <td style="padding:32px 36px 28px;background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 50%,#3b82f6 100%);">
+            <p style="margin:0 0 8px;font-size:13px;color:#bfdbfe;letter-spacing:0.04em;text-transform:uppercase;">Product update</p>
+            <h1 style="margin:0;font-size:24px;color:#ffffff;font-weight:700;line-height:1.3;">What's new on 123Resume</h1>
+            <p style="margin:12px 0 0;font-size:15px;color:#dbeafe;">Job matching, cover letters, AI tailoring &amp; more</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 36px 8px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#334155;">Hi {greet},</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#475569;">We've been busy improving <strong style="color:#1d4ed8;">123Resume</strong>. Here is what you can use today:</p>
+
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+              <tr><td style="padding:14px 16px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d4ed8;">Job matching &amp; cover letter</p>
+                <p style="margin:0;font-size:14px;color:#475569;">Match score for any job · AI cover letters in English or German</p>
+              </td></tr>
+            </table>
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+              <tr><td style="padding:14px 16px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d4ed8;">Tailor resume to a job</p>
+                <p style="margin:0;font-size:14px;color:#475569;">Review AI suggestions side by side · accept changes · download tailored PDF</p>
+              </td></tr>
+            </table>
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+              <tr><td style="padding:14px 16px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d4ed8;">Job tracker</p>
+                <p style="margin:0;font-size:14px;color:#475569;">Track applications, contacts, links, and which resume &amp; letter you used</p>
+              </td></tr>
+            </table>
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 20px;">
+              <tr><td style="padding:14px 16px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d4ed8;">Smarter AI in the builder</p>
+                <p style="margin:0;font-size:14px;color:#475569;">Suggest &amp; improve bullets, summaries, and project descriptions</p>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 20px;font-size:15px;color:#475569;">
+              <a href="https://123resume.de/resumes" style="display:inline-block;padding:12px 22px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;">Open My Resumes</a>
+            </p>
+
+            <hr style="border:none;border-top:1px solid #dbeafe;margin:24px 0;">
+
+            <p style="margin:0 0 16px;font-size:16px;color:#334155;">Hallo {greet},</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#475569;">Neu bei <strong style="color:#1d4ed8;">123Resume</strong>:</p>
+            <ul style="margin:0 0 16px;padding-left:20px;font-size:14px;color:#475569;">
+              <li style="margin-bottom:8px;"><strong>Stellenabgleich &amp; Anschreiben</strong> — Übereinstimmungswert und KI-Anschreiben (DE/EN)</li>
+              <li style="margin-bottom:8px;"><strong>Lebenslauf anpassen</strong> — KI-Vorschläge prüfen, übernehmen, PDF laden</li>
+              <li style="margin-bottom:8px;"><strong>Bewerbungsübersicht</strong> — Bewerbungen und verwendete Unterlagen dokumentieren</li>
+              <li style="margin-bottom:8px;"><strong>KI im Editor</strong> — Vorschläge und Verbesserungen für Inhalte</li>
+            </ul>
+            <p style="margin:0 0 20px;font-size:15px;color:#475569;">
+              <a href="https://123resume.de/resumes" style="color:#2563eb;font-weight:600;">123resume.de/resumes</a>
+            </p>
+
+            <p style="margin:0;font-size:15px;color:#475569;">Thank you for using 123Resume.</p>
+            <p style="margin:16px 0 0;font-size:15px;color:#334155;">Best regards / Mit freundlichen Grüßen,<br><strong>Erfan</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 36px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#64748b;">
+              <a href="https://123resume.de" style="color:#2563eb;text-decoration:none;font-weight:600;">123resume.de</a>
+              &nbsp;·&nbsp; contact@123resume.de
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_job_tools_announcement_email(to_email: str, username: str = "") -> bool:
+    """Product update: job matching, cover letters, tailoring, job tracker (Mailgun)."""
+    greet = (username or "").strip() or "there"
+    subject = "What's new on 123Resume — job tools, AI tailoring & cover letters"
+
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip()
+    if not from_formatted:
+        from_formatted = "123Resume <contact@123resume.de>"
+
+    return _send_with_mailgun(
+        subject=subject,
+        plain_message=_job_tools_announcement_plain(greet),
+        html_message=_job_tools_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+    )
+

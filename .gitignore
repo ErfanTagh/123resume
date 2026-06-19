@@ -85,7 +85,6 @@ frontend/skill-step-form/src/pages/BlogEditor.tsx
 # Blog administration files
 backend/api/views/blog_views.py
 frontend/skill-step-form/src/pages/BlogManagement.tsx
-backend/api/management/
 
 # Markdown documentation files
 *.md

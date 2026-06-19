@@ -1042,8 +1042,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                         // Prevent any automatic form submission - only allow explicit button click
                       }}
                       onKeyDown={(e) => {
-                        // Prevent form submission on Enter key
-                        if (e.key === 'Enter') {
+                        // Prevent form submission on Enter in inputs; allow newlines in textareas.
+                        if (e.key === "Enter") {
+                          const target = e.target;
+                          if (target instanceof HTMLTextAreaElement) {
+                            return;
+                          }
                           e.preventDefault();
                         }
                       }}

@@ -1,13 +1,13 @@
 import { UseFormReturn, useFieldArray, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { Plus, Trash2 } from "lucide-react";
 import { CVFormData } from "./types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
+import { AiImproveTextarea } from "@/components/cv-form/AiImproveTextarea";
 
 
 interface ProjectsStepProps {
@@ -16,6 +16,7 @@ interface ProjectsStepProps {
 
 const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: number }) => {
   const { t } = useLanguage();
+  const projectName = form.watch(`projects.${index}.name`) || "";
   const { fields: techFields, append: appendTech, remove: removeTech } = useFieldArray({
     control: form.control,
     name: `projects.${index}.technologies`,
@@ -31,15 +32,21 @@ const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: 
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={`projects.${index}.description`}>{t('resume.fields.description')}</Label>
-        <Textarea
-          {...form.register(`projects.${index}.description`)}
-          placeholder={t('resume.placeholders.projectDescription')}
-          rows={3}
-          className="resize-none"
-        />
-      </div>
+      <Controller
+        control={form.control}
+        name={`projects.${index}.description`}
+        render={({ field }) => (
+          <AiImproveTextarea
+            fieldType="project_description"
+            fieldId={`projects.${index}.description`}
+            label={t('resume.fields.description')}
+            placeholder={t('resume.placeholders.projectDescription')}
+            value={field.value || ""}
+            onChange={field.onChange}
+            projectName={projectName}
+          />
+        )}
+      />
 
       <div className="space-y-3">
         <div>

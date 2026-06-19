@@ -585,6 +585,8 @@
       "signIn": "Melden Sie sich an, um die Rollenbeschreibung per KI zu verbessern.",
       "needContextTitle": "Mehr Kontext nötig",
       "needContext": "Geben Sie zuerst eine Rollenbeschreibung, Position oder Unternehmen ein.",
+      "needContextProfessional": "Geben Sie zuerst eine Zusammenfassung oder Berufsbezeichnung ein.",
+      "needContextProject": "Geben Sie zuerst eine Projektbeschreibung oder einen Projektnamen ein.",
       "errorTitle": "KI-Verbesserung fehlgeschlagen",
       "error": "Text konnte nicht verbessert werden. Bitte erneut versuchen.",
       "emptyResponse": "Die KI hat kein Ergebnis geliefert. Versuchen Sie „Neu generieren“ oder ergänzen Sie Details.",

@@ -284,42 +284,56 @@ def improve_work_description(request):
         (data.get("output_language") or data.get("outputLanguage") or "en"),
     )
 
-    description = str(data.get("description") or "")
+    description = str(data.get("description") or data.get("text") or "")
     position = str(data.get("position") or "")
     company = str(data.get("company") or "")
+    professional_title = str(
+        data.get("professional_title") or data.get("professionalTitle") or ""
+    )
+    project_name = str(data.get("project_name") or data.get("projectName") or "")
+    field_type = str(data.get("field_type") or data.get("fieldType") or "work_description")
 
     logger.info(
-        "work_description_improve start user_id=%s lang=%s in_chars=%d has_title=%s has_company=%s",
+        "text_improve start user_id=%s field=%s lang=%s in_chars=%d",
         getattr(request.user, "pk", None),
+        field_type,
         out_lang,
         len(description.strip()),
-        bool(position.strip()),
-        bool(company.strip()),
     )
 
     try:
-        improved = resume_ai_work_description.improve_work_role_description(
+        improved = resume_ai_work_description.improve_resume_text(
+            field_type=field_type,
             description=description,
             position=position,
             company=company,
+            professional_title=professional_title,
+            project_name=project_name,
             output_language=out_lang,
         )
         logger.info(
-            "work_description_improve ok user_id=%s out_chars=%d",
+            "text_improve ok user_id=%s field=%s out_chars=%d",
             getattr(request.user, "pk", None),
+            field_type,
             len(improved),
         )
         return Response({"description": improved}, status=status.HTTP_200_OK)
     except ValueError as e:
         err = str(e)
         logger.warning(
-            "work_description_improve value_error user_id=%s err=%s",
+            "text_improve value_error user_id=%s field=%s err=%s",
             getattr(request.user, "pk", None),
+            field_type,
             err,
         )
         if err == "insufficient context":
             return Response(
-                {"error": "Add a role summary, job title, or company before using AI."},
+                {"error": "Add some text or related context before using AI."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if err == "unsupported field type":
+            return Response(
+                {"error": "Unsupported field type."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(
@@ -328,7 +342,7 @@ def improve_work_description(request):
         )
     except RuntimeError as e:
         logger.error(
-            "work_description_improve config_error user_id=%s err=%s",
+            "text_improve config_error user_id=%s err=%s",
             getattr(request.user, "pk", None),
             e,
         )
@@ -338,8 +352,9 @@ def improve_work_description(request):
         )
     except Exception:
         logger.exception(
-            "work_description_improve failed user_id=%s",
+            "text_improve failed user_id=%s field=%s",
             getattr(request.user, "pk", None),
+            field_type,
         )
         return Response(
             {"error": "Could not improve this text with AI. Try again later."},

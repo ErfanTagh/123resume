@@ -361,18 +361,24 @@ export const aiAPI = {
   },
 
   /**
-   * Improve a work-experience role summary (DeepSeek). Returns { description: string }.
+   * Improve resume text (DeepSeek). Returns { description: string }.
    */
-  improveWorkDescription: async (input: {
+  improveResumeText: async (input: {
+    fieldType?: AiImproveFieldType;
     description?: string;
     position?: string;
     company?: string;
+    professionalTitle?: string;
+    projectName?: string;
     outputLanguage?: "en" | "de";
   }): Promise<{ description: string }> => {
     const payload = camelToSnakeObject({
+      fieldType: input.fieldType ?? "work_description",
       description: input.description ?? "",
       position: input.position ?? "",
       company: input.company ?? "",
+      professionalTitle: input.professionalTitle ?? "",
+      projectName: input.projectName ?? "",
       ...(input.outputLanguage === "de" || input.outputLanguage === "en"
         ? { outputLanguage: input.outputLanguage }
         : {}),
@@ -387,6 +393,11 @@ export const aiAPI = {
     return handleResponse(response, doFetch) as Promise<{ description: string }>;
   },
 };
+
+export type AiImproveFieldType =
+  | "work_description"
+  | "professional_summary"
+  | "project_description";
 
 // ============================================
 // Resume APIs

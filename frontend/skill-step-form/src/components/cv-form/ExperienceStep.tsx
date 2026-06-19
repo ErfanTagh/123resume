@@ -14,6 +14,7 @@ import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { PowerSkillsAutocomplete } from "@/components/PowerSkillsAutocomplete";
 import { WorkBulletAiSuggest } from "@/components/cv-form/WorkBulletAiSuggest";
+import { AiImproveTextarea } from "@/components/cv-form/AiImproveTextarea";
 import { WorkDescriptionAiImprove } from "@/components/cv-form/WorkDescriptionAiImprove";
 
 
@@ -346,6 +347,8 @@ const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: 
     name: `projects.${index}.technologies`,
   });
 
+  const projectName = form.watch(`projects.${index}.name`) || "";
+
   return (
     <>
       <div className="space-y-2">
@@ -356,15 +359,21 @@ const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: 
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={`projects.${index}.description`}>{t('resume.fields.projectDescription')}</Label>
-        <Textarea
-          {...form.register(`projects.${index}.description`)}
-          placeholder={t('resume.placeholders.projectDescription')}
-          rows={3}
-          className="resize-none"
-        />
-      </div>
+      <Controller
+        control={form.control}
+        name={`projects.${index}.description`}
+        render={({ field }) => (
+          <AiImproveTextarea
+            fieldType="project_description"
+            fieldId={`projects.${index}.description`}
+            label={t('resume.fields.projectDescription')}
+            placeholder={t('resume.placeholders.projectDescription')}
+            value={field.value || ""}
+            onChange={field.onChange}
+            projectName={projectName}
+          />
+        )}
+      />
 
       <div className="space-y-3">
         <div>

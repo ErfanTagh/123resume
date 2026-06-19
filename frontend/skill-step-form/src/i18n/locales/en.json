@@ -585,6 +585,8 @@
       "signIn": "Sign in to improve your role summary with AI.",
       "needContextTitle": "Add more context",
       "needContext": "Enter a role summary, job title, or company before using AI.",
+      "needContextProfessional": "Enter a professional summary or professional title before using AI.",
+      "needContextProject": "Enter a project description or project name before using AI.",
       "errorTitle": "AI improvement failed",
       "error": "Could not improve this text. Try again.",
       "emptyResponse": "AI returned an empty result. Try Refresh or add more details.",

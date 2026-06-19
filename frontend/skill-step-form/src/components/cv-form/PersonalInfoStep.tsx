@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { ProfessionalTitleAutocomplete } from "@/components/ProfessionalTitleAutocomplete";
+import { AiImproveTextarea } from "@/components/cv-form/AiImproveTextarea";
 
 import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 
@@ -458,16 +459,22 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="summary">{t('resume.sections.professionalSummary')}</Label>
-        <Textarea
-          id="summary"
-          {...form.register("personalInfo.summary")}
-          placeholder={t('resume.placeholders.summary')}
-          rows={4}
-          className="resize-none"
-        />
-      </div>
+      <Controller
+        control={form.control}
+        name="personalInfo.summary"
+        render={({ field }) => (
+          <AiImproveTextarea
+            fieldType="professional_summary"
+            fieldId="summary"
+            label={t('resume.sections.professionalSummary')}
+            placeholder={t('resume.placeholders.summary')}
+            value={field.value || ""}
+            onChange={field.onChange}
+            professionalTitle={form.watch("personalInfo.professionalTitle") || ""}
+            rows={4}
+          />
+        )}
+      />
 
       <div className="space-y-4">
         <div>

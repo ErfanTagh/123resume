@@ -56,7 +56,7 @@ export const WorkBulletAiSuggest = ({
 
     setLoading(true);
     try {
-      const { bullet } = await aiAPI.suggestWorkBullet({
+      const result = await aiAPI.suggestWorkBullet({
         position: position.trim(),
         company: company.trim(),
         description: description.trim(),
@@ -64,10 +64,16 @@ export const WorkBulletAiSuggest = ({
         technologies: technologies.map((tech) => tech.trim()).filter(Boolean),
         outputLanguage: language === "de" ? "de" : "en",
       });
+      const bullet = typeof result?.bullet === "string" ? result.bullet.trim() : "";
+      if (!bullet) {
+        throw new Error(t("resume.aiBullet.emptyResponse"));
+      }
       setSuggestion(bullet);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : t("resume.aiBullet.error");
+        err instanceof Error && err.message
+          ? err.message
+          : t("resume.aiBullet.error");
       toast({
         title: t("resume.aiBullet.errorTitle"),
         description: message,

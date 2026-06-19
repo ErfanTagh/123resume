@@ -573,6 +573,7 @@
       "needContext": "Geben Sie zuerst Position, Unternehmen, Rollenbeschreibung oder mindestens einen Aufzählungspunkt ein.",
       "errorTitle": "KI-Vorschlag fehlgeschlagen",
       "error": "Vorschlag konnte nicht erstellt werden. Bitte erneut versuchen.",
+      "emptyResponse": "Die KI hat keinen Vorschlag geliefert. Versuchen Sie „Neu generieren“ oder ergänzen Sie die Rollenbeschreibung.",
       "addedTitle": "Punkt hinzugefügt",
       "added": "Der KI-Vorschlag wurde zu Ihren Aufgaben hinzugefügt."
     },

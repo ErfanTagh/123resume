@@ -573,6 +573,7 @@
       "needContext": "Enter a job title, company, role summary, or at least one bullet before using AI.",
       "errorTitle": "AI suggestion failed",
       "error": "Could not generate a bullet. Try again.",
+      "emptyResponse": "AI returned an empty suggestion. Try Refresh or add more role details.",
       "addedTitle": "Bullet added",
       "added": "The AI suggestion was added to your responsibilities."
     },

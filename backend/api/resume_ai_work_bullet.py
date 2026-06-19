@@ -28,7 +28,44 @@ def _extract_json_object(text: str) -> Dict[str, Any]:
     m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
     if m:
         text = m.group(1)
+    else:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end > start:
+            text = text[start : end + 1]
     return json.loads(text)
+
+
+def _coerce_string_list(raw: Any, dict_keys: tuple[str, ...]) -> List[str]:
+    out: List[str] = []
+    if not isinstance(raw, list):
+        return out
+    for item in raw:
+        if isinstance(item, str) and item.strip():
+            out.append(item.strip())
+        elif isinstance(item, dict):
+            for key in dict_keys:
+                val = item.get(key)
+                if isinstance(val, str) and val.strip():
+                    out.append(val.strip())
+                    break
+    return out
+
+
+def _parse_bullet_from_model(raw: str) -> str:
+    try:
+        data = _extract_json_object(raw)
+        bullet = _normalize_bullet(str(data.get("bullet") or ""))
+        if bullet:
+            return bullet
+    except json.JSONDecodeError as e:
+        logger.warning("Work bullet JSON parse error: %s", e)
+
+    # Fallback: model sometimes returns a single bullet line instead of JSON.
+    line = _normalize_bullet(raw.split("\n")[0])
+    if line and not line.startswith("{"):
+        return line
+    raise ValueError("empty bullet in model response")
 
 
 def _clip(text: str, max_len: int) -> str:
@@ -62,13 +99,11 @@ def suggest_work_experience_bullet(
     lang = normalize_output_language(output_language)
     bullets = [
         _clip(b, MAX_BULLET_CHARS)
-        for b in (existing_bullets or [])
-        if isinstance(b, str) and b.strip()
+        for b in _coerce_string_list(existing_bullets, ("responsibility", "bullet", "text"))
     ][:MAX_BULLETS]
     techs = [
         _clip(t, 80)
-        for t in (technologies or [])
-        if isinstance(t, str) and t.strip()
+        for t in _coerce_string_list(technologies, ("technology", "name", "value"))
     ][:MAX_TECHNOLOGIES]
 
     position = _clip(position, MAX_FIELD_CHARS)
@@ -132,15 +167,13 @@ Existing bullets:
     if not raw:
         raise ValueError("empty model response")
 
-    try:
-        data = _extract_json_object(raw)
-    except json.JSONDecodeError as e:
-        logger.warning("Work bullet JSON parse error: %s snippet=%s", e, raw[:400])
-        raise
-
-    bullet = _normalize_bullet(str(data.get("bullet") or ""))
-    if not bullet:
-        raise ValueError("empty bullet in model response")
+    bullet = _parse_bullet_from_model(raw)
+    logger.info(
+        "work_bullet_suggest model_ok lang=%s bullets_in=%d bullet_chars=%d",
+        lang,
+        len(bullets),
+        len(bullet),
+    )
 
     log_deepseek_exchange("work_bullet_suggest", completion, raw, {"bullet": bullet})
     return bullet

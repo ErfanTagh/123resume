@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, FilePenLine, Globe, LayoutGrid, Star, Clock, Edit, Download, Eye, CheckCircle2 } from "lucide-react";
+import { ArrowRight, FilePenLine, Globe, LayoutGrid, Star, Clock, Edit, Download, Eye, CheckCircle2, FileText, Copy } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ type TabKey = "builder" | "portfolio" | "manage";
 const TABS: { key: TabKey; icon: typeof FilePenLine; cta: string }[] = [
   { key: "builder", icon: FilePenLine, cta: "/create/start" },
   { key: "portfolio", icon: Globe, cta: "/create/start" },
-  { key: "manage", icon: LayoutGrid, cta: "/resumes" },
+  { key: "manage", icon: LayoutGrid, cta: "/login" },
 ];
 
 /** Sample profile used for the live portfolio preview. */
@@ -82,17 +82,9 @@ const ScaledViewport = ({ scale, children }: { scale: number; children: ReactNod
   </div>
 );
 
-/** macOS-style browser chrome around a preview. */
-const BrowserFrame = ({ url, children }: { url: string; children: ReactNode }) => (
+/** Clean framed container around a live preview (no browser chrome). */
+const BrowserFrame = ({ children }: { children: ReactNode }) => (
   <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_20px_50px_-20px_hsl(var(--primary)/0.35)]">
-    <div className="flex items-center gap-2 border-b border-border bg-muted/60 px-3 py-2.5">
-      <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-      <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-      <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-      <div className="ml-3 flex-1 truncate rounded-md bg-background px-3 py-1 text-center text-[11px] text-muted-foreground">
-        {url}
-      </div>
-    </div>
     {children}
   </div>
 );
@@ -111,53 +103,83 @@ const FeatureBullets = ({ items }: { items: string[] }) => (
 /** Faithful mini-replica of a resume card from the "My Resumes" page. */
 const ManageResumeCard = ({
   template,
-  templateKey,
   name,
   score,
+  rating,
   date,
+  breakdown,
 }: {
   template: string;
-  templateKey: "prism" | "modern" | "minimal";
   name: string;
   score: number;
+  rating: string;
   date: string;
+  breakdown: { completeness: number; clarity: number; formatting: number; impact: number };
 }) => {
   const { t } = useLanguage();
+  const scoreRows: [string, number][] = [
+    [t("pages.resumes.scores.completeness") || "Completeness", breakdown.completeness],
+    [t("pages.resumes.scores.clarity") || "Clarity", breakdown.clarity],
+    [t("pages.resumes.scores.formatting") || "Formatting", breakdown.formatting],
+    [t("pages.resumes.scores.impact") || "Impact", breakdown.impact],
+  ];
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="relative aspect-[3/4] overflow-hidden border-b border-border bg-white">
-        <div className="absolute inset-0">
-          <LandingTemplatePreview templateName={templateKey} previewScale={0.32} />
-        </div>
-        <Badge variant="secondary" className="absolute right-2 top-2 capitalize">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-start justify-between">
+        <FileText className="h-7 w-7 text-primary" />
+        <Badge variant="secondary" className="capitalize">
           {template}
         </Badge>
       </div>
-      <div className="flex flex-col gap-2 p-3">
+
+      <div>
         <h4 className="truncate text-sm font-semibold text-card-foreground">{name}</h4>
-        <div className="flex items-center gap-1.5">
-          <Star className="h-4 w-4 fill-current text-green-600" />
-          <span className="text-base font-bold text-green-600">{score}</span>
-          <span className="text-xs text-muted-foreground">/10</span>
-          <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Clock className="h-3 w-3" /> {date}
-          </span>
-        </div>
-        <div className="flex gap-1.5 pt-1">
-          <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
-            <Edit className="mr-1 h-3 w-3" />
-            {t("pages.resumes.actions.edit") || "Edit"}
-          </Button>
-          <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
-            <Download className="mr-1 h-3 w-3" />
-            {t("pages.resumes.actions.pdf") || "PDF"}
-          </Button>
-          <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
-            <Eye className="mr-1 h-3 w-3" />
-            {t("pages.resumes.actions.view") || "View"}
-          </Button>
-        </div>
+        <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <Clock className="h-3 w-3" /> {date}
+        </p>
       </div>
+
+      <div className="flex items-center gap-1.5">
+        <Star className="h-4 w-4 fill-current text-green-600" />
+        <span className="text-xl font-bold text-green-600">{score}</span>
+        <span className="text-xs text-muted-foreground">/10</span>
+        <Badge variant="outline" className="ml-auto text-[10px]">
+          {rating}
+        </Badge>
+      </div>
+
+      <div className="space-y-1">
+        {scoreRows.map(([label, value]) => (
+          <div key={label} className="flex justify-between text-[11px]">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-medium">{value}/10</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-1.5 border-t border-border/60 pt-3">
+        <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
+          <Edit className="mr-1 h-3 w-3" />
+          {t("pages.resumes.actions.edit") || "Edit"}
+        </Button>
+        <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
+          <Download className="mr-1 h-3 w-3" />
+          {t("pages.resumes.actions.pdf") || "PDF"}
+        </Button>
+        <Button variant="outline" size="sm" className="h-7 flex-1 px-0 text-[11px]" tabIndex={-1}>
+          <Eye className="mr-1 h-3 w-3" />
+          {t("pages.resumes.actions.view") || "View"}
+        </Button>
+      </div>
+
+      <Button
+        size="sm"
+        className="h-8 rounded-full border-0 bg-blue-600 text-[11px] font-semibold text-white hover:bg-blue-700"
+        tabIndex={-1}
+      >
+        <Copy className="mr-1.5 h-3 w-3" />
+        {t("pages.resumes.duplicate") || "Duplicate"}
+      </Button>
     </div>
   );
 };
@@ -170,7 +192,7 @@ export const FeatureTabs = () => {
     switch (key) {
       case "builder":
         return (
-          <BrowserFrame url="123resume.de/create">
+          <BrowserFrame>
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-white">
               <LandingTemplatePreview templateName="prism" previewScale={0.52} />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
@@ -179,7 +201,7 @@ export const FeatureTabs = () => {
         );
       case "portfolio":
         return (
-          <BrowserFrame url="123resume.de/p/jenny-appleseed">
+          <BrowserFrame>
             <div className="relative aspect-[5/6] w-full sm:aspect-[4/3]">
               <ScaledViewport scale={0.34}>
                 <HostedProfileTemplate data={PORTFOLIO_SAMPLE} theme="blue" visibility={PORTFOLIO_VISIBILITY} />
@@ -189,11 +211,25 @@ export const FeatureTabs = () => {
         );
       case "manage":
         return (
-          <BrowserFrame url="123resume.de/resumes">
+          <BrowserFrame>
             <div className="bg-muted/20 p-4 sm:p-6">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <ManageResumeCard template="Prism" templateKey="prism" name="Product Manager CV" score={8.7} date="May 18" />
-                <ManageResumeCard template="Modern" templateKey="modern" name="Software Engineer" score={8.5} date="May 20" />
+                <ManageResumeCard
+                  template="Prism"
+                  name="Product Manager CV"
+                  score={8.7}
+                  rating={t("pages.resumes.rating.good") || "Good"}
+                  date="May 18"
+                  breakdown={{ completeness: 9.0, clarity: 8.5, formatting: 9.2, impact: 8.1 }}
+                />
+                <ManageResumeCard
+                  template="Modern"
+                  name="Software Engineer"
+                  score={8.5}
+                  rating={t("pages.resumes.rating.good") || "Good"}
+                  date="May 20"
+                  breakdown={{ completeness: 8.8, clarity: 8.3, formatting: 8.6, impact: 8.4 }}
+                />
               </div>
             </div>
           </BrowserFrame>
@@ -232,7 +268,7 @@ export const FeatureTabs = () => {
 
           {TABS.map(({ key, cta }) => (
             <TabsContent key={key} value={key} className="mt-0 focus-visible:outline-none">
-              <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12">
                 {/* Text side */}
                 <div className="order-2 lg:order-1">
                   <span className="text-sm font-semibold uppercase tracking-wider text-primary">

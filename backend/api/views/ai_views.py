@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from .. import deepseek_chat
 from .. import resume_ai_scoring
 from .. import resume_ai_work_bullet
+from .. import resume_ai_work_description
 
 logger = logging.getLogger(__name__)
 
@@ -256,5 +257,91 @@ def suggest_work_bullet(request):
         )
         return Response(
             {"error": "Could not generate a bullet with AI. Try again later."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def improve_work_description(request):
+    """
+    Improve a work-experience role summary (DeepSeek).
+
+    Body JSON:
+      - description (optional string)
+      - position, company (optional strings)
+      - output_language / outputLanguage (optional): "en" | "de"
+    """
+    data = request.data or {}
+
+    if not settings.DEEPSEEK_API_KEY:
+        return Response(
+            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    out_lang = resume_ai_scoring.normalize_output_language(
+        (data.get("output_language") or data.get("outputLanguage") or "en"),
+    )
+
+    description = str(data.get("description") or "")
+    position = str(data.get("position") or "")
+    company = str(data.get("company") or "")
+
+    logger.info(
+        "work_description_improve start user_id=%s lang=%s in_chars=%d has_title=%s has_company=%s",
+        getattr(request.user, "pk", None),
+        out_lang,
+        len(description.strip()),
+        bool(position.strip()),
+        bool(company.strip()),
+    )
+
+    try:
+        improved = resume_ai_work_description.improve_work_role_description(
+            description=description,
+            position=position,
+            company=company,
+            output_language=out_lang,
+        )
+        logger.info(
+            "work_description_improve ok user_id=%s out_chars=%d",
+            getattr(request.user, "pk", None),
+            len(improved),
+        )
+        return Response({"description": improved}, status=status.HTTP_200_OK)
+    except ValueError as e:
+        err = str(e)
+        logger.warning(
+            "work_description_improve value_error user_id=%s err=%s",
+            getattr(request.user, "pk", None),
+            err,
+        )
+        if err == "insufficient context":
+            return Response(
+                {"error": "Add a role summary, job title, or company before using AI."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"error": "Could not improve this text. Try again."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+    except RuntimeError as e:
+        logger.error(
+            "work_description_improve config_error user_id=%s err=%s",
+            getattr(request.user, "pk", None),
+            e,
+        )
+        return Response(
+            {"error": "AI assistant is not configured."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception:
+        logger.exception(
+            "work_description_improve failed user_id=%s",
+            getattr(request.user, "pk", None),
+        )
+        return Response(
+            {"error": "Could not improve this text with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
         )

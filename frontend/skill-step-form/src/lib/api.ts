@@ -359,6 +359,33 @@ export const aiAPI = {
     const response = await doFetch();
     return handleResponse(response, doFetch) as Promise<{ bullet: string }>;
   },
+
+  /**
+   * Improve a work-experience role summary (DeepSeek). Returns { description: string }.
+   */
+  improveWorkDescription: async (input: {
+    description?: string;
+    position?: string;
+    company?: string;
+    outputLanguage?: "en" | "de";
+  }): Promise<{ description: string }> => {
+    const payload = camelToSnakeObject({
+      description: input.description ?? "",
+      position: input.position ?? "",
+      company: input.company ?? "",
+      ...(input.outputLanguage === "de" || input.outputLanguage === "en"
+        ? { outputLanguage: input.outputLanguage }
+        : {}),
+    });
+    const doFetch = () =>
+      fetch(`${API_BASE_URL}/ai/work-description-improve/`, {
+        method: "POST",
+        headers: createHeaders(true, true),
+        body: JSON.stringify(payload),
+      });
+    const response = await doFetch();
+    return handleResponse(response, doFetch) as Promise<{ description: string }>;
+  },
 };
 
 // ============================================

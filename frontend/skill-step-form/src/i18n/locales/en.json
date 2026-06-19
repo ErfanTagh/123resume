@@ -577,6 +577,20 @@
       "addedTitle": "Bullet added",
       "added": "The AI suggestion was added to your responsibilities."
     },
+    "aiDescription": {
+      "improve": "Improve with AI",
+      "generating": "Improving…",
+      "refresh": "Refresh",
+      "apply": "Apply",
+      "signIn": "Sign in to improve your role summary with AI.",
+      "needContextTitle": "Add more context",
+      "needContext": "Enter a role summary, job title, or company before using AI.",
+      "errorTitle": "AI improvement failed",
+      "error": "Could not improve this text. Try again.",
+      "emptyResponse": "AI returned an empty result. Try Refresh or add more details.",
+      "appliedTitle": "Summary updated",
+      "applied": "The improved role summary was applied."
+    },
     "feedback": {
       "contactFab": "Contact",
       "contactFabAria": "Contact us or send feedback",

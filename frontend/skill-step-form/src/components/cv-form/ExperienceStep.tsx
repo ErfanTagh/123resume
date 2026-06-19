@@ -14,6 +14,7 @@ import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { PowerSkillsAutocomplete } from "@/components/PowerSkillsAutocomplete";
 import { WorkBulletAiSuggest } from "@/components/cv-form/WorkBulletAiSuggest";
+import { WorkDescriptionAiImprove } from "@/components/cv-form/WorkDescriptionAiImprove";
 
 
 interface ExperienceStepProps {
@@ -167,16 +168,21 @@ const WorkExperienceItem = ({ form, index }: { form: UseFormReturn<CVFormData>; 
       </div>
 
       {/* Role summary / free-text description */}
-      <div className="space-y-2">
-        <Label htmlFor={`workExperience.${index}.description`}>
-          {t('resume.fields.experienceDescription') || t('resume.fields.summary')}
-        </Label>
-        <Textarea
-          {...form.register(`workExperience.${index}.description`)}
-          placeholder={t('resume.placeholders.experienceDescription') || t('resume.placeholders.summary')}
-          rows={3}
-        />
-      </div>
+      <Controller
+        control={form.control}
+        name={`workExperience.${index}.description`}
+        render={({ field }) => (
+          <WorkDescriptionAiImprove
+            fieldId={`workExperience.${index}.description`}
+            label={t('resume.fields.experienceDescription') || t('resume.fields.summary')}
+            placeholder={t('resume.placeholders.experienceDescription') || t('resume.placeholders.summary')}
+            value={field.value || ""}
+            onChange={field.onChange}
+            position={position}
+            company={company}
+          />
+        )}
+      />
 
       <WorkBulletAiSuggest
         position={position}

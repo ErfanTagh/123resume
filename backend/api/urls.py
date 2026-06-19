@@ -51,5 +51,6 @@ urlpatterns = [
     path('ai/resume-assistant/', views.resume_assistant_chat, name='resume-assistant-chat'),
     path('ai/resume-score/', views.resume_score, name='resume-score'),
     path('ai/work-bullet-suggest/', views.suggest_work_bullet, name='work-bullet-suggest'),
+    path('ai/work-description-improve/', views.improve_work_description, name='work-description-improve'),
 ]
 

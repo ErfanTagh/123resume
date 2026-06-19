@@ -14,7 +14,7 @@ from .blog_views import blog_post_list, blog_post_detail
 from .sitemap_views import generate_sitemap
 from .match_views import match_resume_to_job
 from .feedback_views import send_feedback
-from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet
+from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet, improve_work_description
 
 __all__ = [
     'resume_list',
@@ -32,5 +32,6 @@ __all__ = [
     'resume_assistant_chat',
     'resume_score',
     'suggest_work_bullet',
+    'improve_work_description',
 ]
 

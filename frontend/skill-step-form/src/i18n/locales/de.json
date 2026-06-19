@@ -577,6 +577,20 @@
       "addedTitle": "Punkt hinzugefügt",
       "added": "Der KI-Vorschlag wurde zu Ihren Aufgaben hinzugefügt."
     },
+    "aiDescription": {
+      "improve": "Mit KI verbessern",
+      "generating": "Wird verbessert…",
+      "refresh": "Neu generieren",
+      "apply": "Übernehmen",
+      "signIn": "Melden Sie sich an, um die Rollenbeschreibung per KI zu verbessern.",
+      "needContextTitle": "Mehr Kontext nötig",
+      "needContext": "Geben Sie zuerst eine Rollenbeschreibung, Position oder Unternehmen ein.",
+      "errorTitle": "KI-Verbesserung fehlgeschlagen",
+      "error": "Text konnte nicht verbessert werden. Bitte erneut versuchen.",
+      "emptyResponse": "Die KI hat kein Ergebnis geliefert. Versuchen Sie „Neu generieren“ oder ergänzen Sie Details.",
+      "appliedTitle": "Beschreibung aktualisiert",
+      "applied": "Die verbesserte Rollenbeschreibung wurde übernommen."
+    },
     "feedback": {
       "contactFab": "Kontakt",
       "contactFabAria": "Kontakt aufnehmen oder Feedback senden",

@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { TechnologyAutocomplete } from "@/components/TechnologyAutocomplete";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { PowerSkillsAutocomplete } from "@/components/PowerSkillsAutocomplete";
+import { WorkBulletAiSuggest } from "@/components/cv-form/WorkBulletAiSuggest";
 
 
 interface ExperienceStepProps {
@@ -48,6 +49,15 @@ const WorkExperienceItem = ({ form, index }: { form: UseFormReturn<CVFormData>; 
     control: form.control,
     name: `workExperience.${index}.competencies`,
   });
+
+  const position = form.watch(`workExperience.${index}.position`) || "";
+  const company = form.watch(`workExperience.${index}.company`) || "";
+  const roleDescription = form.watch(`workExperience.${index}.description`) || "";
+  const responsibilities = form.watch(`workExperience.${index}.responsibilities`) || [];
+  const technologies = form.watch(`workExperience.${index}.technologies`) || [];
+  const existingBullets = responsibilities
+    .map((r) => (typeof r?.responsibility === "string" ? r.responsibility : ""))
+    .filter((b) => b.trim());
 
   return (
     <>
@@ -168,9 +178,15 @@ const WorkExperienceItem = ({ form, index }: { form: UseFormReturn<CVFormData>; 
         />
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>{t('resume.labels.keyResponsibilities')}</Label>
+      <WorkBulletAiSuggest
+        position={position}
+        company={company}
+        description={roleDescription}
+        existingBullets={existingBullets}
+        technologies={technologies.map((t) => t?.technology || "").filter(Boolean)}
+        onAdd={(bullet) => appendResp({ responsibility: bullet })}
+        sectionLabel={t('resume.labels.keyResponsibilities')}
+        addButton={
           <Button
             type="button"
             variant="outline"
@@ -181,7 +197,8 @@ const WorkExperienceItem = ({ form, index }: { form: UseFormReturn<CVFormData>; 
             <Plus className="h-4 w-4 mr-1" />
             {t('resume.labels.add')}
           </Button>
-        </div>
+        }
+      >
         <div className="space-y-2">
           {respFields.map((field, respIndex) => (
             <div key={field.id} className="flex gap-2">
@@ -208,7 +225,7 @@ const WorkExperienceItem = ({ form, index }: { form: UseFormReturn<CVFormData>; 
             </div>
           ))}
         </div>
-      </div>
+      </WorkBulletAiSuggest>
 
       <div className="space-y-3">
         <div>

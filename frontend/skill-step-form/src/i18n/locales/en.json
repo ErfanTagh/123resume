@@ -563,6 +563,19 @@
         }
       }
     },
+    "aiBullet": {
+      "suggest": "Suggest with AI",
+      "generating": "Generating…",
+      "refresh": "Refresh",
+      "add": "Add",
+      "signIn": "Sign in to get AI suggestions for new bullet points.",
+      "needContextTitle": "Add more context",
+      "needContext": "Enter a job title, company, role summary, or at least one bullet before using AI.",
+      "errorTitle": "AI suggestion failed",
+      "error": "Could not generate a bullet. Try again.",
+      "addedTitle": "Bullet added",
+      "added": "The AI suggestion was added to your responsibilities."
+    },
     "feedback": {
       "contactFab": "Contact",
       "contactFabAria": "Contact us or send feedback",

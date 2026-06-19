@@ -563,6 +563,19 @@
         }
       }
     },
+    "aiBullet": {
+      "suggest": "Mit KI vorschlagen",
+      "generating": "Wird erstellt…",
+      "refresh": "Neu generieren",
+      "add": "Hinzufügen",
+      "signIn": "Melden Sie sich an, um KI-Vorschläge für neue Aufzählungspunkte zu erhalten.",
+      "needContextTitle": "Mehr Kontext nötig",
+      "needContext": "Geben Sie zuerst Position, Unternehmen, Rollenbeschreibung oder mindestens einen Aufzählungspunkt ein.",
+      "errorTitle": "KI-Vorschlag fehlgeschlagen",
+      "error": "Vorschlag konnte nicht erstellt werden. Bitte erneut versuchen.",
+      "addedTitle": "Punkt hinzugefügt",
+      "added": "Der KI-Vorschlag wurde zu Ihren Aufgaben hinzugefügt."
+    },
     "feedback": {
       "contactFab": "Kontakt",
       "contactFabAria": "Kontakt aufnehmen oder Feedback senden",

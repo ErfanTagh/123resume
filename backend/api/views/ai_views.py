@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from .. import deepseek_chat
 from .. import resume_ai_scoring
+from .. import resume_ai_work_bullet
 
 logger = logging.getLogger(__name__)
 
@@ -153,5 +154,78 @@ def resume_score(request):
         logger.exception("DeepSeek resume scoring failed")
         return Response(
             {"error": "Could not score this resume with AI. Try again later."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def suggest_work_bullet(request):
+    """
+    Suggest one new work-experience bullet (DeepSeek).
+
+    Body JSON:
+      - position, company, description (optional strings)
+      - existing_bullets / existingBullets (optional string array)
+      - technologies (optional string array)
+      - output_language / outputLanguage (optional): "en" | "de"
+    """
+    data = request.data or {}
+    existing = data.get("existing_bullets")
+    if existing is None:
+        existing = data.get("existingBullets")
+    if existing is not None and not isinstance(existing, list):
+        return Response(
+            {"error": "existing_bullets must be an array of strings"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    technologies = data.get("technologies")
+    if technologies is not None and not isinstance(technologies, list):
+        return Response(
+            {"error": "technologies must be an array of strings"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not settings.DEEPSEEK_API_KEY:
+        return Response(
+            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    out_lang = resume_ai_scoring.normalize_output_language(
+        (data.get("output_language") or data.get("outputLanguage") or "en"),
+    )
+
+    try:
+        bullet = resume_ai_work_bullet.suggest_work_experience_bullet(
+            position=str(data.get("position") or ""),
+            company=str(data.get("company") or ""),
+            description=str(data.get("description") or ""),
+            existing_bullets=existing or [],
+            technologies=technologies or [],
+            output_language=out_lang,
+        )
+        return Response({"bullet": bullet}, status=status.HTTP_200_OK)
+    except ValueError as e:
+        if str(e) == "insufficient context":
+            return Response(
+                {"error": "Add a job title, company, role summary, or at least one bullet first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"error": "Could not generate a bullet. Try again."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+    except RuntimeError as e:
+        logger.error("Work bullet configuration error: %s", e)
+        return Response(
+            {"error": "AI assistant is not configured."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception:
+        logger.exception("DeepSeek work bullet suggest failed")
+        return Response(
+            {"error": "Could not generate a bullet with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
         )

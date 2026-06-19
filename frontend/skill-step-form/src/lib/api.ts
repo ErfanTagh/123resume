@@ -328,6 +328,37 @@ export const aiAPI = {
       suggestions: string[];
     }>;
   },
+
+  /**
+   * Suggest one new work-experience bullet (DeepSeek). Returns { bullet: string }.
+   */
+  suggestWorkBullet: async (input: {
+    position?: string;
+    company?: string;
+    description?: string;
+    existingBullets?: string[];
+    technologies?: string[];
+    outputLanguage?: "en" | "de";
+  }): Promise<{ bullet: string }> => {
+    const payload = camelToSnakeObject({
+      position: input.position ?? "",
+      company: input.company ?? "",
+      description: input.description ?? "",
+      existingBullets: input.existingBullets ?? [],
+      technologies: input.technologies ?? [],
+      ...(input.outputLanguage === "de" || input.outputLanguage === "en"
+        ? { outputLanguage: input.outputLanguage }
+        : {}),
+    });
+    const doFetch = () =>
+      fetch(`${API_BASE_URL}/ai/work-bullet-suggest/`, {
+        method: "POST",
+        headers: createHeaders(true, true),
+        body: JSON.stringify(payload),
+      });
+    const response = await doFetch();
+    return handleResponse(response, doFetch) as Promise<{ bullet: string }>;
+  },
 };
 
 // ============================================

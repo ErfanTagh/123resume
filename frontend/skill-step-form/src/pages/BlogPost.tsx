@@ -63,7 +63,20 @@ const BlogPost = () => {
     };
     fetchAllPosts();
   }, [language]);
-  
+
+  // Reading progress bar
+  const [readingProgress, setReadingProgress] = useState(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const height = el.scrollHeight - el.clientHeight;
+      setReadingProgress(height > 0 ? Math.min(100, (el.scrollTop / height) * 100) : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -87,66 +100,86 @@ const BlogPost = () => {
     .filter(p => p.id !== id && p.category === post.category)
     .slice(0, 3);
 
+  // Render inline bold (**text**) within a string
+  const renderInline = (text: string) =>
+    text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+      part.startsWith('**') && part.endsWith('**') ? (
+        <strong key={i} className="font-semibold text-foreground">{part.replace(/\*\*/g, '')}</strong>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+
   // Simple markdown-like rendering
   const renderContent = (content: string) => {
     const lines = content.trim().split('\n');
     const elements: JSX.Element[] = [];
     let listItems: string[] = [];
-    let inList = false;
+    let firstParagraphRendered = false;
 
     const flushList = () => {
       if (listItems.length > 0) {
         elements.push(
-          <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-2 text-muted-foreground mb-6 ml-4">
+          <ul key={`list-${elements.length}`} className="my-6 space-y-3 pl-1">
             {listItems.map((item, i) => (
-              <li key={i} className="leading-relaxed">{item}</li>
+              <li key={i} className="flex gap-3 text-[17px] sm:text-lg text-foreground/80 leading-relaxed">
+                <span className="mt-[0.7em] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+                <span>{renderInline(item)}</span>
+              </li>
             ))}
           </ul>
         );
         listItems = [];
       }
-      inList = false;
     };
 
     lines.forEach((line, index) => {
       const trimmed = line.trim();
-      
+
       if (trimmed.startsWith('## ')) {
         flushList();
         elements.push(
-          <h2 key={index} className="text-2xl sm:text-3xl font-bold text-foreground mt-10 mb-4">
+          <h2 key={index} className="scroll-mt-28 text-2xl sm:text-[2rem] font-bold tracking-tight text-foreground mt-12 mb-5 leading-tight">
             {trimmed.replace('## ', '')}
           </h2>
         );
       } else if (trimmed.startsWith('### ')) {
         flushList();
         elements.push(
-          <h3 key={index} className="text-xl sm:text-2xl font-semibold text-foreground mt-8 mb-3">
+          <h3 key={index} className="scroll-mt-28 text-xl sm:text-2xl font-semibold text-foreground mt-9 mb-3">
             {trimmed.replace('### ', '')}
           </h3>
         );
+      } else if (trimmed.startsWith('> ')) {
+        flushList();
+        elements.push(
+          <blockquote key={index} className="my-8 rounded-r-xl border-l-4 border-primary bg-primary/5 px-6 py-4 text-lg italic text-foreground/80">
+            {renderInline(trimmed.replace('> ', ''))}
+          </blockquote>
+        );
       } else if (trimmed.startsWith('- ')) {
-        inList = true;
         listItems.push(trimmed.replace('- ', ''));
       } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         flushList();
         elements.push(
-          <p key={index} className="font-semibold text-foreground mb-2">
+          <p key={index} className="mt-6 mb-2 text-[17px] sm:text-lg font-semibold text-foreground">
             {trimmed.replace(/\*\*/g, '')}
           </p>
         );
       } else if (trimmed.length > 0) {
         flushList();
-        // Handle inline bold text
-        const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
+        const isLead = !firstParagraphRendered;
+        firstParagraphRendered = true;
         elements.push(
-          <p key={index} className="text-muted-foreground leading-relaxed mb-4">
-            {parts.map((part, i) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={i} className="text-foreground font-semibold">{part.replace(/\*\*/g, '')}</strong>;
-              }
-              return part;
-            })}
+          <p
+            key={index}
+            className={
+              isLead
+                ? "mb-8 text-xl sm:text-2xl font-normal leading-relaxed text-foreground/90"
+                : "mb-6 text-[17px] sm:text-lg leading-[1.85] text-foreground/80"
+            }
+          >
+            {renderInline(trimmed)}
           </p>
         );
       }
@@ -231,39 +264,59 @@ const BlogPost = () => {
             </Link>
           </div>
         </div>
+        {/* Reading progress */}
+        <div className="absolute bottom-0 left-0 h-0.5 bg-primary transition-[width] duration-150 ease-out" style={{ width: `${readingProgress}%` }} />
       </nav>
 
       {/* Article Header */}
       <header className="pt-24 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-6">
         <div className="container mx-auto max-w-3xl">
-          <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
+          <Link to="/blog" className="flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" />
             {t('common.back')}
           </Link>
-          
-          <h1 className="text-3xl sm:text-5xl font-bold text-primary mb-6 leading-tight">
+
+          {post.category && (
+            <span className="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 mb-5">
+              {post.category}
+            </span>
+          )}
+
+          <h1 className="text-3xl sm:text-5xl font-bold text-foreground mb-6 leading-[1.12] tracking-tight">
             {post.title}
           </h1>
-          
-          <p className="text-lg sm:text-xl text-muted-foreground mb-6">
+
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed">
             {post.excerpt}
           </p>
-          
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-muted-foreground pb-6 border-b border-border">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {post.readTime}
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 pb-6 border-b border-border">
+            {/* Author byline */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                123
+              </div>
+              <div className="leading-tight">
+                <div className="text-sm font-semibold text-foreground">123Resume Team</div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                  <span>{post.date}</span>
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {post.readTime}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span>{post.date}</span>
             <div className="flex items-center gap-2 ml-auto">
-              <span className="text-xs uppercase tracking-wider">Share:</span>
-              <button className="w-8 h-8 rounded-full bg-muted hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
+              <span className="hidden sm:inline text-xs uppercase tracking-wider text-muted-foreground">Share:</span>
+              <button aria-label="Share on Twitter" className="w-8 h-8 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
                 <Twitter className="w-4 h-4" />
               </button>
-              <button className="w-8 h-8 rounded-full bg-muted hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
+              <button aria-label="Share on LinkedIn" className="w-8 h-8 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
                 <Linkedin className="w-4 h-4" />
               </button>
-              <button className="w-8 h-8 rounded-full bg-muted hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
+              <button aria-label="Share" className="w-8 h-8 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>

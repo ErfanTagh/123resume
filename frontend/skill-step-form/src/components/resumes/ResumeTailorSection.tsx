@@ -197,13 +197,13 @@ export function ResumeTailorSection({
           "Each round suggests changes to improve match by ~20%.");
 
   return (
-    <Card className="border-l-4 border-l-amber-500 shadow-sm">
+    <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="text-amber-900 dark:text-amber-100 flex items-center gap-2">
-          <Wand2 className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2">
+          <Wand2 className="h-5 w-5 text-primary" />
           {t("pages.resumes.jobMatching.tailor.title") || "Tailor resume to job"}
         </CardTitle>
-        <CardDescription className="text-amber-800/90 dark:text-amber-200/90">
+        <CardDescription>
           {t("pages.resumes.jobMatching.tailor.subtitle") ||
             "Get AI suggestions to align your resume with this job. Review each change before applying."}
         </CardDescription>
@@ -254,7 +254,7 @@ export function ResumeTailorSection({
 
         <p className="text-xs text-muted-foreground">{roundHint}</p>
         {projectedMatch !== null && hasFetched && (
-          <p className="text-sm font-medium text-amber-900/90 dark:text-amber-100/90">
+          <p className="text-sm font-medium text-foreground">
             {t("pages.resumes.jobMatching.tailor.projected") || "Projected match"}: ~{projectedMatch}%
             {resumeLabel ? ` · ${resumeLabel}` : ""}
           </p>

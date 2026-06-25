@@ -26,9 +26,10 @@ const Landing = () => {
       <section className="relative pt-28 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-10 left-1/4 w-72 sm:w-[500px] h-72 sm:h-[500px] bg-primary/15 rounded-full blur-[100px] animate-pulse" />
-          <div className="absolute bottom-10 right-1/4 w-56 sm:w-96 h-56 sm:h-96 bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-[600px] h-80 sm:h-[600px] bg-gradient-to-br from-primary/5 via-transparent to-primary/5 rounded-full blur-3xl" />
+          <div className="absolute top-10 left-1/4 w-72 sm:w-[500px] h-72 sm:h-[500px] bg-[hsl(var(--sunset-violet)/0.18)] rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-10 right-1/4 w-56 sm:w-96 h-56 sm:h-96 bg-[hsl(var(--sunset-orange)/0.16)] rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/3 right-1/3 w-64 sm:w-[420px] h-64 sm:h-[420px] bg-[hsl(var(--sunset-pink)/0.14)] rounded-full blur-[90px] animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-[600px] h-80 sm:h-[600px] bg-gradient-to-br from-[hsl(var(--sunset-violet)/0.10)] via-[hsl(var(--sunset-pink)/0.06)] to-[hsl(var(--sunset-orange)/0.10)] rounded-full blur-3xl" />
           {/* Grid pattern overlay */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.3)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.3)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black_40%,transparent_100%)]" />
         </div>
@@ -46,7 +47,7 @@ const Landing = () => {
             <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <h1 className="text-4xl sm:text-6xl md:text-8xl font-extrabold leading-[1.1] tracking-tight">
                 <span className="block text-foreground">{t('landing.headline1')}</span>
-                <span className="mt-1 block bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+                <span className="mt-1 block bg-gradient-to-r from-[hsl(var(--sunset-violet))] via-[hsl(var(--sunset-pink))] to-[hsl(var(--sunset-orange))] bg-clip-text text-transparent">
                   {t('landing.headline2')}
                 </span>
               </h1>

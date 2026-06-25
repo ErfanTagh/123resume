@@ -766,6 +766,7 @@
         "poor": "Geringe Übereinstimmung",
         "coverLetter": {
           "title": "Anschreiben",
+          "tab": "Anschreiben",
           "subtitle": "Erstellen Sie ein passendes Anschreiben aus Ihrem gespeicherten Lebenslauf und der Stellenbeschreibung oben.",
           "generate": "Anschreiben erstellen",
           "regenerate": "Anschreiben neu erstellen",
@@ -787,6 +788,7 @@
         },
         "tailor": {
           "title": "Lebenslauf an Stelle anpassen",
+          "tab": "Lebenslauf verbessern",
           "subtitle": "KI-Vorschläge, um Ihren Lebenslauf an die Stelle anzupassen. Jede Änderung vor dem Übernehmen prüfen.",
           "start": "Lebenslauf für diese Stelle verbessern",
           "more": "Weitere Vorschläge",

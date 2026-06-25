@@ -8,50 +8,56 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --background: 28 33% 98%;
+    --foreground: 222 28% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 222 28% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 222 28% 14%;
 
-    --primary: 214 95% 50%;
+    --primary: 344 84% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 214 95% 60%;
+    --primary-glow: 22 92% 58%;
 
-    --secondary: 214 15% 92%;
-    --secondary-foreground: 215 25% 25%;
+    --secondary: 24 22% 93%;
+    --secondary-foreground: 222 25% 25%;
 
-    --muted: 214 15% 95%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 24 24% 95%;
+    --muted-foreground: 222 12% 45%;
 
-    --accent: 214 95% 95%;
-    --accent-foreground: 214 95% 35%;
+    --accent: 344 90% 96%;
+    --accent-foreground: 344 70% 38%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 92%;
-    --ring: 214 95% 50%;
+    --border: 24 22% 89%;
+    --input: 24 22% 92%;
+    --ring: 344 84% 55%;
 
     --radius: 0.75rem;
 
+    /* Sunset gradient stops (violet -> pink -> orange) */
+    --sunset-violet: 268 72% 60%;
+    --sunset-pink: 338 88% 60%;
+    --sunset-orange: 22 94% 58%;
+
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(214 95% 50%),
-      hsl(214 95% 60%)
+      hsl(268 72% 58%),
+      hsl(338 86% 56%) 50%,
+      hsl(22 94% 56%)
     );
     --gradient-subtle: linear-gradient(
       180deg,
-      hsl(210 20% 98%),
-      hsl(214 30% 96%)
+      hsl(28 33% 98%),
+      hsl(28 42% 96%)
     );
 
-    --shadow-card: 0 2px 8px -2px hsl(214 50% 20% / 0.08);
-    --shadow-elevated: 0 8px 24px -4px hsl(214 50% 20% / 0.12);
+    --shadow-card: 0 2px 8px -2px hsl(338 50% 30% / 0.10);
+    --shadow-elevated: 0 8px 24px -4px hsl(338 50% 30% / 0.14);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -69,48 +75,54 @@ All colors MUST be HSL.
 
     --sidebar-border: 220 13% 91%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 344 84% 55%;
   }
 
   .dark {
-    --background: 215 28% 10%;
-    --foreground: 210 20% 95%;
+    --background: 258 24% 9%;
+    --foreground: 28 25% 95%;
 
-    --card: 215 25% 14%;
-    --card-foreground: 210 20% 95%;
+    --card: 258 22% 13%;
+    --card-foreground: 28 25% 95%;
 
-    --popover: 215 25% 14%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 258 22% 13%;
+    --popover-foreground: 28 25% 95%;
 
-    --primary: 214 95% 55%;
+    --primary: 342 86% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 214 95% 65%;
+    --primary-glow: 22 92% 62%;
 
-    --secondary: 215 25% 20%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 258 18% 19%;
+    --secondary-foreground: 28 25% 95%;
 
-    --muted: 215 25% 18%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 258 16% 17%;
+    --muted-foreground: 28 12% 62%;
 
-    --accent: 214 95% 20%;
-    --accent-foreground: 214 95% 70%;
+    --accent: 342 60% 22%;
+    --accent-foreground: 342 90% 78%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 22%;
-    --input: 215 25% 20%;
-    --ring: 214 95% 55%;
+    --border: 258 16% 22%;
+    --input: 258 16% 20%;
+    --ring: 342 86% 60%;
+
+    /* Sunset gradient stops (violet -> pink -> orange) */
+    --sunset-violet: 268 78% 66%;
+    --sunset-pink: 338 90% 64%;
+    --sunset-orange: 22 94% 62%;
 
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(214 95% 50%),
-      hsl(214 95% 60%)
+      hsl(268 76% 60%),
+      hsl(338 86% 58%) 50%,
+      hsl(22 94% 58%)
     );
     --gradient-subtle: linear-gradient(
       180deg,
-      hsl(215 28% 10%),
-      hsl(215 28% 12%)
+      hsl(258 24% 9%),
+      hsl(258 24% 11%)
     );
 
     --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);

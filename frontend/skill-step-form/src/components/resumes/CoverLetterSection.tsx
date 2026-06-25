@@ -127,13 +127,13 @@ export function CoverLetterSection({
   };
 
   return (
-    <Card className="border-l-4 border-l-sky-500 shadow-sm">
+    <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="text-sky-800 dark:text-sky-200 flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
           {t("pages.resumes.jobMatching.coverLetter.title") || "Cover letter"}
         </CardTitle>
-        <CardDescription className="text-sky-700/90 dark:text-sky-300/90">
+        <CardDescription>
           {t("pages.resumes.jobMatching.coverLetter.subtitle") ||
             "Generate a tailored cover letter from your saved resume and the job description above."}
         </CardDescription>
@@ -148,7 +148,7 @@ export function CoverLetterSection({
 
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="space-y-2 sm:max-w-xs flex-1">
-            <Label htmlFor="cover-letter-language" className="text-sky-800 dark:text-sky-200 font-medium">
+            <Label htmlFor="cover-letter-language" className="font-medium">
               {t("pages.resumes.jobMatching.coverLetter.languageLabel") || "Cover letter language"}
             </Label>
             <Select
@@ -196,7 +196,7 @@ export function CoverLetterSection({
 
         {coverLetter && (
           <div className="space-y-3 pt-2">
-            <Label htmlFor="cover-letter-text" className="text-sky-800 dark:text-sky-200 font-medium">
+            <Label htmlFor="cover-letter-text" className="font-medium">
               {t("pages.resumes.jobMatching.coverLetter.editLabel") || "Edit your cover letter"}
             </Label>
             <Textarea

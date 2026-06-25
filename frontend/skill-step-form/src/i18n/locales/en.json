@@ -766,6 +766,7 @@
         "poor": "Poor Match",
         "coverLetter": {
           "title": "Cover letter",
+          "tab": "Cover letter",
           "subtitle": "Generate a tailored cover letter from your saved resume and the job description above.",
           "generate": "Generate cover letter",
           "regenerate": "Regenerate cover letter",
@@ -787,6 +788,7 @@
         },
         "tailor": {
           "title": "Tailor resume to job",
+          "tab": "Improve resume",
           "subtitle": "Get AI suggestions to align your resume with this job. Review each change before applying.",
           "start": "Improve resume for this job",
           "more": "Get more suggestions",

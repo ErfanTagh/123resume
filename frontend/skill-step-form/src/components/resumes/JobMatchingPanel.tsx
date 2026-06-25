@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Target, TrendingUp } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle, Info, Target, TrendingUp, Wand2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CoverLetterSection } from "@/components/resumes/CoverLetterSection";
@@ -125,11 +126,6 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
 
   return (
     <div className="space-y-6">
-      <p className="text-sm max-w-2xl font-medium text-sky-900/90 dark:text-sky-100/90 leading-relaxed">
-        {t("pages.resumes.jobMatching.subtitle") ||
-          "Compare a saved resume with a job description, get a match score, and generate a cover letter."}
-      </p>
-
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -137,94 +133,88 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-l-4 border-l-violet-500 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-violet-800 dark:text-violet-200">
-              {t("pages.resumes.jobMatching.selectTitle") || "Select your resume"}
-            </CardTitle>
-            <CardDescription className="text-violet-700/90 dark:text-violet-300/90">
-              {t("pages.resumes.jobMatching.selectDesc") || "Choose which resume to compare"}
-            </CardDescription>
-            <Alert className="mt-4 border-amber-200 bg-amber-50/90 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-50">
-              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              <AlertDescription className="text-xs font-medium text-amber-950 dark:text-amber-50">
-                {t("pages.resumes.jobMatching.saveNote") ||
-                  "Save your resume after editing. Job matching uses the saved version from the database."}
-              </AlertDescription>
-            </Alert>
-          </CardHeader>
-          <CardContent>
-            {isLoadingResumes ? (
-              <div className="text-center py-6">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              </div>
-            ) : resumes.length === 0 ? (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {t("pages.resumes.jobMatching.noResumes") || "No resumes yet."}{" "}
-                  <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/create/start")}>
-                    {t("pages.resumes.empty.createButton") || "Create one"}
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            ) : (
+      {/* Step 1 — single input card */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>
+            {t("pages.resumes.jobMatching.selectTitle") || "Match a resume to a job"}
+          </CardTitle>
+          <CardDescription>
+            {t("pages.resumes.jobMatching.subtitle") ||
+              "Compare a saved resume with a job description to get a match score, tailoring tips, and a cover letter."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Left: resume + meta */}
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-violet-800 dark:text-violet-200 font-medium">
-                  {t("pages.resumes.jobMatching.selectPlaceholder") || "Select a resume"}
+                <Label htmlFor="resume-select" className="font-medium">
+                  {t("pages.resumes.jobMatching.selectPlaceholder") || "Resume"}
                 </Label>
-                <Select value={effectiveResumeId} onValueChange={setSelectedResumeId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("pages.resumes.jobMatching.selectPlaceholder") || "Select a resume"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resumes.map((resume) => (
-                      <SelectItem key={resume.id} value={resume.id}>
-                        {resumeLabel(resume)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isLoadingResumes ? (
+                  <div className="flex h-10 items-center">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                ) : resumes.length === 0 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {t("pages.resumes.jobMatching.noResumes") || "No resumes yet."}{" "}
+                      <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/create/start")}>
+                        {t("pages.resumes.empty.createButton") || "Create one"}
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Select value={effectiveResumeId} onValueChange={setSelectedResumeId}>
+                    <SelectTrigger id="resume-select">
+                      <SelectValue placeholder={t("pages.resumes.jobMatching.selectPlaceholder") || "Select a resume"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {resumes.map((resume) => (
+                        <SelectItem key={resume.id} value={resume.id}>
+                          {resumeLabel(resume)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {t("pages.resumes.jobMatching.saveNote") ||
+                    "Matching uses the last saved version of your resume."}
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-emerald-800 dark:text-emerald-200">
-              {t("pages.resumes.jobMatching.jobTitle") || "Job description"}
-            </CardTitle>
-            <CardDescription className="text-emerald-700/90 dark:text-emerald-300/90">
-              {t("pages.resumes.jobMatching.jobDesc") || "Enter the job you want to match against"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="job-title" className="text-emerald-800 dark:text-emerald-200 font-medium">
-                {t("pages.resumes.jobMatching.jobTitleOptional") || "Job title (optional)"}
-              </Label>
-              <Input
-                id="job-title"
-                placeholder={t("pages.resumes.jobMatching.jobTitlePlaceholder") || "e.g. Senior Developer"}
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="job-title" className="font-medium">
+                  {t("pages.resumes.jobMatching.jobTitleOptional") || "Job title (optional)"}
+                </Label>
+                <Input
+                  id="job-title"
+                  placeholder={t("pages.resumes.jobMatching.jobTitlePlaceholder") || "e.g. Senior Developer"}
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="job-company" className="font-medium">
+                  {t("pages.resumes.jobMatching.companyOptional") || "Company (optional)"}
+                </Label>
+                <Input
+                  id="job-company"
+                  placeholder={t("pages.resumes.jobMatching.companyPlaceholder") || "e.g. Acme Corp"}
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="job-company" className="text-emerald-800 dark:text-emerald-200 font-medium">
-                {t("pages.resumes.jobMatching.companyOptional") || "Company (optional)"}
-              </Label>
-              <Input
-                id="job-company"
-                placeholder={t("pages.resumes.jobMatching.companyPlaceholder") || "e.g. Acme Corp"}
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="job-description" className="text-emerald-800 dark:text-emerald-200 font-medium">
+
+            {/* Right: description */}
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="job-description" className="font-medium">
                 {t("pages.resumes.jobMatching.jobDescriptionRequired") || "Job description *"}
               </Label>
               <Textarea
@@ -232,14 +222,16 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
                 placeholder={t("pages.resumes.jobMatching.jobDescriptionPlaceholder") || "Paste the job description here..."}
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                rows={8}
-                className="resize-none"
+                className="min-h-[240px] flex-1 resize-none lg:min-h-0"
               />
             </div>
+          </div>
+
+          <div className="flex justify-end">
             <Button
               onClick={handleMatch}
               disabled={isLoading || !effectiveResumeId || !jobDescription.trim()}
-              className="w-full"
+              className="w-full sm:w-auto"
               size="lg"
             >
               {isLoading ? (
@@ -254,10 +246,11 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
                 </>
               )}
             </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Step 2 — score (semantic color is intentional here) */}
       {matchResult && (
         <Card className={`border-2 ${getMatchColor(matchResult.match_percentage)}`}>
           <CardHeader>
@@ -294,21 +287,39 @@ export function JobMatchingPanel({ resumes, isLoadingResumes }: JobMatchingPanel
         </Card>
       )}
 
-      <ResumeTailorSection
-        resumeId={effectiveResumeId}
-        jobTitle={jobTitle}
-        jobDescription={jobDescription}
-        companyName={companyName}
-        currentMatchPercentage={matchResult?.match_percentage}
-        resumeLabel={coverLetterDownloadName}
-      />
-
-      <CoverLetterSection
-        resumeId={effectiveResumeId}
-        jobTitle={jobTitle}
-        jobDescription={jobDescription}
-        downloadName={coverLetterDownloadName}
-      />
+      {/* Step 3 — next actions, revealed after a match */}
+      {matchResult && (
+        <Tabs defaultValue="tailor" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
+            <TabsTrigger value="tailor" className="gap-1.5">
+              <Wand2 className="h-4 w-4" />
+              {t("pages.resumes.jobMatching.tailor.tab") || "Improve resume"}
+            </TabsTrigger>
+            <TabsTrigger value="cover" className="gap-1.5">
+              <FileText className="h-4 w-4" />
+              {t("pages.resumes.jobMatching.coverLetter.tab") || "Cover letter"}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="tailor" className="mt-4">
+            <ResumeTailorSection
+              resumeId={effectiveResumeId}
+              jobTitle={jobTitle}
+              jobDescription={jobDescription}
+              companyName={companyName}
+              currentMatchPercentage={matchResult?.match_percentage}
+              resumeLabel={coverLetterDownloadName}
+            />
+          </TabsContent>
+          <TabsContent value="cover" className="mt-4">
+            <CoverLetterSection
+              resumeId={effectiveResumeId}
+              jobTitle={jobTitle}
+              jobDescription={jobDescription}
+              downloadName={coverLetterDownloadName}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

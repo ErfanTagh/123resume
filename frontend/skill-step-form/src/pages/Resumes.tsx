@@ -595,7 +595,7 @@ export default function Resumes() {
                         <Button
                           type="button"
                           size="sm"
-                          className="h-9 rounded-full border-0 bg-blue-600 px-8 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+                          className="h-9 rounded-full border-0 bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDuplicate(resume);

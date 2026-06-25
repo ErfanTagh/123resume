@@ -476,112 +476,87 @@ const Blog = () => {
               <p className="text-muted-foreground">No blog posts available.</p>
             </div>
           ) : (
-            <>
-              {/* Group posts by category for better internal linking */}
-              {(() => {
-                const categories = Array.from(new Set(blogPosts.map(p => p.category)));
-                return categories.map((category) => {
-                  const categoryPosts = blogPosts.filter(p => p.category === category);
-                  if (categoryPosts.length === 0) return null;
-                  
-                  return (
-                    <div key={category} className="mb-12 sm:mb-16">
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-                            {category}
-                          </h2>
-                          <p className="text-muted-foreground">
-                            {categoryPosts.length} {categoryPosts.length === 1 ? 'article' : 'articles'} in this category
-                          </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+              {blogPosts.map((post) => {
+                const hasImage = post.image && typeof post.image === 'string';
+                return (
+                  <Link to={`/blog/${post.id}`} key={post.id} className="h-full">
+                    <article className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:shadow-[0_20px_40px_-15px_hsl(var(--primary)/0.25)] hover:border-primary/40 transition-all duration-500 cursor-pointer hover:-translate-y-2 h-full flex flex-col">
+                      {/* Hero Image or Decorative background pattern */}
+                      {hasImage ? (
+                        <div className="aspect-[16/9] relative overflow-hidden">
+                          <img
+                            src={post.image}
+                            alt={`Featured image for blog post: ${post.title}${post.category ? ` about ${post.category}` : ''} on 123Resume`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              // Image failed to load, fallback to gradient design
+                            }}
+                          />
+                          {/* Watermark */}
+                          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-white px-1.5 py-1 rounded-md shadow-sm">
+                            <img
+                              src="/logoo.png"
+                              alt="123Resume Logo"
+                              className="h-5 w-auto object-contain"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`aspect-[16/9] bg-gradient-to-br ${post.gradient} relative overflow-hidden`}>
+                          <div className="absolute inset-0 opacity-30">
+                            <div className="absolute top-4 right-4 w-20 h-20 border border-current rounded-full opacity-20" />
+                            <div className="absolute bottom-4 left-4 w-12 h-12 border border-current rounded-lg rotate-12 opacity-20" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-current rounded-full opacity-10" />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                              <BookOpen className={`w-8 h-8 sm:w-10 sm:h-10 ${post.iconColor} group-hover:scale-110 transition-transform duration-300`} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-6 sm:p-8 flex flex-col flex-1">
+                        <div className="flex items-center gap-2 mb-4 flex-wrap">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 hover:bg-primary/15 transition-colors">
+                            {post.category}
+                          </span>
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {post.tags.slice(0, 3).map((tag, index) => (
+                                <span key={index} className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
+                                  {tag}
+                                </span>
+                              ))}
+                              {post.tags.length > 3 && (
+                                <span className="text-xs text-muted-foreground">+{post.tags.length - 3}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors duration-300 line-clamp-2 leading-tight">
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-5 line-clamp-2 leading-relaxed">
+                          {post.excerpt}
+                        </p>
+                        <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground pt-5 border-t border-border/50">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3.5 h-3.5" />
+                            {post.readTime}
+                          </div>
+                          <span className="font-medium">{post.date}</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {categoryPosts.map((post) => {
-                          const hasImage = post.image && typeof post.image === 'string';
-                          return (
-                            <Link to={`/blog/${post.id}`} key={post.id}>
-                              <article className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:shadow-[0_20px_40px_-15px_hsl(var(--primary)/0.25)] hover:border-primary/40 transition-all duration-500 cursor-pointer hover:-translate-y-2 h-full">
-                                {/* Hero Image or Decorative background pattern */}
-                                {hasImage ? (
-                                  <div className="aspect-[16/9] relative overflow-hidden">
-                                    <img 
-                                      src={post.image} 
-                                      alt={`Featured image for blog post: ${post.title}${post.category ? ` about ${post.category}` : ''} on 123Resume`}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                      onError={(e) => {
-                                        // Image failed to load, fallback to gradient design
-                                      }}
-                                    />
-                                    {/* Watermark */}
-                                    <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-white px-1.5 py-1 rounded-md shadow-sm">
-                                      <img 
-                                        src="/logoo.png" 
-                                        alt="123Resume Logo" 
-                                        className="h-5 w-auto object-contain"
-                                      />
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className={`aspect-[16/9] bg-gradient-to-br ${post.gradient} relative overflow-hidden`}>
-                                    <div className="absolute inset-0 opacity-30">
-                                      <div className="absolute top-4 right-4 w-20 h-20 border border-current rounded-full opacity-20" />
-                                      <div className="absolute bottom-4 left-4 w-12 h-12 border border-current rounded-lg rotate-12 opacity-20" />
-                                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-current rounded-full opacity-10" />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-                                        <BookOpen className={`w-8 h-8 sm:w-10 sm:h-10 ${post.iconColor} group-hover:scale-110 transition-transform duration-300`} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="p-6 sm:p-8">
-                                  <div className="flex items-center gap-2 mb-4 flex-wrap">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 hover:bg-primary/15 transition-colors">
-                                      {post.category}
-                                    </span>
-                                    {post.tags && post.tags.length > 0 && (
-                                      <div className="flex items-center gap-1.5 flex-wrap">
-                                        {post.tags.slice(0, 3).map((tag, index) => (
-                                          <span key={index} className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
-                                            {tag}
-                                          </span>
-                                        ))}
-                                        {post.tags.length > 3 && (
-                                          <span className="text-xs text-muted-foreground">+{post.tags.length - 3}</span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors duration-300 line-clamp-2 leading-tight">
-                                    {post.title}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground mb-5 line-clamp-2 leading-relaxed">
-                                    {post.excerpt}
-                                  </p>
-                                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-5 border-t border-border/50">
-                                    <div className="flex items-center gap-1.5 font-medium">
-                                      <Clock className="w-3.5 h-3.5" />
-                                      {post.readTime}
-                                    </div>
-                                    <span className="font-medium">{post.date}</span>
-                                  </div>
-                                </div>
-                                {/* Hover arrow indicator */}
-                                <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                                  <ArrowRight className="w-4 h-4 text-primary" />
-                                </div>
-                              </article>
-                            </Link>
-                          );
-                        })}
+                      {/* Hover arrow indicator */}
+                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+                        <ArrowRight className="w-4 h-4 text-primary" />
                       </div>
-                    </div>
-                  );
-                });
-              })()}
-            </>
+                    </article>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </div>
       </section>

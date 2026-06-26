@@ -1,10 +1,10 @@
-# Builder uses Debian-slim (not alpine) so react-snap's headless Chromium
-# (used for prerendering public pages) runs reliably during the build.
+# Builder uses Debian-slim (not alpine) so Puppeteer's headless Chrome
+# (used to prerender public pages) runs reliably during the build.
 FROM node:18-slim as builder
 
 WORKDIR /app
 
-# System libraries required by the headless Chromium that react-snap drives.
+# System libraries required by the headless Chrome that the prerender step drives.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates fonts-liberation wget \
     libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 \
@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies (including dev deps needed for build + react-snap).
-# Puppeteer (a react-snap dependency) downloads its matching Chromium here.
+# Install dependencies (including dev deps needed for build + prerender).
+# Puppeteer downloads its matching headless Chrome here.
 RUN npm ci && npm cache clean --force
 
 # Copy source code
@@ -27,8 +27,8 @@ COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
-# `npm run build` runs `vite build`, then `postbuild` runs react-snap,
-# which prerenders the public routes in package.json -> static HTML in dist/.
+# `npm run build` runs `vite build`, then `postbuild` runs scripts/prerender.mjs,
+# which prerenders the public routes -> static HTML in dist/.
 RUN npm run build
 
 # Production stage

@@ -22,7 +22,14 @@ ROUND_TARGET_BOOST = 20
 MAX_ROUNDS = 5
 
 ALLOWED_SECTIONS = frozenset(
-    {"professional_summary", "skills", "work_experience", "projects"}
+    {
+        "professional_summary",
+        "professional_title",
+        "location",
+        "skills",
+        "work_experience",
+        "projects",
+    }
 )
 
 
@@ -84,6 +91,10 @@ def build_resume_snapshot(resume_doc: Dict[str, Any]) -> Dict[str, Any]:
         )
     return {
         "professional_summary": (personal.get("summary") or "").strip(),
+        "professional_title": (
+            personal.get("professional_title") or personal.get("professionalTitle") or ""
+        ).strip(),
+        "location": (personal.get("location") or "").strip(),
         "skills": _skills_to_display(resume_doc.get("skills") or []),
         "skills_list": [
             {"skill": (s.get("skill") or "").strip()}
@@ -113,6 +124,14 @@ def _normalize_suggestion(raw: Dict[str, Any], snapshot: Dict[str, Any]) -> Dict
         apply_data["summary"] = after
         if not before:
             before = snapshot.get("professional_summary") or "(empty)"
+    elif section == "professional_title":
+        apply_data["title"] = after[:200]
+        if not before:
+            before = snapshot.get("professional_title") or "(empty)"
+    elif section == "location":
+        apply_data["location"] = after[:200]
+        if not before:
+            before = snapshot.get("location") or "(empty)"
     elif section == "skills":
         skills_raw = raw.get("skills_after")
         if isinstance(skills_raw, list) and skills_raw:
@@ -310,8 +329,10 @@ Rules:
 - Round 1: focus on professional_summary and skills if weak.
 - Later rounds: refine work_experience descriptions/responsibilities and project descriptions.
 - Do NOT repeat suggestion ids already skipped: {list(skip) or "none"}.
-- Only use sections: professional_summary, skills, work_experience, projects.
-{scope_rule}- For work_experience use work_index (0-based) and field "description" or "responsibilities".
+- Only use sections: professional_summary, professional_title, location, skills, work_experience, projects.
+{scope_rule}- professional_title: align the headline title with the target job title ONLY when truthful (e.g., add a specialization the resume supports). Never claim a seniority or role the resume does not back up.
+- location: only reformat or clarify the EXISTING location (e.g., add country, standard format). Do NOT invent a new city or imply relocation the resume doesn't state.
+- For work_experience use work_index (0-based) and field "description" or "responsibilities".
 - For skills: skills_after must list ALL skills (reordered with job-relevant ones first, keep every existing skill).
 - {lang_rule}
 - "before" must match current resume content; "after" is your improved version.
@@ -321,7 +342,7 @@ Return JSON:
   "suggestions": [
     {{
       "id": "unique-stable-id",
-      "section": "professional_summary|skills|work_experience|projects",
+      "section": "professional_summary|professional_title|location|skills|work_experience|projects",
       "label": "Human label",
       "before": "current text",
       "after": "improved text",

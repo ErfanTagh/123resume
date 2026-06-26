@@ -857,6 +857,8 @@
           "missingInputs": "Bitte Lebenslauf wählen und Stellenbeschreibung eingeben.",
           "noScope": "Wählen Sie mindestens einen Teil Ihres Lebenslaufs, den die KI ändern darf.",
           "scopeTitle": "Was darf die KI ändern?",
+          "scopeTitle2": "Berufsbezeichnung",
+          "scopeLocation": "Ort",
           "scopeSummary": "Profil / Zusammenfassung",
           "scopeSkills": "Fähigkeiten",
           "scopeExperience": "Berufserfahrung",
@@ -870,7 +872,12 @@
           "download": "Angepasstes PDF herunterladen",
           "downloading": "Download läuft...",
           "downloadedTitle": "Download gestartet",
-          "downloadFailed": "PDF-Download fehlgeschlagen."
+          "downloadFailed": "PDF-Download fehlgeschlagen.",
+          "saveAsNew": "Als neuen Lebenslauf speichern",
+          "savingAsNew": "Wird gespeichert...",
+          "savedAsNewTitle": "Als neuer Lebenslauf gespeichert",
+          "savedAsNewDesc": "Zu „Meine Lebensläufe“ hinzugefügt als",
+          "saveAsNewFailed": "Kopie konnte nicht gespeichert werden."
         }
       },
       "jobTracker": {

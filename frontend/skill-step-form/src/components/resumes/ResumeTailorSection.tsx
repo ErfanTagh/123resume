@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Download, Sparkles, Wand2 } from "lucide-react";
+import { AlertCircle, Download, Sparkles, Wand2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -25,6 +25,8 @@ type ResumeTailorSectionProps = {
   companyName?: string;
   currentMatchPercentage?: number;
   resumeLabel?: string;
+  /** Called after a tailored copy is saved as a new resume, so the list can refresh. */
+  onResumeCreated?: () => void;
 };
 
 export function ResumeTailorSection({
@@ -34,6 +36,7 @@ export function ResumeTailorSection({
   companyName,
   currentMatchPercentage = 0,
   resumeLabel,
+  onResumeCreated,
 }: ResumeTailorSectionProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
@@ -46,6 +49,7 @@ export function ResumeTailorSection({
   const [isFetching, setIsFetching] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSavingCopy, setIsSavingCopy] = useState(false);
   const [error, setError] = useState("");
   const [hasFetched, setHasFetched] = useState(false);
   const [effectiveMatch, setEffectiveMatch] = useState(currentMatchPercentage);
@@ -53,6 +57,8 @@ export function ResumeTailorSection({
   // Scope: which parts of the resume the user lets the AI change.
   const [tailorResume, setTailorResume] = useState<Resume | null>(null);
   const [allowSummary, setAllowSummary] = useState(true);
+  const [allowTitle, setAllowTitle] = useState(true);
+  const [allowLocation, setAllowLocation] = useState(true);
   const [allowSkills, setAllowSkills] = useState(true);
   const [allowedWork, setAllowedWork] = useState<Set<number>>(new Set());
   const [allowedProjects, setAllowedProjects] = useState<Set<number>>(new Set());
@@ -70,6 +76,8 @@ export function ResumeTailorSection({
         if (!active) return;
         setTailorResume(r);
         setAllowSummary(true);
+        setAllowTitle(true);
+        setAllowLocation(true);
         setAllowSkills(true);
         setAllowedWork(new Set((r.workExperience || []).map((_, i) => i)));
         setAllowedProjects(new Set((r.projects || []).map((_, i) => i)));
@@ -96,6 +104,8 @@ export function ResumeTailorSection({
   const buildAllowedScope = () => {
     const allowedSections: string[] = [];
     if (allowSummary) allowedSections.push("professional_summary");
+    if (allowTitle) allowedSections.push("professional_title");
+    if (allowLocation) allowedSections.push("location");
     if (allowSkills) allowedSections.push("skills");
     if (allowedWork.size > 0) allowedSections.push("work_experience");
     if (allowedProjects.size > 0) allowedSections.push("projects");
@@ -110,6 +120,8 @@ export function ResumeTailorSection({
   const isSuggestionInScope = (apply: Record<string, unknown>): boolean => {
     const norm = normalizeApplyPayload(apply);
     if (norm.section === "professional_summary") return allowSummary;
+    if (norm.section === "professional_title") return allowTitle;
+    if (norm.section === "location") return allowLocation;
     if (norm.section === "skills") return allowSkills;
     if (norm.section === "work_experience") return norm.workIndex !== undefined && allowedWork.has(norm.workIndex);
     if (norm.section === "projects") return norm.projectIndex !== undefined && allowedProjects.has(norm.projectIndex);
@@ -253,6 +265,40 @@ export function ResumeTailorSection({
     setHandledIds((ids) => [...ids, suggestion.id]);
   };
 
+  const handleSaveAsNew = async () => {
+    setIsSavingCopy(true);
+    try {
+      // Pull the latest resume (with any accepted tailoring already applied).
+      const resume = await resumeAPI.getById(resumeId);
+      const baseName =
+        resume.name?.trim() ||
+        [resume.personalInfo?.firstName, resume.personalInfo?.lastName].filter(Boolean).join(" ") ||
+        "Resume";
+      const suffix = (companyName || jobTitle || "").trim();
+      const newName = suffix ? `${baseName} — ${suffix}`.slice(0, 200) : `${baseName} (tailored)`.slice(0, 200);
+
+      const payload = { ...toResumeUpdatePayload(resume), name: newName };
+      const created = await resumeAPI.create(payload);
+
+      onResumeCreated?.();
+      toast({
+        title: t("pages.resumes.jobMatching.tailor.savedAsNewTitle") || "Saved as new resume",
+        description:
+          (t("pages.resumes.jobMatching.tailor.savedAsNewDesc") || "Added to My Resumes as") +
+          ` "${newName}".`,
+      });
+      return created;
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("pages.resumes.jobMatching.tailor.saveAsNewFailed") || "Could not save a copy.";
+      toast({ title: t("common.error") || "Error", description: msg, variant: "destructive" });
+    } finally {
+      setIsSavingCopy(false);
+    }
+  };
+
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
@@ -310,8 +356,16 @@ export function ResumeTailorSection({
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
             <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={allowTitle} onCheckedChange={(v) => setAllowTitle(v === true)} />
+              <span className="text-sm">{t("pages.resumes.jobMatching.tailor.scopeTitle2") || "Job title"}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox checked={allowSummary} onCheckedChange={(v) => setAllowSummary(v === true)} />
               <span className="text-sm">{t("pages.resumes.jobMatching.tailor.scopeSummary") || "Professional summary"}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={allowLocation} onCheckedChange={(v) => setAllowLocation(v === true)} />
+              <span className="text-sm">{t("pages.resumes.jobMatching.tailor.scopeLocation") || "Location"}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox checked={allowSkills} onCheckedChange={(v) => setAllowSkills(v === true)} />
@@ -382,17 +436,30 @@ export function ResumeTailorSection({
             )}
           </Button>
           {hasFetched && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleDownload}
-              disabled={isDownloading}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {isDownloading
-                ? t("pages.resumes.jobMatching.tailor.downloading") || "Downloading..."
-                : t("pages.resumes.jobMatching.tailor.download") || "Download tailored PDF"}
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveAsNew}
+                disabled={isSavingCopy}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isSavingCopy
+                  ? t("pages.resumes.jobMatching.tailor.savingAsNew") || "Saving..."
+                  : t("pages.resumes.jobMatching.tailor.saveAsNew") || "Save as new resume"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDownload}
+                disabled={isDownloading}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isDownloading
+                  ? t("pages.resumes.jobMatching.tailor.downloading") || "Downloading..."
+                  : t("pages.resumes.jobMatching.tailor.download") || "Download tailored PDF"}
+              </Button>
+            </>
           )}
         </div>
 

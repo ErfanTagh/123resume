@@ -857,6 +857,8 @@
           "missingInputs": "Select a resume and enter a job description first.",
           "noScope": "Select at least one part of your resume for the AI to change.",
           "scopeTitle": "What can the AI change?",
+          "scopeTitle2": "Job title",
+          "scopeLocation": "Location",
           "scopeSummary": "Professional summary",
           "scopeSkills": "Skills",
           "scopeExperience": "Work experience",
@@ -870,7 +872,12 @@
           "download": "Download tailored PDF",
           "downloading": "Downloading...",
           "downloadedTitle": "Download started",
-          "downloadFailed": "Could not download PDF."
+          "downloadFailed": "Could not download PDF.",
+          "saveAsNew": "Save as new resume",
+          "savingAsNew": "Saving...",
+          "savedAsNewTitle": "Saved as new resume",
+          "savedAsNewDesc": "Added to My Resumes as",
+          "saveAsNewFailed": "Could not save a copy."
         }
       },
       "jobTracker": {

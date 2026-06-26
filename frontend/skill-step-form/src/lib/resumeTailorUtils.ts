@@ -1,8 +1,16 @@
 import type { Resume, ResumeData } from "@/lib/api";
 
 export type TailorApplyPayload = {
-  section: "professional_summary" | "skills" | "work_experience" | "projects";
+  section:
+    | "professional_summary"
+    | "professional_title"
+    | "location"
+    | "skills"
+    | "work_experience"
+    | "projects";
   summary?: string;
+  title?: string;
+  location?: string;
   skills?: Array<{ skill: string }>;
   workIndex?: number;
   projectIndex?: number;
@@ -58,6 +66,10 @@ export function normalizeApplyPayload(raw: Record<string, unknown>): TailorApply
       raw.summary !== undefined && raw.summary !== null
         ? String(raw.summary)
         : undefined,
+    title:
+      raw.title !== undefined && raw.title !== null ? String(raw.title) : undefined,
+    location:
+      raw.location !== undefined && raw.location !== null ? String(raw.location) : undefined,
     skills,
     workIndex: Number.isFinite(workIndex) ? workIndex : undefined,
     projectIndex: Number.isFinite(projectIndex) ? projectIndex : undefined,
@@ -103,6 +115,28 @@ export function applyTailorSuggestion(resume: ResumeData, apply: TailorApplyPayl
       lastName: next.personalInfo?.lastName ?? "",
       email: next.personalInfo?.email ?? "",
       summary: apply.summary,
+    };
+    return next;
+  }
+
+  if (apply.section === "professional_title" && apply.title !== undefined) {
+    next.personalInfo = {
+      ...next.personalInfo,
+      firstName: next.personalInfo?.firstName ?? "",
+      lastName: next.personalInfo?.lastName ?? "",
+      email: next.personalInfo?.email ?? "",
+      professionalTitle: apply.title,
+    };
+    return next;
+  }
+
+  if (apply.section === "location" && apply.location !== undefined) {
+    next.personalInfo = {
+      ...next.personalInfo,
+      firstName: next.personalInfo?.firstName ?? "",
+      lastName: next.personalInfo?.lastName ?? "",
+      email: next.personalInfo?.email ?? "",
+      location: apply.location,
     };
     return next;
   }

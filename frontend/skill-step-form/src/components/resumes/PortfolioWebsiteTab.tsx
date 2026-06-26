@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExternalLink, Globe, Link2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -226,7 +225,7 @@ export function PortfolioWebsiteTab({
 
   if (resumes.length === 0) {
     return (
-      <Card>
+      <Card className="max-w-2xl mx-auto">
         <CardContent className="py-10 text-center text-muted-foreground text-sm">
           {t("pages.resumes.portfolio.noResumes") || "Create a resume first to publish a portfolio website."}
         </CardContent>
@@ -238,28 +237,21 @@ export function PortfolioWebsiteTab({
   const publishedId = activeResume?.id;
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <Alert className="border-sky-300 bg-sky-50/90 text-sky-950 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-50">
-        <Globe className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-        <AlertDescription className="text-sm font-medium leading-relaxed text-sky-900 dark:text-sky-100">
-          {t("pages.resumes.portfolio.oneSiteHint") ||
-            "You can have one portfolio website per account. Choose which resume powers your public page—the link always points to that resume only."}
-        </AlertDescription>
-      </Alert>
-
-      <Card className="border-l-4 border-l-sky-500 shadow-sm">
+    <div className="space-y-5 max-w-2xl mx-auto">
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-sky-900 dark:text-sky-100">
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
             {t("pages.resumes.portfolio.title") || "Portfolio website"}
           </CardTitle>
-          <CardDescription className="text-sky-800/90 dark:text-sky-200/90">
+          <CardDescription>
             {t("pages.resumes.portfolio.subtitle") ||
               "Select a resume and publish your hosted portfolio link."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-sky-800 dark:text-sky-200 font-medium">
+            <Label className="font-medium">
               {t("pages.resumes.portfolio.selectResume") || "Resume for portfolio"}
             </Label>
             <Select value={selectedId} onValueChange={setSelectedId} disabled={busy}>
@@ -284,22 +276,23 @@ export function PortfolioWebsiteTab({
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-lg border border-sky-200/80 dark:border-sky-800/80 bg-sky-50/50 dark:bg-sky-950/30 p-4">
-            <div>
-              <p className="font-semibold text-sm text-sky-900 dark:text-sky-100">
-                {t("pages.resumes.portfolio.publishLabel") || "Publish portfolio"}
-              </p>
-              <p
-                className={`text-xs font-medium mt-1 ${
-                  isPublished
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-amber-800 dark:text-amber-300"
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-start gap-3">
+              <span
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                  isPublished ? "bg-emerald-500" : "bg-muted-foreground/40"
                 }`}
-              >
-                {isPublished
-                  ? t("pages.resumes.portfolio.statusOn") || "Your portfolio is live."
-                  : t("pages.resumes.portfolio.statusOff") || "Portfolio is off for this resume."}
-              </p>
+              />
+              <div>
+                <p className="font-semibold text-sm text-foreground">
+                  {t("pages.resumes.portfolio.publishLabel") || "Publish portfolio"}
+                </p>
+                <p className="text-xs font-medium mt-0.5 text-muted-foreground">
+                  {isPublished
+                    ? t("pages.resumes.portfolio.statusOn") || "Your portfolio is live."
+                    : t("pages.resumes.portfolio.statusOff") || "Portfolio is off for this resume."}
+                </p>
+              </div>
             </div>
             <Switch
               checked={isPublished}
@@ -311,33 +304,42 @@ export function PortfolioWebsiteTab({
 
           {isPublished && selected && (
             <>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => copyLink(selected.id)} disabled={busy}>
-                  <Link2 className="h-3.5 w-3.5 mr-1.5" />
-                  {t("pages.resumes.publicProfile.copyLink") || "Copy link"}
-                </Button>
-                <Button type="button" variant="secondary" className="flex-1" asChild disabled={busy}>
-                  <a href={publicProfileUrl(selected.id)} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                    {t("pages.resumes.publicProfile.open") || "Open"}
-                  </a>
-                </Button>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  {t("pages.resumes.portfolio.live") || "Live"}
+                </div>
+                <p className="text-sm break-all font-mono text-foreground">
+                  {publicProfileUrl(selected.id)}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button type="button" className="flex-1" onClick={() => copyLink(selected.id)} disabled={busy}>
+                    <Link2 className="h-3.5 w-3.5 mr-1.5" />
+                    {t("pages.resumes.publicProfile.copyLink") || "Copy link"}
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" asChild disabled={busy}>
+                    <a href={publicProfileUrl(selected.id)} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      {t("pages.resumes.publicProfile.open") || "Open"}
+                    </a>
+                  </Button>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground break-all font-mono bg-muted/50 rounded px-3 py-2">
-                {publicProfileUrl(selected.id)}
-              </p>
 
-              <div className="space-y-2 pt-2 border-t">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-sm font-medium text-foreground">
                   {t("pages.resumes.publicProfile.sectionsTitle") || "Show on public page"}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   {PUBLIC_PROFILE_SECTION_KEYS.map((sectionKey) => {
                     const sections = mergePublicProfileSections(selected.publicProfileSections);
                     const sectionLabel =
                       t(`pages.resumes.publicProfile.sections.${sectionKey}`) || sectionKey;
                     return (
-                      <div key={sectionKey} className="flex items-center justify-between gap-2">
+                      <div key={sectionKey} className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
                         <Label htmlFor={`portfolio-${selected.id}-${sectionKey}`} className="text-xs font-normal">
                           {sectionLabel}
                         </Label>
@@ -353,11 +355,11 @@ export function PortfolioWebsiteTab({
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2 border-t">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-sm font-medium text-foreground">
                   {t("pages.resumes.publicProfile.themeTitle") || "Color scheme"}
                 </p>
-                <div className="flex flex-wrap gap-2" role="radiogroup">
+                <div className="flex flex-wrap gap-2.5" role="radiogroup">
                   {PUBLIC_PROFILE_THEME_IDS.map((tid) => {
                     const active = mergePublicProfileTheme(selected.publicProfileTheme) === tid;
                     const c = HOSTED_PROFILE_THEME_COLORS[tid];
@@ -370,7 +372,7 @@ export function PortfolioWebsiteTab({
                         disabled={busy}
                         onClick={() => handleThemeChange(tid)}
                         className={`h-9 w-9 rounded-full shrink-0 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                          active ? "ring-2 ring-offset-2 ring-primary" : "ring-1 ring-border"
+                          active ? "ring-2 ring-offset-2 ring-primary" : "ring-1 ring-border hover:ring-primary/40"
                         }`}
                         style={{
                           background: `linear-gradient(135deg, ${c.accent} 50%, ${c.secondary} 50%)`,

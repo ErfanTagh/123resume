@@ -767,7 +767,8 @@
           "phone": "Telefon",
           "location": "Stadt / Ort",
           "website": "Website",
-          "twitter": "Twitter / X-Name"
+          "twitter": "Twitter / X-Name",
+          "photo": "Profilfoto"
         },
         "templates": {
           "classic": "Klassisch",
@@ -854,6 +855,12 @@
           "applyFailed": "Änderung konnte nicht übernommen werden",
           "failed": "Vorschläge konnten nicht geladen werden",
           "missingInputs": "Bitte Lebenslauf wählen und Stellenbeschreibung eingeben.",
+          "noScope": "Wählen Sie mindestens einen Teil Ihres Lebenslaufs, den die KI ändern darf.",
+          "scopeTitle": "Was darf die KI ändern?",
+          "scopeSummary": "Profil / Zusammenfassung",
+          "scopeSkills": "Fähigkeiten",
+          "scopeExperience": "Berufserfahrung",
+          "scopeProjects": "Projekte",
           "noSuggestionsTitle": "Keine weiteren Vorschläge",
           "noSuggestionsDesc": "Ihr Lebenslauf passt bereits gut, oder bearbeiten Sie ihn manuell.",
           "firstHint": "Jede Runde verbessert die Übereinstimmung um ca. 20 %.",

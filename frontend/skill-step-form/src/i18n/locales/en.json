@@ -767,7 +767,8 @@
           "phone": "Phone",
           "location": "City / location",
           "website": "Website",
-          "twitter": "Twitter / X handle"
+          "twitter": "Twitter / X handle",
+          "photo": "Profile photo"
         },
         "templates": {
           "classic": "Classic",
@@ -854,6 +855,12 @@
           "applyFailed": "Failed to apply change",
           "failed": "Failed to get suggestions",
           "missingInputs": "Select a resume and enter a job description first.",
+          "noScope": "Select at least one part of your resume for the AI to change.",
+          "scopeTitle": "What can the AI change?",
+          "scopeSummary": "Professional summary",
+          "scopeSkills": "Skills",
+          "scopeExperience": "Work experience",
+          "scopeProjects": "Projects",
           "noSuggestionsTitle": "No more suggestions",
           "noSuggestionsDesc": "Your resume already aligns well, or try editing manually.",
           "firstHint": "Each round suggests changes to improve match by ~20%.",

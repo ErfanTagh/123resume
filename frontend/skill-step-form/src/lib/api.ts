@@ -833,6 +833,12 @@ export const resumeAPI = {
       currentMatchPercentage?: number;
       skipIds?: string[];
       outputLanguage?: "en" | "de";
+      /** Sections the AI may change (subset of professional_summary, skills, work_experience, projects). */
+      allowedSections?: string[];
+      /** Work-experience indexes the AI may change (when work_experience is allowed). */
+      allowedWorkIndexes?: number[];
+      /** Project indexes the AI may change (when projects are allowed). */
+      allowedProjectIndexes?: number[];
     },
   ): Promise<{
     resumeId: string;
@@ -863,6 +869,9 @@ export const resumeAPI = {
           ...(input.outputLanguage === "de" || input.outputLanguage === "en"
             ? { outputLanguage: input.outputLanguage }
             : {}),
+          ...(input.allowedSections ? { allowedSections: input.allowedSections } : {}),
+          ...(input.allowedWorkIndexes ? { allowedWorkIndexes: input.allowedWorkIndexes } : {}),
+          ...(input.allowedProjectIndexes ? { allowedProjectIndexes: input.allowedProjectIndexes } : {}),
         }),
       });
     const response = await makeRequest();

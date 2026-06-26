@@ -11,6 +11,8 @@ import { downloadResumePDF } from "@/lib/resumePdfUtils";
 import { TailorSuggestionRow } from "@/components/resumes/TailorSuggestionRow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Download, Sparkles, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +50,72 @@ export function ResumeTailorSection({
   const [hasFetched, setHasFetched] = useState(false);
   const [effectiveMatch, setEffectiveMatch] = useState(currentMatchPercentage);
 
+  // Scope: which parts of the resume the user lets the AI change.
+  const [tailorResume, setTailorResume] = useState<Resume | null>(null);
+  const [allowSummary, setAllowSummary] = useState(true);
+  const [allowSkills, setAllowSkills] = useState(true);
+  const [allowedWork, setAllowedWork] = useState<Set<number>>(new Set());
+  const [allowedProjects, setAllowedProjects] = useState<Set<number>>(new Set());
+
+  // Load the resume so we can list its experiences/projects, and allow all by default.
+  useEffect(() => {
+    let active = true;
+    if (!resumeId) {
+      setTailorResume(null);
+      return;
+    }
+    (async () => {
+      try {
+        const r = await resumeAPI.getById(resumeId);
+        if (!active) return;
+        setTailorResume(r);
+        setAllowSummary(true);
+        setAllowSkills(true);
+        setAllowedWork(new Set((r.workExperience || []).map((_, i) => i)));
+        setAllowedProjects(new Set((r.projects || []).map((_, i) => i)));
+      } catch {
+        if (active) setTailorResume(null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [resumeId]);
+
+  const toggleIndex = (set: Set<number>, setter: (s: Set<number>) => void, idx: number) => {
+    const next = new Set(set);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
+    setter(next);
+  };
+
+  const workList = tailorResume?.workExperience || [];
+  const projectList = tailorResume?.projects || [];
+
+  /** Build the allowed-scope payload for the API from the current selection. */
+  const buildAllowedScope = () => {
+    const allowedSections: string[] = [];
+    if (allowSummary) allowedSections.push("professional_summary");
+    if (allowSkills) allowedSections.push("skills");
+    if (allowedWork.size > 0) allowedSections.push("work_experience");
+    if (allowedProjects.size > 0) allowedSections.push("projects");
+    return {
+      allowedSections,
+      allowedWorkIndexes: [...allowedWork],
+      allowedProjectIndexes: [...allowedProjects],
+    };
+  };
+
+  /** Client-side guarantee: only keep suggestions that target an allowed part. */
+  const isSuggestionInScope = (apply: Record<string, unknown>): boolean => {
+    const norm = normalizeApplyPayload(apply);
+    if (norm.section === "professional_summary") return allowSummary;
+    if (norm.section === "skills") return allowSkills;
+    if (norm.section === "work_experience") return norm.workIndex !== undefined && allowedWork.has(norm.workIndex);
+    if (norm.section === "projects") return norm.projectIndex !== undefined && allowedProjects.has(norm.projectIndex);
+    return false;
+  };
+
   useEffect(() => {
     setSuggestions([]);
     setTailorRound(1);
@@ -81,6 +149,18 @@ export function ResumeTailorSection({
     }
     if (atMaxRound) return;
 
+    const scope = buildAllowedScope();
+    if (scope.allowedSections.length === 0) {
+      toast({
+        title: t("common.error") || "Error",
+        description:
+          t("pages.resumes.jobMatching.tailor.noScope") ||
+          "Select at least one part of your resume for the AI to change.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsFetching(true);
     setError("");
 
@@ -95,13 +175,20 @@ export function ResumeTailorSection({
           ...suggestions.filter((s) => !handledIds.includes(s.id)).map((s) => s.id),
         ],
         outputLanguage: language === "de" ? "de" : "en",
+        allowedSections: scope.allowedSections,
+        allowedWorkIndexes: scope.allowedWorkIndexes,
+        allowedProjectIndexes: scope.allowedProjectIndexes,
       });
       const pendingIds = new Set(
         suggestions.filter((s) => !handledIds.includes(s.id)).map((s) => s.id),
       );
+      // Client-side guarantee: drop anything outside the user's allowed scope.
+      const scoped = result.suggestions.filter((s) =>
+        isSuggestionInScope(s.apply as Record<string, unknown>),
+      );
       const merged = [
         ...suggestions.filter((s) => !handledIds.includes(s.id)),
-        ...result.suggestions.filter((s) => !pendingIds.has(s.id) && !handledIds.includes(s.id)),
+        ...scoped.filter((s) => !pendingIds.has(s.id) && !handledIds.includes(s.id)),
       ];
       setSuggestions(merged as TailorSuggestion[]);
       setProjectedMatch(result.projectedMatchPercentage);
@@ -215,6 +302,63 @@ export function ResumeTailorSection({
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        {/* Scope: let the user choose what the AI may change */}
+        <div className="rounded-lg border border-border/70 bg-muted/20 p-3 sm:p-4 space-y-3">
+          <p className="text-sm font-medium text-foreground">
+            {t("pages.resumes.jobMatching.tailor.scopeTitle") || "What can the AI change?"}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={allowSummary} onCheckedChange={(v) => setAllowSummary(v === true)} />
+              <span className="text-sm">{t("pages.resumes.jobMatching.tailor.scopeSummary") || "Professional summary"}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={allowSkills} onCheckedChange={(v) => setAllowSkills(v === true)} />
+              <span className="text-sm">{t("pages.resumes.jobMatching.tailor.scopeSkills") || "Skills"}</span>
+            </label>
+          </div>
+
+          {workList.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("pages.resumes.jobMatching.tailor.scopeExperience") || "Work experience"}
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {workList.map((exp, i) => (
+                  <label key={i} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={allowedWork.has(i)}
+                      onCheckedChange={() => toggleIndex(allowedWork, setAllowedWork, i)}
+                    />
+                    <span className="text-sm truncate">
+                      {[exp.position, exp.company].filter(Boolean).join(" · ") || `Experience ${i + 1}`}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {projectList.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("pages.resumes.jobMatching.tailor.scopeProjects") || "Projects"}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {projectList.map((proj, i) => (
+                  <label key={i} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={allowedProjects.has(i)}
+                      onCheckedChange={() => toggleIndex(allowedProjects, setAllowedProjects, i)}
+                    />
+                    <span className="text-sm truncate">{proj.name || `Project ${i + 1}`}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
           <Button

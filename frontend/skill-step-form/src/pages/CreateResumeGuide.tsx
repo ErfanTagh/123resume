@@ -14,7 +14,8 @@ import {
   type SeniorityLevel,
 } from "@/lib/templateGuideRecommendations";
 import type { CVTemplate } from "@/components/cv-form/types";
-import { ArrowRight, ChevronLeft, Sparkles } from "lucide-react";
+import { RESUME_COLOR_THEMES, DEFAULT_RESUME_THEME_ID, getResumeThemeAccent } from "@/lib/resumeColorThemes";
+import { ArrowRight, ChevronLeft, Sparkles, Check } from "lucide-react";
 
 /** Questionnaire steps (0 = language … 3 = focus); step 4 = result */
 const TOTAL_GUIDE_STEPS = 4;
@@ -50,6 +51,7 @@ const CreateResumeGuide = () => {
   const [years, setYears] = useState<ExperienceBand | "">("");
   const [seniority, setSeniority] = useState<SeniorityLevel | "">("");
   const [focus, setFocus] = useState<JobSearchFocus | "">("");
+  const [themeId, setThemeId] = useState<string>(DEFAULT_RESUME_THEME_ID);
 
   const recommendation = useMemo(() => {
     if (!years || !seniority || !focus) return null;
@@ -71,7 +73,7 @@ const CreateResumeGuide = () => {
   const templateDescription = (id: CVTemplate) => t(`landing.${TEMPLATE_DESC_KEY[id]}`);
 
   const goCreate = (template: CVTemplate) => {
-    navigate(`/create?template=${encodeURIComponent(template)}`);
+    navigate(`/create?template=${encodeURIComponent(template)}&theme=${encodeURIComponent(themeId)}`);
   };
 
   return (
@@ -239,11 +241,45 @@ const CreateResumeGuide = () => {
 
                   <div className="overflow-hidden rounded-xl border bg-muted/20">
                     <div className="aspect-[3/4] max-h-[320px] w-full border-b bg-white sm:max-h-[380px]">
-                      <LandingTemplatePreview templateName={recommendation.template} />
+                      <LandingTemplatePreview
+                        templateName={recommendation.template}
+                        accent={getResumeThemeAccent(themeId)}
+                      />
                     </div>
                     <div className="p-4">
                       <p className="text-lg font-bold">{templateTitle(recommendation.template)}</p>
                       <p className="text-sm text-muted-foreground">{templateDescription(recommendation.template)}</p>
+                    </div>
+                  </div>
+
+                  {/* Pick an accent colour — carried into the editor */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-foreground">
+                      {t("resume.settings.colorTheme") || "Color theme"}
+                    </p>
+                    <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label={t("resume.settings.colorTheme") || "Color theme"}>
+                      {RESUME_COLOR_THEMES.map((theme) => {
+                        const active = themeId === theme.id;
+                        return (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => setThemeId(theme.id)}
+                            title={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                            aria-label={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                            className={`relative h-8 w-8 rounded-full shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              active ? "ring-2 ring-offset-2 ring-primary scale-110" : "ring-1 ring-border hover:ring-primary/40 hover:scale-110"
+                            }`}
+                            style={{ background: theme.accent }}
+                          >
+                            {active && (
+                              <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" strokeWidth={3} />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 

@@ -156,6 +156,19 @@ DATABASES = {
     }
 }
 
+# Shared, process-safe cache. Used to memoize AI resume scores so an identical
+# resume always returns the same score — across all gunicorn workers and repeat
+# presses — instead of a fresh (jittery) DeepSeek call each time. File-based so
+# it needs no extra service (Redis/Memcached) and is shared within the container.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.getenv('DJANGO_CACHE_DIR', '/tmp/resume_django_cache'),
+        'TIMEOUT': 60 * 60 * 24 * 30,  # 30 days
+        'OPTIONS': {'MAX_ENTRIES': 5000},
+    }
+}
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

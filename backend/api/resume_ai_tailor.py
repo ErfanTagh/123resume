@@ -208,6 +208,9 @@ def generate_tailor_suggestions(
     current_match_percentage: float = 0.0,
     skip_ids: List[str] | None = None,
     output_language: str = "en",
+    allowed_sections: List[str] | None = None,
+    allowed_work_indexes: List[int] | None = None,
+    allowed_project_indexes: List[int] | None = None,
 ) -> Dict[str, Any]:
     if not settings.DEEPSEEK_API_KEY:
         raise RuntimeError("DEEPSEEK_API_KEY is not configured")
@@ -216,6 +219,35 @@ def generate_tailor_suggestions(
     snapshot = build_resume_snapshot(resume_doc)
     rnd = max(1, min(int(round_number or 1), MAX_ROUNDS))
     skip = set(skip_ids or [])
+
+    # Scope: which parts of the resume the user allows the AI to change.
+    # None => no restriction (back-compat). Indexes only constrain their section.
+    scoped_sections = (
+        {s for s in allowed_sections if s in ALLOWED_SECTIONS}
+        if isinstance(allowed_sections, list)
+        else None
+    )
+    work_idx_filter = (
+        {int(i) for i in allowed_work_indexes}
+        if isinstance(allowed_work_indexes, list)
+        else None
+    )
+    proj_idx_filter = (
+        {int(i) for i in allowed_project_indexes}
+        if isinstance(allowed_project_indexes, list)
+        else None
+    )
+
+    def _in_scope(norm: Dict[str, Any]) -> bool:
+        ap = norm.get("apply") or {}
+        sec = ap.get("section")
+        if scoped_sections is not None and sec not in scoped_sections:
+            return False
+        if sec == "work_experience" and work_idx_filter is not None:
+            return ap.get("work_index") in work_idx_filter
+        if sec == "projects" and proj_idx_filter is not None:
+            return ap.get("project_index") in proj_idx_filter
+        return True
 
     try:
         current_pct = float(current_match_percentage or 0)
@@ -238,6 +270,32 @@ def generate_tailor_suggestions(
     else:
         lang_rule = "Write suggested text in English (professional, no invented facts)."
 
+    # Build a human-readable allowed-scope instruction for the model (when restricted).
+    scope_rule = ""
+    if scoped_sections is not None:
+        parts: List[str] = []
+        if "professional_summary" in scoped_sections:
+            parts.append("professional_summary")
+        if "skills" in scoped_sections:
+            parts.append("skills")
+        if "work_experience" in scoped_sections:
+            if work_idx_filter is not None:
+                allowed = ", ".join(str(i) for i in sorted(work_idx_filter)) or "none"
+                parts.append(f"work_experience (ONLY work_index in [{allowed}])")
+            else:
+                parts.append("work_experience")
+        if "projects" in scoped_sections:
+            if proj_idx_filter is not None:
+                allowed = ", ".join(str(i) for i in sorted(proj_idx_filter)) or "none"
+                parts.append(f"projects (ONLY project_index in [{allowed}])")
+            else:
+                parts.append("projects")
+        allowed_desc = "; ".join(parts) if parts else "none"
+        scope_rule = (
+            f"- ALLOWED SCOPE — the user permits changes ONLY to: {allowed_desc}. "
+            "Do NOT suggest changes to any other section or to any experience/project outside the allowed indexes.\n"
+        )
+
     system = (
         "You are a resume tailoring coach. Suggest small, truthful edits so a resume fits a job better. "
         "Reply with a single JSON object only (no markdown fences). "
@@ -253,7 +311,7 @@ Rules:
 - Later rounds: refine work_experience descriptions/responsibilities and project descriptions.
 - Do NOT repeat suggestion ids already skipped: {list(skip) or "none"}.
 - Only use sections: professional_summary, skills, work_experience, projects.
-- For work_experience use work_index (0-based) and field "description" or "responsibilities".
+{scope_rule}- For work_experience use work_index (0-based) and field "description" or "responsibilities".
 - For skills: skills_after must list ALL skills (reordered with job-relevant ones first, keep every existing skill).
 - {lang_rule}
 - "before" must match current resume content; "after" is your improved version.
@@ -314,7 +372,8 @@ Current resume snapshot:
         if sid and sid in skip:
             continue
         norm = _normalize_suggestion(item, snapshot)
-        if norm:
+        # Enforce the user's allowed scope server-side, regardless of model output.
+        if norm and _in_scope(norm):
             suggestions.append(norm)
 
     try:

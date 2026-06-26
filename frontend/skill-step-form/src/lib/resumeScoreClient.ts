@@ -24,32 +24,55 @@ function cloneResumeForAiScore(data: CVFormData): CVFormData {
   }
 }
 
-function normalizeAiScore(raw: {
-  overallScore: number;
-  estimatedPages?: number;
-  overallFeedback?: string;
-  categories: Array<{
-    name: string;
-    score: number;
-    maxScore: number;
-    feedback: string;
-  }>;
-  suggestions: string[];
-}): ResumeScore {
-  const overallFeedback =
+/**
+ * Combine a deterministic score with the AI's written feedback.
+ *
+ * The NUMBERS (overall score + per-category scores) come from the local
+ * rule-based scorer, so they are reproducible and monotonic: identical input
+ * always yields the identical score, and a small improvement reliably nudges the
+ * score up. The AI supplies only the qualitative PROSE — per-category feedback,
+ * suggestions, and the overall summary — matched to categories by name.
+ */
+function mergeDeterministicScoreWithAiText(
+  data: CVFormData,
+  raw: {
+    overallScore: number;
+    estimatedPages?: number;
+    overallFeedback?: string;
+    categories: Array<{
+      name: string;
+      score: number;
+      maxScore: number;
+      feedback: string;
+    }>;
+    suggestions: string[];
+  },
+): ResumeScore {
+  const local = calculateResumeScore(data);
+  const aiByName = new Map(
+    (raw.categories || []).map((c) => [c.name, c] as const),
+  );
+  const aiOverallFeedback =
     typeof raw.overallFeedback === "string" ? raw.overallFeedback.trim() : "";
+  const aiSuggestions = Array.isArray(raw.suggestions)
+    ? raw.suggestions.filter((s) => typeof s === "string" && s.trim())
+    : [];
+
   return {
-    overallScore: Math.max(0, Math.min(10, Number(raw.overallScore) || 0)),
-    categories: (raw.categories || []).map((c) => ({
-      name: c.name,
-      score: Math.max(0, Math.min(c.maxScore || 0, Number(c.score) || 0)),
-      maxScore: c.maxScore,
-      feedback: c.feedback || "",
-    })),
-    suggestions: Array.isArray(raw.suggestions)
-      ? raw.suggestions.filter((s) => typeof s === "string" && s.trim())
-      : [],
-    overallFeedback: overallFeedback || undefined,
+    // Deterministic headline + category numbers.
+    overallScore: local.overallScore,
+    categories: local.categories.map((c) => {
+      const ai = aiByName.get(c.name);
+      return {
+        name: c.name,
+        score: c.score,
+        maxScore: c.maxScore,
+        // Prefer the AI's richer feedback text; fall back to the local note.
+        feedback: (ai?.feedback || c.feedback || "").trim(),
+      };
+    }),
+    suggestions: aiSuggestions.length > 0 ? aiSuggestions : local.suggestions,
+    overallFeedback: aiOverallFeedback || local.overallFeedback,
     fromAi: true,
   };
 }
@@ -99,7 +122,7 @@ export async function getResumeScoreWithOptionalAI(
         suggestionCount: raw.suggestions?.length ?? 0,
       });
     }
-    return normalizeAiScore(raw);
+    return mergeDeterministicScoreWithAiText(data, raw);
   } catch (err) {
     logResumeScore("client:getResumeScoreWithOptionalAI:api-error", {
       err: err instanceof Error ? err.message : String(err),

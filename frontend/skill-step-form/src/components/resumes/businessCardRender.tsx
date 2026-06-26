@@ -33,6 +33,8 @@ export type CardRenderProps = {
   qr: QrMatrix | null;
   qrCaption: string;
   brand?: string;
+  /** Optional headshot (data URL recommended) shown as a circular avatar. */
+  photo?: string;
 };
 
 const FONT = "Poppins, ui-sans-serif, system-ui, sans-serif";
@@ -52,6 +54,29 @@ function BrandGlyph({ kind, x, y, size, color }: { kind: SocialKind; x: number; 
   return (
     <g transform={`translate(${x},${y}) scale(${size / 24})`}>
       <path d={BRAND_PATHS[kind]} fill={color} />
+    </g>
+  );
+}
+
+/** Circular headshot with a thin ring. `id` must be unique within the SVG. */
+function Avatar({ photo, cx, cy, r, ring, id }: { photo: string; cx: number; cy: number; r: number; ring: string; id: string }) {
+  return (
+    <g>
+      <defs>
+        <clipPath id={id}>
+          <circle cx={cx} cy={cy} r={r} />
+        </clipPath>
+      </defs>
+      <circle cx={cx} cy={cy} r={r + 5} fill={ring} />
+      <image
+        href={photo}
+        x={cx - r}
+        y={cy - r}
+        width={r * 2}
+        height={r * 2}
+        clipPath={`url(#${id})`}
+        preserveAspectRatio="xMidYMid slice"
+      />
     </g>
   );
 }
@@ -126,16 +151,19 @@ function QrBlock({ qr, x, y, size, caption, captionColor, dark }: { qr: QrMatrix
 }
 
 export function renderBusinessCard(p: CardRenderProps): JSX.Element {
-  const { template, accent, name, title, contacts, socials, qr, qrCaption, brand } = p;
+  const { template, accent, name, title, contacts, socials, qr, qrCaption, brand, photo } = p;
   const displayName = name || "Your Name";
+  const hasPhoto = !!photo && photo.trim().length > 0;
 
   if (template === "banner") {
+    // Headshot sits at the top-right of the colored banner.
     return (
       <>
         <rect x="0" y="0" width="1050" height="600" fill="#ffffff" />
         <rect x="0" y="0" width="1050" height="200" fill={accent} />
         <text x="70" y="112" fontFamily={FONT} fontSize="54" fontWeight="700" fill="#ffffff">{displayName}</text>
         {title ? <text x="72" y="160" fontFamily={FONT} fontSize="26" fontWeight="500" fill="#ffffff" opacity="0.92">{title}</text> : null}
+        {hasPhoto ? <Avatar photo={photo!} cx={946} cy={100} r={64} ring="#ffffff" id="bc-av-banner" /> : null}
         <InfoLines x={72} startY={288} step={46} textColor="#374151" accent={accent} glyphColor={accent} contacts={contacts} socials={socials} />
         <text x="70" y="566" fontFamily={FONT} fontSize="18" fontWeight="500" fill={MUTED}>{brand}</text>
         <QrBlock qr={qr} x={772} y={270} size={210} caption={qrCaption} captionColor={MUTED} />
@@ -143,13 +171,20 @@ export function renderBusinessCard(p: CardRenderProps): JSX.Element {
     );
   }
 
+  // For the remaining templates a circular headshot sits top-left and the
+  // name/title shift right to sit beside it.
+  const headX = hasPhoto ? 252 : 70;
+  const nameY = hasPhoto ? 120 : 150;
+
   if (template === "minimal") {
+    const titleY = hasPhoto ? 182 : 214;
     return (
       <>
         <rect x="0" y="0" width="1050" height="600" fill="#ffffff" />
-        <text x="70" y="150" fontFamily={FONT} fontSize="56" fontWeight="700" fill={SLATE}>{displayName}</text>
-        <rect x="72" y="168" width="84" height="5" rx="2.5" fill={accent} />
-        {title ? <text x="72" y="214" fontFamily={FONT} fontSize="24" fontWeight="400" fill={MUTED}>{title}</text> : null}
+        {hasPhoto ? <Avatar photo={photo!} cx={134} cy={138} r={78} ring="#eef0f4" id="bc-av-min" /> : null}
+        <text x={headX} y={nameY} fontFamily={FONT} fontSize="56" fontWeight="700" fill={SLATE}>{displayName}</text>
+        <rect x={headX + 2} y={hasPhoto ? 138 : 168} width="84" height="5" rx="2.5" fill={accent} />
+        {title ? <text x={headX + 2} y={titleY} fontFamily={FONT} fontSize="24" fontWeight="400" fill={MUTED}>{title}</text> : null}
         <InfoLines x={72} startY={286} step={44} textColor="#4b5563" accent={accent} glyphColor={accent} contacts={contacts} socials={socials} />
         <text x="70" y="566" fontFamily={FONT} fontSize="18" fontWeight="500" fill={MUTED}>{brand}</text>
         <QrBlock qr={qr} x={788} y={160} size={200} caption={qrCaption} captionColor={MUTED} />
@@ -159,12 +194,14 @@ export function renderBusinessCard(p: CardRenderProps): JSX.Element {
 
   if (template === "dark") {
     const tileX = 716, tileY = 150, tile = 276, qs = 232;
+    const titleY = hasPhoto ? 166 : 196;
     return (
       <>
         <rect x="0" y="0" width="1050" height="600" fill="#15161c" />
         <rect x="0" y="0" width="16" height="600" fill={accent} />
-        <text x="70" y="150" fontFamily={FONT} fontSize="58" fontWeight="700" fill="#ffffff">{displayName}</text>
-        {title ? <text x="72" y="196" fontFamily={FONT} fontSize="26" fontWeight="500" fill={accent}>{title}</text> : null}
+        {hasPhoto ? <Avatar photo={photo!} cx={140} cy={138} r={78} ring="#2a2c36" id="bc-av-dark" /> : null}
+        <text x={headX} y={nameY} fontFamily={FONT} fontSize="58" fontWeight="700" fill="#ffffff">{displayName}</text>
+        {title ? <text x={headX + 2} y={titleY} fontFamily={FONT} fontSize="26" fontWeight="500" fill={accent}>{title}</text> : null}
         <line x1="72" y1="232" x2="600" y2="232" stroke="#ffffff" strokeOpacity="0.12" strokeWidth="2" />
         <InfoLines x={72} startY={292} step={48} textColor="#e5e7eb" accent={accent} glyphColor={accent} contacts={contacts} socials={socials} />
         <text x="70" y="566" fontFamily={FONT} fontSize="18" fontWeight="500" fill="#9ca3af">{brand}</text>
@@ -175,12 +212,14 @@ export function renderBusinessCard(p: CardRenderProps): JSX.Element {
   }
 
   // classic (default)
+  const classicTitleY = hasPhoto ? 166 : 196;
   return (
     <>
       <rect x="0" y="0" width="1050" height="600" fill="#ffffff" />
       <rect x="0" y="0" width="16" height="600" fill={accent} />
-      <text x="70" y="150" fontFamily={FONT} fontSize="58" fontWeight="700" fill={SLATE}>{displayName}</text>
-      {title ? <text x="72" y="196" fontFamily={FONT} fontSize="26" fontWeight="500" fill={accent}>{title}</text> : null}
+      {hasPhoto ? <Avatar photo={photo!} cx={140} cy={138} r={78} ring="#eef0f4" id="bc-av-classic" /> : null}
+      <text x={headX} y={nameY} fontFamily={FONT} fontSize="58" fontWeight="700" fill={SLATE}>{displayName}</text>
+      {title ? <text x={headX + 2} y={classicTitleY} fontFamily={FONT} fontSize="26" fontWeight="500" fill={accent}>{title}</text> : null}
       <line x1="72" y1="232" x2="600" y2="232" stroke="#ececf0" strokeWidth="2" />
       <InfoLines x={72} startY={292} step={48} textColor="#374151" accent={accent} glyphColor={accent} contacts={contacts} socials={socials} />
       <text x="70" y="566" fontFamily={FONT} fontSize="18" fontWeight="500" fill={MUTED}>{brand}</text>

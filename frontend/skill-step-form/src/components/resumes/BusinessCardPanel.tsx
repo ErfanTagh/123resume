@@ -92,6 +92,8 @@ export function BusinessCardPanel({ resumes, isLoadingResumes }: BusinessCardPan
 
   const fullName = [pi?.firstName, pi?.lastName].filter(Boolean).join(" ").trim();
   const title = pi?.professionalTitle?.trim();
+  const photo = pi?.profileImage?.trim() || "";
+  const [showPhoto, setShowPhoto] = useState<boolean>(true);
 
   // Which field toggles to show (only those with data)
   const availableFields: { key: FieldKey; label: string; value: string }[] = [
@@ -127,6 +129,7 @@ export function BusinessCardPanel({ resumes, isLoadingResumes }: BusinessCardPan
     qr,
     qrCaption: t("pages.resumes.businessCard.scanCaption") || "Scan to view portfolio",
     brand: "123resume.de",
+    photo: showPhoto && photo ? photo : undefined,
   });
 
   const svgMarkup = () => (svgRef.current ? new XMLSerializer().serializeToString(svgRef.current) : "");
@@ -235,6 +238,14 @@ export function BusinessCardPanel({ resumes, isLoadingResumes }: BusinessCardPan
               {/* Fields */}
               <div className="space-y-3">
                 <p className="text-sm font-medium text-foreground">{t("pages.resumes.businessCard.showOnCard") || "Show on card"}</p>
+                {photo ? (
+                  <div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+                    <Label htmlFor="bc-photo" className="text-xs font-normal truncate">
+                      {t("pages.resumes.businessCard.fields.photo") || "Profile photo"}
+                    </Label>
+                    <Switch id="bc-photo" checked={showPhoto} onCheckedChange={setShowPhoto} />
+                  </div>
+                ) : null}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
                   {availableFields.map((f) => (
                     <div key={f.key} className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">

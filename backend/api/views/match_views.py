@@ -418,6 +418,29 @@ def tailor_resume_suggestions(request, resume_id):
         if not isinstance(skip_ids, list):
             skip_ids = []
 
+        # Optional user-chosen scope: which sections / experiences / projects the AI may change.
+        allowed_sections = request.data.get("allowed_sections") or request.data.get("allowedSections")
+        if not isinstance(allowed_sections, list):
+            allowed_sections = None
+
+        def _int_list(raw):
+            if not isinstance(raw, list):
+                return None
+            out = []
+            for v in raw:
+                try:
+                    out.append(int(v))
+                except (TypeError, ValueError):
+                    continue
+            return out
+
+        allowed_work_indexes = _int_list(
+            request.data.get("allowed_work_indexes") or request.data.get("allowedWorkIndexes")
+        )
+        allowed_project_indexes = _int_list(
+            request.data.get("allowed_project_indexes") or request.data.get("allowedProjectIndexes")
+        )
+
         logger.info(
             "tailor_suggestions start user_id=%s resume=%s round=%s",
             getattr(request.user, "pk", None),
@@ -434,6 +457,9 @@ def tailor_resume_suggestions(request, resume_id):
                 current_match_percentage=current_match,
                 skip_ids=[str(x) for x in skip_ids if x],
                 output_language=out_lang,
+                allowed_sections=allowed_sections,
+                allowed_work_indexes=allowed_work_indexes,
+                allowed_project_indexes=allowed_project_indexes,
             )
         except ValueError as e:
             err_msg = str(e)

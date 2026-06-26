@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Palette, Type, Bold, Text, RotateCcw } from "lucide-react";
+import { Palette, Type, Bold, Text, RotateCcw, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CVFormData } from "./types";
 import { Separator } from "@/components/ui/separator";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_COLOR_THEMES, getActiveResumeThemeId } from "@/lib/resumeColorThemes";
 
 interface StylingSettingsProps {
   data: CVFormData;
@@ -82,6 +83,43 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
             <RotateCcw className="h-4 w-4" />
             {t('resume.settings.resetAll') || 'Reset All Settings'}
           </Button>
+        </div>
+      </div>
+
+      {/* One-click Color Theme */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Palette className="h-4 w-4" />
+          {t('resume.settings.colorTheme') || 'Color theme'}
+        </Label>
+        <p className="text-xs text-muted-foreground -mt-1">
+          {t('resume.settings.colorThemeDesc') || 'Pick an accent for headings, links, and template top bars.'}
+        </p>
+        <div className="flex flex-wrap gap-2.5 pt-1" role="radiogroup" aria-label={t('resume.settings.colorTheme') || 'Color theme'}>
+          {RESUME_COLOR_THEMES.map((theme) => {
+            const active = getActiveResumeThemeId(styling.headingColor) === theme.id;
+            return (
+              <button
+                key={theme.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => updateStyling({ headingColor: theme.accent, linkColor: theme.accent })}
+                title={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                aria-label={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                className={`relative h-9 w-9 rounded-full shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  active
+                    ? 'ring-2 ring-offset-2 ring-primary scale-105'
+                    : 'ring-1 ring-border hover:ring-primary/40 hover:scale-105'
+                }`}
+                style={{ background: theme.accent }}
+              >
+                {active && (
+                  <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" strokeWidth={3} />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -190,15 +228,15 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
           <Input
             id="headingColor"
             type="color"
-            value={styling.headingColor || RESUME_ACCENT_BLUE}
+            value={styling.headingColor || RESUME_ACCENT_DEFAULT}
             onChange={(e) => updateStyling({ headingColor: e.target.value })}
             className="w-16 h-10 cursor-pointer"
           />
           <Input
             type="text"
-            value={styling.headingColor || RESUME_ACCENT_BLUE}
+            value={styling.headingColor || RESUME_ACCENT_DEFAULT}
             onChange={(e) => updateStyling({ headingColor: e.target.value })}
-            placeholder={RESUME_ACCENT_BLUE}
+            placeholder={RESUME_ACCENT_DEFAULT}
             className="flex-1"
           />
         </div>
@@ -251,15 +289,15 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
           <Input
             id="linkColor"
             type="color"
-            value={styling.linkColor || RESUME_ACCENT_BLUE}
+            value={styling.linkColor || RESUME_ACCENT_DEFAULT}
             onChange={(e) => updateStyling({ linkColor: e.target.value })}
             className="w-16 h-10 cursor-pointer"
           />
           <Input
             type="text"
-            value={styling.linkColor || RESUME_ACCENT_BLUE}
+            value={styling.linkColor || RESUME_ACCENT_DEFAULT}
             onChange={(e) => updateStyling({ linkColor: e.target.value })}
-            placeholder={RESUME_ACCENT_BLUE}
+            placeholder={RESUME_ACCENT_DEFAULT}
             className="flex-1"
           />
         </div>

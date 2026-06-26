@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 28 33% 98%;
+    --foreground: 222 28% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 28% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 28% 14%;
+
+    --primary: 344 84% 55%;
+    --primary-dark: 344 84% 47%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 22 92% 58%;
+
+    --secondary: 24 22% 93%;
+    --secondary-foreground: 222 25% 25%;
+
+    --muted: 24 24% 95%;
+    --muted-foreground: 222 12% 45%;
+
+    --accent: 344 90% 96%;
+    --accent-foreground: 344 70% 38%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 24 22% 89%;
+    --input: 24 22% 92%;
+    --ring: 344 84% 55%;
+
+    --radius: 0.75rem;
+
+    /* Sunset gradient stops (violet -> pink -> orange) */
+    --sunset-violet: 268 72% 60%;
+    --sunset-pink: 338 88% 60%;
+    --sunset-orange: 22 94% 58%;
+
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(268 72% 58%),
+      hsl(338 86% 56%) 50%,
+      hsl(22 94% 56%)
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(28 33% 98%),
+      hsl(28 42% 96%)
+    );
+
+    --shadow-card: 0 2px 8px -2px hsl(338 50% 30% / 0.10);
+    --shadow-elevated: 0 8px 24px -4px hsl(338 50% 30% / 0.14);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 344 84% 55%;
+  }
+
+  .dark {
+    --background: 258 24% 9%;
+    --foreground: 28 25% 95%;
+
+    --card: 258 22% 13%;
+    --card-foreground: 28 25% 95%;
+
+    --popover: 258 22% 13%;
+    --popover-foreground: 28 25% 95%;
+
+    --primary: 342 86% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 22 92% 62%;
+
+    --secondary: 258 18% 19%;
+    --secondary-foreground: 28 25% 95%;
+
+    --muted: 258 16% 17%;
+    --muted-foreground: 28 12% 62%;
+
+    --accent: 342 60% 22%;
+    --accent-foreground: 342 90% 78%;
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 258 16% 22%;
+    --input: 258 16% 20%;
+    --ring: 342 86% 60%;
+
+    /* Sunset gradient stops (violet -> pink -> orange) */
+    --sunset-violet: 268 78% 66%;
+    --sunset-pink: 338 90% 64%;
+    --sunset-orange: 22 94% 62%;
+
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(268 76% 60%),
+      hsl(338 86% 58%) 50%,
+      hsl(22 94% 58%)
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(258 24% 9%),
+      hsl(258 24% 11%)
+    );
+
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 8px 24px -4px hsl(0 0% 0% / 0.4);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.0);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============================================================
+   LANDING PAGE TEMPLATE PREVIEWS ONLY
+   Scoped to [data-landing-preview] - does NOT affect actual
+   resume templates (CVPreview, ResumeView, PDF export).
+   ============================================================ */
+
+/* Uniform photo size for all templates in preview (7rem) */
+[data-landing-preview] .resume-page-container .flex-shrink-0 > div:has(> img),
+[data-landing-preview] .resume-page-container .flex.justify-center.mb-4 > div:has(> img),
+[data-landing-preview] .resume-page-container div[style*="width"]:has(> img) {
+  width: 7rem !important;
+  height: 7rem !important;
+  min-width: 7rem !important;
+  min-height: 7rem !important;
+  margin-top: 0.375rem !important;
+}
+
+/* Modern: override -mt-8 that pulls header up and causes clipping */
+[data-landing-preview][data-template="modern"] .resume-page-container > div:first-child {
+  margin-top: 0 !important;
+  padding-top: 1rem !important;
+}
+
+/* Extra top padding for Modern and Minimal so whole header has breathing room */
+[data-landing-preview][data-template="modern"] .resume-page-container,
+[data-landing-preview][data-template="minimal"] .resume-page-container {
+  padding-top: 1.5rem !important;
+}
+
+[data-landing-preview][data-template="minimal"] .resume-page-container > div:first-child {
+  padding-top: 1rem !important;
+}
+
+/* Hide page numbers and placeholders in previews */
+[data-landing-preview] .page-number-footer,
+[data-landing-preview] .photo-placeholder,
+[data-landing-preview] .page-number-indicator {
+  display: none !important;
+}

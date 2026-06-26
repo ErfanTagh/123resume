@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FileText, User, LogOut, Settings, Sparkles, Globe, Briefcase } from 'lucide-react';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -41,6 +42,7 @@ export const Header = () => {
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9" asChild>
               <Link to="/blog">{t('navigation.blog')}</Link>
             </Button>
+            <LanguageSwitcher />
             {isAuthenticated ? (
               <>
                 <span className="text-xs sm:text-sm font-medium text-foreground hidden md:inline whitespace-nowrap">

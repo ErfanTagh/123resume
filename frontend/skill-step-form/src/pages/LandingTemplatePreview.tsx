@@ -254,6 +254,8 @@ interface LandingTemplatePreviewProps {
     | "prism";
   /** Zoom for thumbnail previews; default fits smaller cards. */
   previewScale?: number;
+  /** Optional accent color (hex) to recolor headings/links in the preview. */
+  accent?: string;
 }
 
 const DEFAULT_PREVIEW_SCALE = 0.4;
@@ -261,6 +263,7 @@ const DEFAULT_PREVIEW_SCALE = 0.4;
 export const LandingTemplatePreview = ({
   templateName,
   previewScale,
+  accent,
 }: LandingTemplatePreviewProps) => {
   // Create base sample data with template-specific profile image
   const baseSampleData = createSampleData(templateName);
@@ -434,6 +437,10 @@ export const LandingTemplatePreview = ({
   const data: CVFormData = {
     ...enhancedData,
     template: templateName,
+    // Apply the chosen accent so the preview matches the selected color theme.
+    styling: accent
+      ? { ...enhancedData.styling, headingColor: accent, linkColor: accent }
+      : enhancedData.styling,
   };
   const displayData = withResumeSectionsSortedForDisplay(data);
 

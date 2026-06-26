@@ -7,7 +7,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasMeaningfulProfileLink, hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 import { SLATE_COPPER_PROFILE_OBJECT_POSITION } from "@/lib/slateCopperConstants";
 
@@ -73,10 +73,10 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
 
   const titleColor = styling?.titleColor || RESUME_TITLE_GRAY;
   const titleBold = styling?.titleBold ?? true;
-  const headingColor = styling?.headingColor || RESUME_ACCENT_BLUE;
+  const headingColor = styling?.headingColor || RESUME_ACCENT_DEFAULT;
   const headingBold = styling?.headingBold ?? true;
   const textColor = styling?.textColor || RESUME_BODY_GRAY;
-  const linkColor = styling?.linkColor || RESUME_ACCENT_BLUE;
+  const linkColor = styling?.linkColor || RESUME_ACCENT_DEFAULT;
 
   const profilePhotoTrimmed = personalInfo.profileImage?.trim() ?? "";
   const profilePhotoDisplayName = [personalInfo.firstName, personalInfo.lastName]

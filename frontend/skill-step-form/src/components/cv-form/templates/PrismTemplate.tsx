@@ -6,7 +6,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY } from "@/lib/resumeTemplatePalette";
 
 interface PrismTemplateProps {
   data: CVFormData;
@@ -34,8 +34,8 @@ export const PrismTemplate = ({ data }: PrismTemplateProps) => {
   const titleBold    = styling?.titleBold ?? true;
   const headingBold  = styling?.headingBold ?? true;
   const textColor    = styling?.textColor || RESUME_BODY_GRAY;
-  const linkColor    = styling?.linkColor || RESUME_ACCENT_BLUE;
-  const headingColor = styling?.headingColor || RESUME_ACCENT_BLUE;
+  const linkColor    = styling?.linkColor || RESUME_ACCENT_DEFAULT;
+  const headingColor = styling?.headingColor || RESUME_ACCENT_DEFAULT;
 
   const darkBlock  = linkColor;
   const lightBlock = "#f1f5f9";

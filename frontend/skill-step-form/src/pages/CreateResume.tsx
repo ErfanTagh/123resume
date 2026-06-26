@@ -6,7 +6,8 @@ import type { CVFormData } from "@/components/cv-form/types";
 import { resumeAPI, type Resume } from "@/lib/api";
 import { resumeToCvFormData } from "@/lib/resumeToCvFormData";
 import { SEO } from "@/components/SEO";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { getResumeThemeAccent } from "@/lib/resumeColorThemes";
 
 const DEFAULT_SECTION_ORDER = [
   "summary",
@@ -68,8 +69,8 @@ const createEmptyCVFormData = (): CVFormData => ({
   styling: {
     titleColor: RESUME_TITLE_GRAY,
     textColor: RESUME_BODY_GRAY,
-    headingColor: RESUME_ACCENT_BLUE,
-    linkColor: RESUME_ACCENT_BLUE,
+    headingColor: RESUME_ACCENT_DEFAULT,
+    linkColor: RESUME_ACCENT_DEFAULT,
     fontSize: "medium",
     fontFamily: "Inter",
     titleBold: true,
@@ -123,6 +124,7 @@ const CreateResume = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit") || undefined;
   const templateParam = searchParams.get("template") || undefined;
+  const themeParam = searchParams.get("theme") || undefined;
 
   const [initialData, setInitialData] = useState<CVFormData | undefined>(
     undefined,
@@ -138,11 +140,23 @@ const CreateResume = () => {
       localStorage.removeItem('pendingResume');
       
       // If template param is provided, set initialData with that template
+      // (optionally pre-applying a chosen accent color via ?theme=).
       if (templateParam) {
         const validTemplates = ['modern', 'classic', 'creative', 'minimal', 'latex', 'starRover', 'slateCopper', 'prism'];
         const template = validTemplates.includes(templateParam) ? templateParam : 'modern';
         const dataWithTemplate = createEmptyCVFormData();
         dataWithTemplate.template = template as CVFormData['template'];
+
+        // Carry the color picked on the template card into the editor.
+        const accent = getResumeThemeAccent(themeParam);
+        if (accent) {
+          dataWithTemplate.styling = {
+            ...dataWithTemplate.styling,
+            headingColor: accent,
+            linkColor: accent,
+          };
+        }
+
         setInitialData(dataWithTemplate);
       } else {
         setInitialData(undefined);
@@ -172,7 +186,7 @@ const CreateResume = () => {
     return () => {
       isMounted = false;
     };
-  }, [editId, templateParam]);
+  }, [editId, templateParam, themeParam]);
 
   if (editId && isLoading) {
     return (

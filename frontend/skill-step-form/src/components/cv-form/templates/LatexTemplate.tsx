@@ -5,7 +5,7 @@ import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
 import { ProjectLinkedTitle } from "@/components/cv-form/ProjectLinkedTitle";
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getWorkExperienceResponsibilityOnly } from "@/lib/workExperienceBullets";
 
 interface LatexTemplateProps {
@@ -31,7 +31,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const headingColor = styling?.headingColor || RESUME_TITLE_GRAY;
   const headingBold = styling?.headingBold ?? true;
   const textColor = styling?.textColor || RESUME_BODY_GRAY;
-  const linkColor = styling?.linkColor || RESUME_ACCENT_BLUE;
+  const linkColor = styling?.linkColor || RESUME_ACCENT_DEFAULT;
   const sectionHeadingColor = linkColor;
 
   const personalInfoSectionStyling = styling?.sectionStyling?.personalInfo;

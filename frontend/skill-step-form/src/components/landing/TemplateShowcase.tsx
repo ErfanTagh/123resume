@@ -14,6 +14,8 @@ import { TemplateCarouselPreviewNav } from "@/components/landing/TemplateCarouse
 import { TemplateShowcaseBadge } from "@/components/landing/TemplateShowcaseBadge";
 import { LANDING_TEMPLATE_CATALOG } from "@/lib/landingTemplateCatalog";
 import type { CVTemplate } from "@/components/cv-form/types";
+import { RESUME_COLOR_THEMES, DEFAULT_RESUME_THEME_ID, getResumeThemeAccent } from "@/lib/resumeColorThemes";
+import { Check } from "lucide-react";
 
 interface TemplateShowcaseProps {
   hideHeader?: boolean;
@@ -26,9 +28,13 @@ export const TemplateShowcase = ({
 }: TemplateShowcaseProps) => {
   const { t } = useLanguage();
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  // Per-template color choice, carried into the editor via ?theme=.
+  const [cardThemes, setCardThemes] = useState<Record<string, string>>({});
 
-  const templateHref = (key: CVTemplate) =>
-    `/create?template=${encodeURIComponent(key)}`;
+  const templateHref = (key: CVTemplate) => {
+    const themeId = cardThemes[key] || DEFAULT_RESUME_THEME_ID;
+    return `/create?template=${encodeURIComponent(key)}&theme=${encodeURIComponent(themeId)}`;
+  };
 
   return (
     <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/20 border-y border-border/60 overflow-x-hidden">
@@ -70,6 +76,7 @@ export const TemplateShowcase = ({
                       <LandingTemplatePreview
                         templateName={item.key}
                         previewScale={0.48}
+                        accent={getResumeThemeAccent(cardThemes[item.key] || DEFAULT_RESUME_THEME_ID)}
                       />
                     </div>
                   </div>
@@ -86,6 +93,42 @@ export const TemplateShowcase = ({
                       {t("landing.templateLabel")}{" "}
                       {t(`landing.${item.nameKey}`)}
                     </h3>
+
+                    {/* Pick an accent color before opening the editor */}
+                    <div
+                      className="flex flex-wrap justify-center gap-1.5"
+                      role="radiogroup"
+                      aria-label={t("resume.settings.colorTheme") || "Color theme"}
+                    >
+                      {RESUME_COLOR_THEMES.map((theme) => {
+                        const selectedId = cardThemes[item.key] || DEFAULT_RESUME_THEME_ID;
+                        const active = selectedId === theme.id;
+                        return (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() =>
+                              setCardThemes((prev) => ({ ...prev, [item.key]: theme.id }))
+                            }
+                            title={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                            aria-label={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                            className={`relative h-5 w-5 rounded-full shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              active
+                                ? "ring-2 ring-offset-1 ring-primary scale-110"
+                                : "ring-1 ring-border hover:ring-primary/40 hover:scale-110"
+                            }`}
+                            style={{ background: theme.accent }}
+                          >
+                            {active && (
+                              <Check className="absolute inset-0 m-auto h-3 w-3 text-white drop-shadow" strokeWidth={3.5} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     <Link to={templateHref(item.key)} className="w-full">
                       <Button
                         variant="outline"

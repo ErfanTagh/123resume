@@ -19,7 +19,7 @@ import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { ProfessionalTitleAutocomplete } from "@/components/ProfessionalTitleAutocomplete";
 import { AiImproveTextarea } from "@/components/cv-form/AiImproveTextarea";
 
-import { RESUME_ACCENT_BLUE, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
+import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 
 interface PersonalInfoStepProps {
   form: UseFormReturn<CVFormData>;
@@ -46,8 +46,8 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
     const defaultStyling = {
       titleColor: RESUME_TITLE_GRAY,
       textColor: RESUME_BODY_GRAY,
-      headingColor: RESUME_ACCENT_BLUE,
-      linkColor: RESUME_ACCENT_BLUE,
+      headingColor: RESUME_ACCENT_DEFAULT,
+      linkColor: RESUME_ACCENT_DEFAULT,
       fontSize: "medium" as const,
       fontFamily: "Inter",
       titleBold: true,

@@ -14,8 +14,10 @@ import { ReviewStep } from "./ReviewStep";
 import { ResumePreviewPane } from "./ResumePreviewPane";
 import { ResumeCustomizeSidebar } from "./ResumeCustomizeSidebar";
 import { SignupOverlay } from "./SignupOverlay";
+import { SaveStatusBadge, type SaveStatus } from "./SaveStatusBadge";
 import { cvFormSchema, CVFormData } from "./types";
-import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare, Check } from "lucide-react";
+import { RESUME_COLOR_THEMES, getActiveResumeThemeId } from "@/lib/resumeColorThemes";
 import { toast } from "@/hooks/use-toast";
 import { getTestProfile, getTestProfileNames } from "@/lib/testData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,7 +37,7 @@ import {
   landingTemplateDescKey,
 } from "@/lib/landingTemplateCatalog";
 import {
-  RESUME_ACCENT_BLUE,
+  RESUME_ACCENT_DEFAULT,
   RESUME_BODY_GRAY,
   RESUME_TITLE_GRAY,
 } from "@/lib/resumeTemplatePalette";
@@ -57,6 +59,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   /** Tracks language for AI score refetch (skip first run after mount / login). */
   const previousLanguageRef = useRef<"en" | "de" | null>(null);
   const [templateSelected, setTemplateSelected] = useState(!!initialData?.template);
+  // Per-step draft autosave: the id of the resume we keep updating as the user
+  // advances. Seeded from editId when editing an existing resume.
+  const [, setDraftId] = useState<string | undefined>(editId);
+  const draftIdRef = useRef<string | undefined>(editId);
+  const creatingDraftRef = useRef(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -76,6 +84,13 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     lastSuccessfulScorePayloadRef.current = null;
     scoreRequestIdRef.current = 0;
     setNavResumeScore(undefined);
+  }, [editId]);
+
+  // Keep the autosave draft id aligned with the resume being edited.
+  useEffect(() => {
+    draftIdRef.current = editId;
+    setDraftId(editId);
+    setSaveStatus("idle");
   }, [editId]);
 
   // Ensure overlay is ALWAYS hidden when navigating between steps - only show when explicitly clicking "Complete CV"
@@ -114,7 +129,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   }, [currentStep, templateSelected, editId, initialData]);
 
   /** Section heading / accent — same blue as other templates (`linkColor` family). */
-  const getTemplateDefaultHeadingColor = (_template: string): string => RESUME_ACCENT_BLUE;
+  const getTemplateDefaultHeadingColor = (_template: string): string => RESUME_ACCENT_DEFAULT;
 
   // Get template-specific default for personalInfo section heading color
   // This matches each template's original headingColor default
@@ -135,7 +150,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       titleColor: RESUME_TITLE_GRAY,
       textColor: RESUME_BODY_GRAY,
       headingColor: templateDefaultHeadingColor,
-      linkColor: RESUME_ACCENT_BLUE,
+      linkColor: RESUME_ACCENT_DEFAULT,
       fontSize: "medium" as const,
       fontFamily: "Inter",
       titleBold: true,
@@ -481,7 +496,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         titleColor: RESUME_TITLE_GRAY,
         textColor: RESUME_BODY_GRAY,
         headingColor: templateDefaultHeadingColor,
-        linkColor: RESUME_ACCENT_BLUE,
+        linkColor: RESUME_ACCENT_DEFAULT,
         fontSize: "medium" as const,
         fontFamily: "Inter",
         titleBold: true,
@@ -577,7 +592,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       }
     }
 
+    const advancing = stepIndex > currentStep;
     setCurrentStep(stepIndex);
+    // Completing the current step by jumping ahead also saves progress.
+    if (advancing) {
+      void persistDraft();
+    }
   };
 
   // Test data loader (dev only)
@@ -622,6 +642,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       if (currentStep < steps.length - 1) {
         const nextStep = currentStep + 1;
         setCurrentStep(nextStep);
+        // Save the just-completed step's data in the background.
+        void persistDraft();
       }
     } else if (currentStep === 0) {
       toast({
@@ -640,6 +662,52 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       setCurrentStep(prevStep);
     }
   };
+
+  /**
+   * Persist the resume "as it is" when a step is completed.
+   * - Logged-in users: create the resume on the first save, then update the
+   *   same draft on each subsequent step (no duplicate resumes).
+   * - Guests: keep progress in localStorage so it survives a refresh.
+   * Runs in the background; the SaveStatusBadge reflects progress.
+   */
+  const persistDraft = useCallback(async () => {
+    if (!templateSelected) return;
+    const data = form.getValues();
+    setSaveStatus("saving");
+
+    try {
+      if (!user) {
+        try {
+          localStorage.setItem("pendingResume", JSON.stringify(data));
+        } catch {
+          /* ignore quota / serialization issues for the local draft */
+        }
+        setSaveStatus("saved");
+        return;
+      }
+
+      const { resumeAPI } = await import("@/lib/api");
+
+      if (draftIdRef.current) {
+        await resumeAPI.update(draftIdRef.current, data as any);
+      } else {
+        // Avoid creating two resumes if steps are completed in quick succession.
+        if (creatingDraftRef.current) return;
+        creatingDraftRef.current = true;
+        try {
+          const created = await resumeAPI.create(data as any);
+          draftIdRef.current = created.id;
+          setDraftId(created.id);
+        } finally {
+          creatingDraftRef.current = false;
+        }
+      }
+
+      setSaveStatus("saved");
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [templateSelected, user, form]);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -808,26 +876,32 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         fullStylingObject: JSON.parse(JSON.stringify(data.styling)), // Deep clone to avoid reference issues
       });
 
-      if (editId) {
-        const updatedResume = await resumeAPI.update(editId, resumeDataWithScores as any);
-        
+      // Reuse the autosaved draft (or the resume being edited) so completing the
+      // CV updates the existing record instead of creating a duplicate.
+      const existingId = editId ?? draftIdRef.current;
+
+      if (existingId) {
+        const updatedResume = await resumeAPI.update(existingId, resumeDataWithScores as any);
+        draftIdRef.current = updatedResume.id;
+
         console.log('🔵 [FORM SUBMIT] Resume updated - Response:', {
           id: updatedResume.id,
           styling: (updatedResume as any).styling,
         });
 
         toast({
-          title: "CV Updated Successfully!",
+          title: editId ? "CV Updated Successfully!" : "CV Saved Successfully!",
           description: "Opening your resume in a new tab...",
         });
 
         setTimeout(() => {
           window.open(`/resume/${updatedResume.id}`, '_blank');
           navigate('/resumes');
-        }, 800);
+        }, editId ? 800 : 1000);
       } else {
         const savedResume = await resumeAPI.create(resumeDataWithScores as any);
-        
+        draftIdRef.current = savedResume.id;
+
         console.log('🔵 [FORM SUBMIT] Resume created - Response:', {
           id: savedResume.id,
           styling: (savedResume as any).styling,
@@ -915,7 +989,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                     >
                       <div className="aspect-[3/4] bg-white rounded-t-2xl overflow-hidden border-b border-border shadow-inner relative max-h-[550px] sm:max-h-[650px] lg:max-h-[700px] flex-shrink-0">
                         <div className="absolute inset-0 w-full h-full">
-                          <LandingTemplatePreview templateName={template.key} />
+                          <LandingTemplatePreview
+                            templateName={template.key}
+                            accent={isSelected ? formData.styling?.headingColor : undefined}
+                          />
                         </div>
                       </div>
                       <div className="px-3 pt-4 pb-4 sm:px-4 sm:pt-5 sm:pb-5 flex flex-col gap-2 min-h-[6.5rem] sm:min-h-[7rem] flex-shrink-0">
@@ -929,13 +1006,59 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                         <h3 className="font-bold text-base sm:text-lg flex-shrink-0 leading-snug" style={{ color: 'hsl(215 25% 15%)' }}>
                           {t(`landing.${template.nameKey}`)} {t('landing.templateLabel')}
                         </h3>
-                        <p className="text-xs sm:text-sm font-medium flex-shrink-0 line-clamp-2 leading-snug" style={{ color: 'hsl(214 95% 45%)' }}>
+                        <p className="text-xs sm:text-sm font-medium flex-shrink-0 line-clamp-2 leading-snug text-muted-foreground">
                           {t(`landing.${landingTemplateDescKey(template.nameKey)}`)}
                         </p>
                         {isSelected && (
-                          <div className="flex items-center gap-2 text-primary text-sm font-semibold flex-shrink-0 mt-1 pt-3 border-t border-border/70">
-                            <CheckCircle2 className="h-4 w-4 shrink-0" />
-                            <span>{t('common.selected') || 'Selected'}</span>
+                          <div className="flex flex-col gap-2 flex-shrink-0 mt-1 pt-3 border-t border-border/70">
+                            <div className="flex items-center gap-2 text-primary text-sm font-semibold">
+                              <CheckCircle2 className="h-4 w-4 shrink-0" />
+                              <span>{t('common.selected') || 'Selected'}</span>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1.5">
+                                {t('resume.settings.colorTheme') || 'Color theme'}
+                              </p>
+                              <div
+                                className="flex flex-wrap gap-1.5"
+                                role="radiogroup"
+                                aria-label={t('resume.settings.colorTheme') || 'Color theme'}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {RESUME_COLOR_THEMES.map((theme) => {
+                                  const active = getActiveResumeThemeId(formData.styling?.headingColor) === theme.id;
+                                  return (
+                                    <button
+                                      key={theme.id}
+                                      type="button"
+                                      role="radio"
+                                      aria-checked={active}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const cur = form.getValues('styling') || {};
+                                        form.setValue('styling', {
+                                          ...cur,
+                                          headingColor: theme.accent,
+                                          linkColor: theme.accent,
+                                        });
+                                      }}
+                                      title={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                                      aria-label={t(`resume.settings.colorThemes.${theme.labelKey}`) || theme.label}
+                                      className={`relative h-6 w-6 rounded-full shrink-0 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                                        active
+                                          ? 'ring-2 ring-offset-1 ring-primary scale-110'
+                                          : 'ring-1 ring-border hover:ring-primary/40 hover:scale-110'
+                                      }`}
+                                      style={{ background: theme.accent }}
+                                    >
+                                      {active && (
+                                        <Check className="absolute inset-0 m-auto h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3.5} />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -995,7 +1118,10 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                     onStylingChange={(styling) => form.setValue("styling", styling)}
                     currentStep={currentStep}
                   />
-                  <Card className="p-8 shadow-elevated">
+                  <Card className="relative p-8 shadow-elevated">
+                    <div className="pointer-events-none absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
+                      <SaveStatusBadge status={saveStatus} />
+                    </div>
                     <ProgressIndicator
                       currentStep={currentStep}
                       totalSteps={steps.length}

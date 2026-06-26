@@ -426,7 +426,10 @@
       "sectionTitlesEnglish": "English",
       "sectionTitlesDeutsch": "Deutsch",
       "completeRequiredFieldsTitle": "Complete required fields",
-      "completeRequiredFieldsDesc": "Please enter your first name, last name, and a valid work email before continuing."
+      "completeRequiredFieldsDesc": "Please enter your first name, last name, and a valid work email before continuing.",
+      "savingDraft": "Saving",
+      "savedDraft": "Saved",
+      "saveDraftError": "Couldn't save"
     },
     "templates": {
       "modern": "Modern",
@@ -614,6 +617,19 @@
     "settings": {
       "stylingTitle": "Styling & Typography",
       "stylingDesc": "Customize fonts, colors, and text styles",
+      "colorTheme": "Color theme",
+      "colorThemeDesc": "Pick an accent for headings, links, and template top bars.",
+      "colorThemes": {
+        "red": "Red",
+        "blue": "Blue",
+        "indigo": "Indigo",
+        "violet": "Violet",
+        "teal": "Teal",
+        "emerald": "Emerald",
+        "amber": "Amber",
+        "rose": "Rose",
+        "slate": "Slate"
+      },
       "fontFamily": "Font Family",
       "selectFont": "Select font",
       "fontSize": "Font Size",

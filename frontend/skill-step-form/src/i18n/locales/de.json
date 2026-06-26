@@ -426,7 +426,10 @@
       "sectionTitlesEnglish": "Englisch",
       "sectionTitlesDeutsch": "Deutsch",
       "completeRequiredFieldsTitle": "Pflichtfelder ausfüllen",
-      "completeRequiredFieldsDesc": "Bitte geben Sie Vorname, Nachname und eine gültige E-Mail-Adresse ein, bevor Sie fortfahren."
+      "completeRequiredFieldsDesc": "Bitte geben Sie Vorname, Nachname und eine gültige E-Mail-Adresse ein, bevor Sie fortfahren.",
+      "savingDraft": "Wird gespeichert",
+      "savedDraft": "Gespeichert",
+      "saveDraftError": "Speichern fehlgeschlagen"
     },
     "templates": {
       "modern": "Modern",
@@ -614,6 +617,19 @@
     "settings": {
       "stylingTitle": "Gestaltung & Typografie",
       "stylingDesc": "Schriftarten, Farben und Textstile anpassen",
+      "colorTheme": "Farbthema",
+      "colorThemeDesc": "Wählen Sie eine Akzentfarbe für Überschriften, Links und Vorlagen-Kopfbereiche.",
+      "colorThemes": {
+        "red": "Rot",
+        "blue": "Blau",
+        "indigo": "Indigo",
+        "violet": "Violett",
+        "teal": "Türkis",
+        "emerald": "Smaragd",
+        "amber": "Bernstein",
+        "rose": "Rosé",
+        "slate": "Schiefer"
+      },
       "fontFamily": "Schriftart",
       "selectFont": "Schriftart auswählen",
       "fontSize": "Schriftgröße",

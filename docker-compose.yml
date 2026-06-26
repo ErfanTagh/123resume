@@ -65,6 +65,23 @@ services:
     networks:
       - resume-network
 
+  # Next.js public/SEO site (landing, templates, pricing, blog, about, careers, contact).
+  # Dev server on http://localhost:3000 — separate from the Vite SPA on :5173.
+  web:
+    image: node:20
+    container_name: resume_web
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend-next:/app
+      # Keep node_modules inside the container (correct Linux binaries, no host conflict).
+      - /app/node_modules
+    command: sh -c "npm install && npx next dev -H 0.0.0.0 -p 3000"
+    networks:
+      - resume-network
+
 volumes:
   mongodb_data:
 

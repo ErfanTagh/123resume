@@ -128,6 +128,7 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       }
     >
       <section className="hero">
+        <div className="hero-glow" aria-hidden />
         <div className="max-w-6xl mx-auto px-6 pt-8 pb-14 md:pt-10 md:pb-20">
           {navItems.length > 0 && (
             <nav
@@ -191,12 +192,12 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       </section>
 
       {showAbout && (
-        <section id="about" className="px-6 pt-10 pb-4 md:pt-14 md:pb-5">
+        <section id="about" className="hp-section px-6">
           <div
             className={`section-shot max-w-6xl mx-auto ${showAboutHeadshot ? "section-shot--with-photo" : ""}`.trim()}
           >
             <div className="section-shot-text w-full">
-              <h2 className="pb-2 border-b-2" style={{ borderColor: themeColors.accent }}>
+              <h2 className="hp-heading">
                 {t("pages.hostedProfile.sectionAbout")}
               </h2>
               <p className="hosted-body text-gray-800 whitespace-pre-wrap">{pi.summary!.trim()}</p>
@@ -211,16 +212,16 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       )}
 
       {showProjects && (
-        <section id="projects" className="bg-gray-50 pt-8 pb-4 md:pt-10 md:pb-5 px-6">
+        <section id="projects" className="hp-section bg-gray-50 px-6">
           <div className="max-w-6xl mx-auto">
-            <h2 className="pb-2 border-b-2 border-gray-200">
+            <h2 className="hp-heading">
               {t("pages.hostedProfile.sectionProjects")}
             </h2>
-            <div className="space-y-4 mt-4">
+            <div className="space-y-5">
               {projects.map((p, i) => {
                 const projectTitle = p.name?.trim() || t("pages.hostedProfile.untitledProject");
                 return (
-                  <article key={i} className="project-card border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                  <article key={i} className="project-card">
                     <h3 className="mb-1.5">
                       {hasWebLink(p.link) ? (
                         <a
@@ -248,19 +249,19 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       )}
 
       {showCertificates && (
-        <section id="certificates" className="px-6 py-4 md:py-5">
+        <section id="certificates" className="hp-section px-6">
           <div className="max-w-6xl mx-auto">
-            <h2 className="pb-2 border-b-2" style={{ borderColor: themeColors.accent }}>
+            <h2 className="hp-heading">
               {t("pages.hostedProfile.sectionCertificates")}
             </h2>
-            <ul className="space-y-4 mt-4">
+            <ul className="hp-card-grid">
               {certs.map((c, i) => {
                 const certTitle =
                   c.name?.trim() ||
                   c.organization?.trim() ||
                   t("pages.hostedProfile.untitledCertificate");
                 return (
-                  <li key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                  <li key={i} className="cert-card">
                     <h3 className="text-lg font-bold text-gray-900 mb-0.5">{certTitle}</h3>
                     {c.name?.trim() && c.organization?.trim() ? (
                       <p className="text-sm text-gray-600 mb-2">{c.organization}</p>
@@ -285,19 +286,15 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       )}
 
       {showContact && (
-        <section id="contact" className="bg-gray-50 py-4 md:py-5 px-6">
+        <section id="contact" className="hp-section bg-gray-50 px-6">
           <div className="max-w-6xl mx-auto text-center md:text-left">
-            <h2 className="pb-2 border-b-2 border-gray-200 mb-3">
+            <h2 className="hp-heading">
               {t("pages.hostedProfile.sectionContact")}
             </h2>
-            <p className="text-muted-foreground mb-4 text-sm md:text-base max-w-2xl mx-auto md:mx-0">
+            <p className="text-muted-foreground mb-6 text-sm md:text-base max-w-2xl mx-auto md:mx-0">
               {t("pages.hostedProfile.contactHint")}
             </p>
-            <a
-              href={`mailto:${pi.email}`}
-              className="inline-flex items-center justify-center gap-2 text-lg font-medium underline underline-offset-4 decoration-2"
-              style={{ color: themeColors.accent }}
-            >
+            <a href={`mailto:${pi.email}`} className="hp-contact-btn">
               <Mail className="h-5 w-5 shrink-0" aria-hidden />
               {pi.email}
             </a>

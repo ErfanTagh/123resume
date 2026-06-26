@@ -734,7 +734,42 @@
         "resumes": "My Resumes",
         "jobMatching": "Job matching & cover letter",
         "jobTracker": "Job tracker",
-        "portfolio": "Portfolio Website"
+        "portfolio": "Portfolio Website",
+        "businessCard": "Business card"
+      },
+      "businessCard": {
+        "title": "Business card",
+        "subtitle": "Generate a print-ready business card with a QR code that opens your portfolio.",
+        "selectResume": "Resume",
+        "selectPlaceholder": "Choose a resume",
+        "showOnCard": "Show on card",
+        "templateLabel": "Template",
+        "accentLabel": "Accent color",
+        "customColor": "Custom color",
+        "fields": {
+          "email": "Email",
+          "phone": "Phone",
+          "location": "City / location",
+          "website": "Website",
+          "twitter": "Twitter / X handle"
+        },
+        "templates": {
+          "classic": "Classic",
+          "banner": "Banner",
+          "minimal": "Minimal",
+          "dark": "Dark"
+        },
+        "qrPortfolio": "The QR code opens your published portfolio.",
+        "qrWebsite": "No portfolio is published — the QR code opens your website link instead.",
+        "qrFallback": "Publish a portfolio or add a website so the QR code has somewhere to point.",
+        "noTargetWarning": "Tip: publish your portfolio in the Portfolio Website tab so the QR code links to a live page.",
+        "scanCaption": "Scan to view portfolio",
+        "print": "Print card",
+        "downloadPng": "Download PNG",
+        "downloaded": "Card downloaded",
+        "popupBlocked": "Allow pop-ups to print the card.",
+        "noResumes": "Create a resume first to generate a business card.",
+        "yourName": "Your Name"
       },
       "jobMatching": {
         "subtitle": "Compare a saved resume with a job description, get a match score, and generate a cover letter.",

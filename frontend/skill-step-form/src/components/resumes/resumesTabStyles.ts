@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export type ResumesTabId = "resumes" | "job-matching" | "job-tracker" | "portfolio";
+export type ResumesTabId = "resumes" | "job-matching" | "job-tracker" | "portfolio" | "business-card";
 
 /** Compact tab list: no chrome, tabs sit inline. */
 export const resumesTabsListClass = cn(

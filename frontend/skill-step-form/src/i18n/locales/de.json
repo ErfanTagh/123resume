@@ -734,7 +734,42 @@
         "resumes": "Meine Lebensläufe",
         "jobMatching": "Stellenabgleich & Anschreiben",
         "jobTracker": "Bewerbungsübersicht",
-        "portfolio": "Portfolio-Website"
+        "portfolio": "Portfolio-Website",
+        "businessCard": "Visitenkarte"
+      },
+      "businessCard": {
+        "title": "Visitenkarte",
+        "subtitle": "Erstellen Sie eine druckfertige Visitenkarte mit QR-Code, der Ihr Portfolio öffnet.",
+        "selectResume": "Lebenslauf",
+        "selectPlaceholder": "Lebenslauf wählen",
+        "showOnCard": "Auf der Karte anzeigen",
+        "templateLabel": "Vorlage",
+        "accentLabel": "Akzentfarbe",
+        "customColor": "Eigene Farbe",
+        "fields": {
+          "email": "E-Mail",
+          "phone": "Telefon",
+          "location": "Stadt / Ort",
+          "website": "Website",
+          "twitter": "Twitter / X-Name"
+        },
+        "templates": {
+          "classic": "Klassisch",
+          "banner": "Banner",
+          "minimal": "Minimal",
+          "dark": "Dunkel"
+        },
+        "qrPortfolio": "Der QR-Code öffnet Ihr veröffentlichtes Portfolio.",
+        "qrWebsite": "Kein Portfolio veröffentlicht – der QR-Code öffnet stattdessen Ihren Website-Link.",
+        "qrFallback": "Veröffentlichen Sie ein Portfolio oder fügen Sie eine Website hinzu, damit der QR-Code ein Ziel hat.",
+        "noTargetWarning": "Tipp: Veröffentlichen Sie Ihr Portfolio im Tab „Portfolio-Website“, damit der QR-Code auf eine Live-Seite verweist.",
+        "scanCaption": "Scannen, um Portfolio zu sehen",
+        "print": "Karte drucken",
+        "downloadPng": "PNG herunterladen",
+        "downloaded": "Karte heruntergeladen",
+        "popupBlocked": "Pop-ups zulassen, um die Karte zu drucken.",
+        "noResumes": "Erstellen Sie zuerst einen Lebenslauf, um eine Visitenkarte zu generieren.",
+        "yourName": "Ihr Name"
       },
       "jobMatching": {
         "subtitle": "Vergleichen Sie einen gespeicherten Lebenslauf mit einer Stellenbeschreibung, erhalten Sie eine Übereinstimmung und erstellen Sie ein Anschreiben.",

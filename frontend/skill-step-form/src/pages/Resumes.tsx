@@ -4,6 +4,7 @@ import { resumeAPI, Resume, ResumeData } from '@/lib/api';
 import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
 import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
+import { BusinessCardPanel } from '@/components/resumes/BusinessCardPanel';
 import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,7 @@ const generateDefaultResumeName = (resume: Resume): string => {
   return parts.length > 0 ? parts.join('-') : 'Untitled Resume';
 };
 
-const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio'] as const;
+const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio', 'business-card'] as const;
 type ResumesTab = (typeof RESUMES_TABS)[number];
 
 export default function Resumes() {
@@ -378,6 +379,10 @@ export default function Resumes() {
                 id: 'portfolio',
                 label: t('pages.resumes.tabs.portfolio') || 'Portfolio Website',
               },
+              {
+                id: 'business-card',
+                label: t('pages.resumes.tabs.businessCard') || 'Business card',
+              },
             ]}
           />
 
@@ -640,6 +645,13 @@ export default function Resumes() {
               isLoading={isLoading}
               onResumesChange={setResumes}
             />
+          </TabsContent>
+
+          <TabsContent
+            value="business-card"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <BusinessCardPanel resumes={resumes} isLoadingResumes={isLoading} />
           </TabsContent>
         </Tabs>
 

@@ -66,8 +66,29 @@ def _responsibilities_to_text(items: List[Any]) -> str:
     return "\n".join(lines) if lines else ""
 
 
+def _names_to_text(items: List[Any], *keys: str) -> str:
+    """Join a list of strings or dicts (using the first present key) into 'a, b, c'."""
+    names: List[str] = []
+    for item in items or []:
+        if isinstance(item, str) and item.strip():
+            names.append(item.strip())
+        elif isinstance(item, dict):
+            for k in keys:
+                val = item.get(k)
+                if isinstance(val, str) and val.strip():
+                    names.append(val.strip())
+                    break
+    return ", ".join(names)
+
+
 def build_resume_snapshot(resume_doc: Dict[str, Any]) -> Dict[str, Any]:
-    """Compact structured snapshot for tailoring (no PII beyond what's needed)."""
+    """Compact structured snapshot for tailoring (no PII beyond what's needed).
+
+    Certifications and languages are intentionally omitted — they are binary
+    (have it or not) and must never be reworded or tailored. Education and the
+    work/project technology stacks are included as READ-ONLY context so the model
+    can write more relevant edits, but only the ALLOWED_SECTIONS are editable.
+    """
     personal = resume_doc.get("personal_info") or {}
     work = []
     for i, exp in enumerate(resume_doc.get("work_experience") or []):
@@ -78,6 +99,8 @@ def build_resume_snapshot(resume_doc: Dict[str, Any]) -> Dict[str, Any]:
                 "company": (exp.get("company") or "").strip(),
                 "description": (exp.get("description") or "").strip(),
                 "responsibilities": _responsibilities_to_text(exp.get("responsibilities")),
+                # Read-only context (NOT directly editable): the tech stack used.
+                "technologies": _names_to_text(exp.get("technologies"), "technology"),
             }
         )
     projects = []
@@ -87,6 +110,21 @@ def build_resume_snapshot(resume_doc: Dict[str, Any]) -> Dict[str, Any]:
                 "index": i,
                 "name": (proj.get("name") or "").strip(),
                 "description": (proj.get("description") or "").strip(),
+                "technologies": _names_to_text(proj.get("technologies"), "technology"),
+            }
+        )
+    # Education is read-only context only (not an editable section).
+    education = []
+    for edu in resume_doc.get("education") or []:
+        if not isinstance(edu, dict):
+            continue
+        education.append(
+            {
+                "degree": (edu.get("degree") or "").strip(),
+                "field": (
+                    edu.get("field") or edu.get("field_of_study") or edu.get("fieldOfStudy") or ""
+                ).strip(),
+                "institution": (edu.get("institution") or "").strip(),
             }
         )
     return {
@@ -103,6 +141,7 @@ def build_resume_snapshot(resume_doc: Dict[str, Any]) -> Dict[str, Any]:
         ],
         "work_experience": work,
         "projects": projects,
+        "education_context": education,
     }
 
 
@@ -330,6 +369,7 @@ Rules:
 - Later rounds: refine work_experience descriptions/responsibilities and project descriptions.
 - Do NOT repeat suggestion ids already skipped: {list(skip) or "none"}.
 - Only use sections: professional_summary, professional_title, location, skills, work_experience, projects.
+- The snapshot's "education_context" and each entry's "technologies" are READ-ONLY context: use them to write more relevant edits, but never output a suggestion that edits education or a technologies list.
 {scope_rule}- professional_title: align the headline title with the target job title ONLY when truthful (e.g., add a specialization the resume supports). Never claim a seniority or role the resume does not back up.
 - location: only reformat or clarify the EXISTING location (e.g., add country, standard format). Do NOT invent a new city or imply relocation the resume doesn't state.
 - For work_experience use work_index (0-based) and field "description" or "responsibilities".

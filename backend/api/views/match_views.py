@@ -16,8 +16,34 @@ from rest_framework.response import Response
 logger = logging.getLogger(__name__)
 
 
+def _list_items_text(items, *keys):
+    """Extract text from a list whose entries are plain strings or dicts.
+
+    For dict entries, the first present key in `keys` is used. Returns a list of
+    non-empty stripped strings.
+    """
+    out = []
+    for item in items or []:
+        if isinstance(item, str):
+            if item.strip():
+                out.append(item.strip())
+        elif isinstance(item, dict):
+            for k in keys:
+                val = item.get(k)
+                if isinstance(val, str) and val.strip():
+                    out.append(val.strip())
+                    break
+    return out
+
+
 def get_resume_text(resume_doc):
-    """Convert resume document to text for matching"""
+    """Convert resume document to text for job matching and cover letters.
+
+    Includes the content that affects fit: personal info, work experience,
+    projects, education, and skills. Certifications and languages are
+    intentionally excluded — they are binary (you have them or you don't) and
+    not something the AI should reword or tailor.
+    """
     text_parts = []
 
     # Personal info
@@ -44,22 +70,47 @@ def get_resume_text(resume_doc):
             exp_parts.append(dates)
         if exp.get("description"):
             exp_parts.append(exp.get("description"))
-        for resp in exp.get("responsibilities") or []:
-            if isinstance(resp, dict) and resp.get("responsibility"):
-                exp_parts.append(resp.get("responsibility"))
-            elif isinstance(resp, str) and resp.strip():
-                exp_parts.append(resp.strip())
+        exp_parts.extend(_list_items_text(exp.get("responsibilities"), "responsibility"))
+        techs = _list_items_text(exp.get("technologies"), "technology")
+        if techs:
+            exp_parts.append(f"Technologies: {', '.join(techs)}")
         if exp_parts:
             text_parts.append(". ".join(exp_parts))
 
-    # Education
+    # Projects
+    projects = resume_doc.get("projects", [])
+    for proj in projects:
+        proj_parts = []
+        if proj.get("name"):
+            proj_parts.append(f"Project: {proj.get('name')}")
+        if proj.get("description"):
+            proj_parts.append(proj.get("description"))
+        proj_parts.extend(_list_items_text(proj.get("highlights"), "highlight"))
+        techs = _list_items_text(proj.get("technologies"), "technology")
+        if techs:
+            proj_parts.append(f"Technologies: {', '.join(techs)}")
+        if proj_parts:
+            text_parts.append(". ".join(proj_parts))
+
+    # Education (degree, field of study, institution, dates, key courses, descriptions)
     education = resume_doc.get("education", [])
     for edu in education:
         edu_parts = []
         if edu.get("degree"):
             edu_parts.append(edu.get("degree"))
+        field = edu.get("field") or edu.get("field_of_study") or edu.get("fieldOfStudy")
+        if field:
+            edu_parts.append(f"in {field}")
         if edu.get("institution"):
             edu_parts.append(f"from {edu.get('institution')}")
+        if edu.get("start_date") or edu.get("end_date"):
+            edu_parts.append(
+                f"{edu.get('start_date', '')} - {edu.get('end_date', 'Present')}"
+            )
+        courses = _list_items_text(edu.get("key_courses") or edu.get("keyCourses"), "course")
+        if courses:
+            edu_parts.append(f"Key courses: {', '.join(courses)}")
+        edu_parts.extend(_list_items_text(edu.get("descriptions"), "description"))
         if edu_parts:
             text_parts.append(", ".join(edu_parts))
 

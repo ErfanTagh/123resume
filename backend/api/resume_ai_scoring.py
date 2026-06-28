@@ -24,15 +24,23 @@ OVERALL_SCORE_BASE = 2.5
 # Cache identical resumes so repeated "Get score" returns the SAME number (no LLM jitter)
 # and avoids redundant API calls. Bump SCORE_CACHE_VERSION whenever the rubric/prompt
 # changes so previously cached scores are invalidated.
-SCORE_CACHE_VERSION = "v3"
+SCORE_CACHE_VERSION = "v4"
 SCORE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
 def _score_cache_key(resume: Dict[str, Any], lang: str) -> str:
-    """Stable key from a canonical JSON of the resume + language + model + rubric version."""
+    """Stable key from a canonical JSON of the resume CONTENT + language + model + rubric version.
+
+    Visual-only fields (styling, template, section order) are excluded so that changing
+    colors or fonts does not bust the cache or change the score — only content matters.
+    """
     try:
         canonical = json.dumps(
-            resume, sort_keys=True, separators=(",", ":"), default=str, ensure_ascii=False
+            _strip_non_content(resume),
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+            ensure_ascii=False,
         )
     except Exception:
         canonical = repr(resume)
@@ -157,8 +165,33 @@ def _trim_text_fields(node: Any, max_len: int) -> None:
             _trim_text_fields(item, max_len)
 
 
-def resume_json_for_prompt(data: Dict[str, Any], max_chars: int = 26000) -> str:
+# Non-content keys carry only visual/layout state. They add noise to the prompt and
+# can bury real content (e.g. the professional title), making the model think a filled
+# field is missing. Strip them before scoring — they have no bearing on the rubric.
+_NON_CONTENT_TOP_KEYS = (
+    "styling",
+    "template",
+    "sectionOrder",
+    "section_order",
+    "sectionStyling",
+    "section_styling",
+    "completenessScore",
+    "clarityScore",
+    "formattingScore",
+    "impactScore",
+    "overallScore",
+)
+
+
+def _strip_non_content(data: Dict[str, Any]) -> Dict[str, Any]:
     d = copy.deepcopy(data) if isinstance(data, dict) else {}
+    for key in _NON_CONTENT_TOP_KEYS:
+        d.pop(key, None)
+    return d
+
+
+def resume_json_for_prompt(data: Dict[str, Any], max_chars: int = 26000) -> str:
+    d = _strip_non_content(data)
     for lim in (1500, 900, 600, 400, 280):
         _trim_text_fields(d, lim)
         out = json.dumps(d, default=str, ensure_ascii=False)
@@ -333,6 +366,18 @@ RECRUITER REVIEW PRINCIPLES (apply when scoring AND when writing feedback/sugges
 - NO DUPLICATE KEYWORDS within the same role's bullets — suggest consolidating instead of repeating the same tech.
 - COMMUNICATION: value evidence of explaining technical work to non-technical stakeholders.
 - Strong bullets usually surface ~3+ relevant skills used in real context (not a bare keyword list).
+
+FIELD MAP — READ THE RESUME BEFORE SUGGESTING (critical)
+- The professional title / headline is `personalInfo.professionalTitle`.
+- Each job's role title is `workExperience[i].position`; the employer is `workExperience[i].company`.
+- The professional summary is `personalInfo.summary`. Location is `personalInfo.location`.
+  Links are `personalInfo.linkedin`, `personalInfo.github`, `personalInfo.website`.
+- Skills are in `skills[]` and `skillGroups[]`. Education is in `education[]`. Projects in `projects[]`.
+- BEFORE writing any suggestion, CHECK whether that field is already filled in the JSON.
+  NEVER tell the candidate to add or "write a role/title/summary/location/skill" that is ALREADY present
+  (e.g. if professionalTitle is "Software Engineer" or a position is filled, do NOT suggest adding a role/title).
+  If a field already has content, your only valid suggestion about it is to IMPROVE the existing wording —
+  and say so explicitly ("Strengthen your <field> by …"), never "add" it.
 
 CATEGORIES (exact names and max_score — you MUST output all six):
 1) Content Quality — max_score 3

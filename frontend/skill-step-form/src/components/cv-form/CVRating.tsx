@@ -65,13 +65,6 @@ export const CVRating = ({
     );
   }
 
-  const getScoreColor = (score: number, maxScore: number) => {
-    const percentage = (score / maxScore) * 100;
-    if (percentage >= 80) return "text-green-600 dark:text-green-400";
-    if (percentage >= 60) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
-
   const getOverallScoreColor = (score: number) => {
     if (score >= 8) return "text-green-600 dark:text-green-400";
     if (score >= 6) return "text-yellow-600 dark:text-yellow-400";
@@ -144,15 +137,9 @@ export const CVRating = ({
 
   const status = getOverallStatus(rating.overallScore);
 
-  const categoryNameMap: Record<string, string> = {
-    "Content Quality": t("resume.score.categories.contentQuality") || "Content Quality",
-    "Structure & Format": t("resume.score.categories.structureFormat") || "Structure & Format",
-    "Professional Summary": t("resume.score.categories.professionalSummary") || "Professional Summary",
-    "Experience Section": t("resume.score.categories.experience") || "Experience Section",
-    "Skills & Proficiency": t("resume.score.categories.skills") || "Skills & Proficiency",
-    "Education & Certifications": t("resume.score.categories.education") || "Education & Certifications",
-    "ATS Optimization": t("resume.score.categories.ats") || "ATS Optimization",
-  };
+  const suggestions = (rating.suggestions || [])
+    .map((s) => s.replace(/^-\s*/, "").trim())
+    .filter(Boolean);
 
   return (
     <Card>
@@ -195,28 +182,26 @@ export const CVRating = ({
           />
         </div>
 
-        <div className="space-y-4">
-          <h4 className="font-semibold">{t("resume.score.breakdown") || "Score Breakdown"}</h4>
-          {rating.categories.map((category, index) => {
-            const localizedName = categoryNameMap[category.name] || category.name;
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{localizedName}</span>
-                  <span className={`text-sm font-semibold ${getScoreColor(category.score, category.maxScore)}`}>
-                    {category.score}/{category.maxScore}
-                  </span>
-                </div>
-                <Progress value={(category.score / category.maxScore) * 100} className="h-2" />
-                {category.feedback?.trim() && rating.fromAi !== false ? (
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                    {category.feedback.replace(/^\-\s*/, "").trim()}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+        {suggestions.length > 0 ? (
+          <div className="space-y-3">
+            <h4 className="flex items-center gap-2 font-semibold">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {t("resume.score.suggestionsTitle") || "How to improve your score"}
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              {t("resume.score.suggestionsHint") ||
+                "Each tip points to something you can edit here in the builder."}
+            </p>
+            <ul className="list-none space-y-2 pl-0 text-sm leading-relaxed text-foreground">
+              {suggestions.slice(0, 6).map((line, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                  <span className="whitespace-pre-wrap">{line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {rating.fromAi !== false && rating.overallFeedback?.trim() ? (
           <div className="space-y-2 rounded-lg border border-primary/15 bg-muted/30 p-4">
@@ -234,7 +219,7 @@ export const CVRating = ({
                 .map((line, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-                    <span className="whitespace-pre-wrap">{line.replace(/^\-\s*/, "")}</span>
+                    <span className="whitespace-pre-wrap">{line.replace(/^-\s*/, "")}</span>
                   </li>
                 ))}
             </ul>

@@ -413,7 +413,39 @@ export const aiAPI = {
     const response = await doFetch();
     return handleResponse(response, doFetch) as Promise<{ description: string }>;
   },
+
+  /**
+   * One-click "Improve my resume" (DeepSeek). Rewrites only editable free-text
+   * fields (professional summary, work role summaries, project descriptions) and
+   * returns a per-field list of proposed changes for the user to accept/reject.
+   */
+  improveResume: async (
+    resume: Record<string, unknown>,
+    options?: { outputLanguage?: "en" | "de" },
+  ): Promise<{ changes: ResumeImproveChange[] }> => {
+    const payload: Record<string, unknown> = { resume };
+    if (options?.outputLanguage === "de" || options?.outputLanguage === "en") {
+      payload.outputLanguage = options.outputLanguage;
+    }
+    const doFetch = () =>
+      fetch(`${API_BASE_URL}/ai/resume-improve/`, {
+        method: "POST",
+        headers: createHeaders(true, true),
+        body: JSON.stringify(payload),
+      });
+    const response = await doFetch();
+    return handleResponse(response, doFetch) as Promise<{ changes: ResumeImproveChange[] }>;
+  },
 };
+
+export interface ResumeImproveChange {
+  /** react-hook-form field path, e.g. "personalInfo.summary" or "workExperience.0.description". */
+  path: string;
+  /** Human-readable label for the field, e.g. "Experience — Engineer at Acme". */
+  label: string;
+  original: string;
+  improved: string;
+}
 
 export type AiImproveFieldType =
   | "work_description"

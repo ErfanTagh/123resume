@@ -1119,15 +1119,17 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                     currentStep={currentStep}
                   />
                   <Card className="relative p-8 shadow-elevated">
-                    <div className="pointer-events-none absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
-                      <SaveStatusBadge status={saveStatus} />
-                    </div>
                     <ProgressIndicator
                       currentStep={currentStep}
                       totalSteps={steps.length}
                       stepLabels={steps.map((s) => s.label)}
                       onStepClick={handleStepClick}
                     />
+
+                    {/* Autosave status — its own right-aligned row below the step indicators. */}
+                    <div className="-mt-4 mb-4 flex min-h-[1.75rem] items-center justify-end">
+                      <SaveStatusBadge status={saveStatus} />
+                    </div>
 
                     {/* Dev-only Test Data Loader */}
                     {import.meta.env.DEV && (

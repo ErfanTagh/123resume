@@ -473,6 +473,8 @@
       "suggestions": "Suggestions for Improvement",
       "overallAiSummary": "AI summary",
       "overallAiSummaryHint": "Follows your selected interface language (English or German).",
+      "suggestionsTitle": "How to improve your score",
+      "suggestionsHint": "Each tip points to something you can edit here in the builder.",
       "reanalyze": "Re-analyze CV",
       "status": {
         "excellent": "Excellent",
@@ -565,6 +567,27 @@
           "needsImprovement": "Add more keywords and ensure standard formatting"
         }
       }
+    },
+    "improve": {
+      "title": "Improve my resume with AI",
+      "subtitle": "Let AI rewrite your summary and descriptions. Review each change and accept or reject it.",
+      "cta": "Improve my resume",
+      "analyzing": "Improving your resume…",
+      "runAgain": "Run again",
+      "acceptAll": "Accept all",
+      "accept": "Accept",
+      "reject": "Reject",
+      "undo": "Undo",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "before": "Current",
+      "after": "Suggested",
+      "summaryCount": "{accepted} applied · {pending} to review",
+      "appliedAllTitle": "Improvements applied",
+      "appliedAll": "All remaining suggestions were added to your resume.",
+      "noChangesTitle": "Nothing to improve",
+      "noChanges": "Your resume text already looks strong — no rewrites suggested.",
+      "error": "Could not generate improvements. Try again."
     },
     "aiBullet": {
       "suggest": "Suggest with AI",

@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar, Edit } from "lucide-react";
 import { SectionOrderManager } from "./SectionOrderManager";
 import { CVRating } from "./CVRating";
+import { ResumeImprovePanel } from "./ResumeImprovePanel";
 import type { ResumeScore } from "@/lib/resumeScorer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
@@ -81,6 +82,9 @@ export const ReviewStep = ({
         rating={resumeScoreFromNav}
         ratingLoading={resumeScoreLoadingFromNav}
       />
+
+      {/* One-click AI improvements with per-change accept/reject */}
+      <ResumeImprovePanel form={form} />
 
       {/* Section Order Manager */}
       <SectionOrderManager

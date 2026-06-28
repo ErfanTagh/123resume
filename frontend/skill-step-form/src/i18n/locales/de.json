@@ -473,6 +473,8 @@
       "suggestions": "Verbesserungsvorschläge",
       "overallAiSummary": "KI-Zusammenfassung",
       "overallAiSummaryHint": "Entspricht der gewählten Oberflächensprache (Englisch oder Deutsch).",
+      "suggestionsTitle": "So verbessern Sie Ihre Punktzahl",
+      "suggestionsHint": "Jeder Tipp bezieht sich auf etwas, das Sie hier im Editor bearbeiten können.",
       "reanalyze": "Lebenslauf erneut analysieren",
       "status": {
         "excellent": "Ausgezeichnet",
@@ -565,6 +567,27 @@
           "needsImprovement": "Fügen Sie mehr Keywords hinzu und stellen Sie sicher, dass die Formatierung standardisiert ist"
         }
       }
+    },
+    "improve": {
+      "title": "Lebenslauf mit KI verbessern",
+      "subtitle": "Lassen Sie die KI Ihre Zusammenfassung und Beschreibungen überarbeiten. Prüfen Sie jede Änderung und nehmen Sie sie an oder lehnen Sie sie ab.",
+      "cta": "Lebenslauf verbessern",
+      "analyzing": "Ihr Lebenslauf wird verbessert…",
+      "runAgain": "Erneut ausführen",
+      "acceptAll": "Alle annehmen",
+      "accept": "Annehmen",
+      "reject": "Ablehnen",
+      "undo": "Rückgängig",
+      "accepted": "Angenommen",
+      "rejected": "Abgelehnt",
+      "before": "Aktuell",
+      "after": "Vorschlag",
+      "summaryCount": "{accepted} übernommen · {pending} zu prüfen",
+      "appliedAllTitle": "Verbesserungen übernommen",
+      "appliedAll": "Alle übrigen Vorschläge wurden Ihrem Lebenslauf hinzugefügt.",
+      "noChangesTitle": "Nichts zu verbessern",
+      "noChanges": "Ihre Texte sind bereits stark — keine Überarbeitungen vorgeschlagen.",
+      "error": "Verbesserungen konnten nicht erstellt werden. Bitte erneut versuchen."
     },
     "aiBullet": {
       "suggest": "Mit KI vorschlagen",

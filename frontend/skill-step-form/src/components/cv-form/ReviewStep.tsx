@@ -84,7 +84,7 @@ export const ReviewStep = ({
       />
 
       {/* One-click AI improvements with per-change accept/reject */}
-      <ResumeImprovePanel form={form} />
+      <ResumeImprovePanel form={form} onApplied={onReanalyzeAiScore} />
 
       {/* Section Order Manager */}
       <SectionOrderManager

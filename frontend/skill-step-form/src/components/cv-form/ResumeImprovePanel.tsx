@@ -18,6 +18,9 @@ interface TrackedChange extends ResumeImproveChange {
 
 interface ResumeImprovePanelProps {
   form: UseFormReturn<CVFormData>;
+  /** Called after any accepted/rejected change so the parent can refresh the score
+   *  to reflect the edited content (keeps the Review score in sync with what's saved). */
+  onApplied?: () => void;
 }
 
 /**
@@ -26,7 +29,7 @@ interface ResumeImprovePanelProps {
  * proposed change as a before→after card the user can Accept or Reject. Accepted
  * changes are written straight back into the builder form.
  */
-export const ResumeImprovePanel = ({ form }: ResumeImprovePanelProps) => {
+export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -91,6 +94,9 @@ export const ResumeImprovePanel = ({ form }: ResumeImprovePanelProps) => {
       next[index] = { ...target, status };
       return next;
     });
+    // Content changed → let the parent refresh the score so the displayed number
+    // matches what will be saved.
+    onApplied?.();
   };
 
   const acceptAll = () => {
@@ -109,6 +115,7 @@ export const ResumeImprovePanel = ({ form }: ResumeImprovePanelProps) => {
       description:
         t("resume.improve.appliedAll") || "All remaining suggestions were added to your resume.",
     });
+    onApplied?.();
   };
 
   const pendingCount = changes?.filter((c) => c.status === "pending").length ?? 0;

@@ -374,6 +374,8 @@ Rules:
 - location: only reformat or clarify the EXISTING location (e.g., add country, standard format). Do NOT invent a new city or imply relocation the resume doesn't state.
 - For work_experience use work_index (0-based) and field "description" or "responsibilities".
 - For skills: skills_after must list ALL skills (reordered with job-relevant ones first, keep every existing skill).
+  Skills are NAMES ONLY — never append proficiency levels, ratings, or labels (e.g. "Advanced", "Beginner",
+  "Grundkenntnisse") to a skill; the builder has no skill-level field.
 - {lang_rule}
 - "before" must match current resume content; "after" is your improved version.
 

@@ -24,7 +24,7 @@ OVERALL_SCORE_BASE = 2.5
 # Cache identical resumes so repeated "Get score" returns the SAME number (no LLM jitter)
 # and avoids redundant API calls. Bump SCORE_CACHE_VERSION whenever the rubric/prompt
 # changes so previously cached scores are invalidated.
-SCORE_CACHE_VERSION = "v4"
+SCORE_CACHE_VERSION = "v6"
 SCORE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
@@ -370,12 +370,16 @@ RECRUITER REVIEW PRINCIPLES (apply when scoring AND when writing feedback/sugges
 FIELD MAP — READ THE RESUME BEFORE SUGGESTING (critical)
 - The professional title / headline is `personalInfo.professionalTitle`.
 - Each job's role title is `workExperience[i].position`; the employer is `workExperience[i].company`.
+- The COMPANY LINK for a job is `workExperience[i].link`. A project's link is `projects[i].link`; an education
+  entry's link is `education[i].link`; a certificate's link is `certificates[i].url`.
 - The professional summary is `personalInfo.summary`. Location is `personalInfo.location`.
   Links are `personalInfo.linkedin`, `personalInfo.github`, `personalInfo.website`.
 - Skills are in `skills[]` and `skillGroups[]`. Education is in `education[]`. Projects in `projects[]`.
-- BEFORE writing any suggestion, CHECK whether that field is already filled in the JSON.
-  NEVER tell the candidate to add or "write a role/title/summary/location/skill" that is ALREADY present
-  (e.g. if professionalTitle is "Software Engineer" or a position is filled, do NOT suggest adding a role/title).
+- BEFORE writing any suggestion, CHECK whether that field is already filled in the JSON — including links.
+  NEVER tell the candidate to "add a link/role/title/summary/location/skill" that is ALREADY present
+  (e.g. if `workExperience[i].link` is non-empty, do NOT suggest adding a company link; if professionalTitle
+  or a position is filled, do NOT suggest adding a role/title). Only suggest adding something for entries where
+  that exact field is genuinely empty.
   If a field already has content, your only valid suggestion about it is to IMPROVE the existing wording —
   and say so explicitly ("Strengthen your <field> by …"), never "add" it.
 
@@ -404,6 +408,10 @@ SUGGESTIONS MUST BE FIXABLE INSIDE THE 123Resume BUILDER (critical)
 - NEVER suggest anything about visual formatting, layout, design, fonts, font size, colors, spacing, margins,
   templates, section styling, file/export format (PDF/Word), photo, or generic "use an ATS-friendly format" advice.
   The builder handles all of that — such tips are off-limits and must not appear.
+- NEVER suggest adding proficiency levels, skill levels, ratings, percentages, or bars to SKILLS (e.g. "Advanced",
+  "Beginner", "Expert", "Grundkenntnisse", "Fortgeschritten"). The skills field stores names only and has no level
+  input — such advice is not actionable in the builder and must not appear. (This does NOT apply to the separate
+  Languages section, which has its own proficiency field; do not give skills-level advice there either.)
 - NEVER give vague advice ("proofread", "make it pop", "be more professional"); always point to a concrete field + edit.
 Make suggestions specific and actionable using the RECRUITER REVIEW PRINCIPLES above — prefer fixes like turning a
 keyword-only bullet into What+How+Why+Where, adding plain-language business impact, adding a missing location,

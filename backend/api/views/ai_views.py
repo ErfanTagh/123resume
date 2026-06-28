@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .. import deepseek_chat
+from .. import resume_ai_improve
 from .. import resume_ai_scoring
 from .. import resume_ai_work_bullet
 from .. import resume_ai_work_description
@@ -155,6 +156,83 @@ def resume_score(request):
         logger.exception("DeepSeek resume scoring failed")
         return Response(
             {"error": "Could not score this resume with AI. Try again later."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def improve_resume(request):
+    """
+    One-click "Improve my resume" (DeepSeek). Rewrites only free-text fields the
+    user can edit in the builder (professional summary, work-experience role
+    summaries, project descriptions) and returns a per-field list of proposed
+    changes so the UI can Accept/Reject each one.
+
+    Body JSON:
+      - resume (required): CV JSON object (camelCase, same shape as resume-score)
+      - output_language / outputLanguage (optional): "en" | "de"
+
+    Response:
+      - changes: [{path, label, original, improved}, ...]  (may be empty)
+    """
+    data = request.data or {}
+    resume = data.get("resume")
+
+    if not isinstance(resume, dict):
+        return Response(
+            {"error": "resume must be a JSON object"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    resume = _resume_without_profile_images(resume)
+
+    try:
+        raw_len = len(json.dumps(resume, default=str))
+    except Exception:
+        raw_len = MAX_RESUME_JSON_CHARS + 1
+
+    if raw_len > MAX_RESUME_JSON_CHARS:
+        return Response(
+            {"error": "resume payload is too large"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not settings.DEEPSEEK_API_KEY:
+        return Response(
+            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    out_lang = resume_ai_scoring.normalize_output_language(
+        (data.get("output_language") or data.get("outputLanguage") or "en"),
+    )
+
+    logger.info(
+        "resume_improve start user_id=%s lang=%s payload_chars=%s",
+        getattr(request.user, "pk", None),
+        out_lang,
+        raw_len,
+    )
+
+    try:
+        changes = resume_ai_improve.improve_resume_fields(resume, out_lang)
+        logger.info(
+            "resume_improve ok user_id=%s changes=%d",
+            getattr(request.user, "pk", None),
+            len(changes),
+        )
+        return Response({"changes": changes}, status=status.HTTP_200_OK)
+    except RuntimeError as e:
+        logger.error("resume_improve configuration error: %s", e)
+        return Response(
+            {"error": "AI assistant is not configured."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception:
+        logger.exception("DeepSeek resume improve failed")
+        return Response(
+            {"error": "Could not generate improvements with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
         )
 

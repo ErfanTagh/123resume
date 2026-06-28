@@ -15,7 +15,7 @@ from .sitemap_views import generate_sitemap
 from .match_views import match_resume_to_job, generate_resume_cover_letter, tailor_resume_suggestions
 from .job_application_views import job_application_list, job_application_detail
 from .feedback_views import send_feedback
-from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet, improve_work_description
+from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet, improve_work_description, improve_resume
 
 __all__ = [
     'resume_list',
@@ -38,5 +38,6 @@ __all__ = [
     'resume_score',
     'suggest_work_bullet',
     'improve_work_description',
+    'improve_resume',
 ]
 

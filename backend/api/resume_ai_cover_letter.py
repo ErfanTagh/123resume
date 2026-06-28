@@ -87,10 +87,28 @@ def generate_cover_letter_with_deepseek(
         )
         greeting_hint = "Beginnen Sie mit einer passenden Anrede (z. B. „Sehr geehrte Damen und Herren,“ wenn kein Name bekannt ist)."
         closing_hint = "Schließen Sie mit „Mit freundlichen Grüßen“ und dem Namen des Kandidaten aus dem Lebenslauf."
+        structure_hint = (
+            "Gliedern Sie den Haupttext genau in dieser Reihenfolge:\n"
+            "1. Einleitungsabsatz — warum sich der Kandidat für das Unternehmen interessiert "
+            "(beziehen Sie sich auf etwas Konkretes zum Unternehmen oder zur Stelle; erfinden Sie keine Fakten über das Unternehmen).\n"
+            "2. Mittlerer Absatz/Absätze — wie die Fähigkeiten und der Lebenslauf des Kandidaten zu dieser Stelle passen. "
+            "Nennen Sie 2–3 relevante Stärken oder Erfahrungen aus dem Lebenslauf und verknüpfen Sie diese mit den Anforderungen der Stelle.\n"
+            "3. Schlussabsatz — danken Sie der lesenden Person für die Zeit und das Lesen des Anschreibens und "
+            "bringen Sie zum Ausdruck, dass sich der Kandidat auf ein Vorstellungsgespräch freut."
+        )
     else:
         lang_rule = "Write the cover letter in **English** (professional US-style business letter)."
         greeting_hint = "Start with an appropriate greeting (e.g. Dear Hiring Manager, if no name is given)."
         closing_hint = "End with a professional sign-off and the candidate's name from the resume."
+        structure_hint = (
+            "Structure the body in exactly this order:\n"
+            "1. Opening paragraph — why the candidate is interested in the company "
+            "(reference something specific about the company or role; do not invent facts about the company).\n"
+            "2. Middle paragraph(s) — how the candidate's skills and resume match this role. "
+            "Mention 2–3 relevant strengths or experiences from the resume and tie them to the role's requirements.\n"
+            "3. Closing paragraph — thank the reader for taking the time to read the letter and "
+            "express that the candidate looks forward to discussing the role in an interview."
+        )
 
     system = (
         "You write tailored job application cover letters. "
@@ -100,10 +118,10 @@ def generate_cover_letter_with_deepseek(
     user = f"""
 Write a tailored cover letter for this job application.
 
+{structure_hint}
+
 Rules:
-- 3–4 short paragraphs plus greeting and sign-off.
-- Explain fit between the candidate's background and this role.
-- Mention 2–3 relevant strengths or experiences from the resume.
+- 3–4 short paragraphs plus greeting and sign-off, following the structure above.
 - Do not copy the job description verbatim.
 - Do not fabricate information not in the resume.
 - {lang_rule}

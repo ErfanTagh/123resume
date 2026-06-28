@@ -24,7 +24,7 @@ OVERALL_SCORE_BASE = 2.5
 # Cache identical resumes so repeated "Get score" returns the SAME number (no LLM jitter)
 # and avoids redundant API calls. Bump SCORE_CACHE_VERSION whenever the rubric/prompt
 # changes so previously cached scores are invalidated.
-SCORE_CACHE_VERSION = "v2"
+SCORE_CACHE_VERSION = "v3"
 SCORE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
@@ -347,9 +347,22 @@ and "feedback": **one** short bullet line in the OUTPUT LANGUAGE (start with "- 
 
 Also return "overall_score" from 0 to 10 (float, one decimal) using the **2.5 baseline** described above,
 and "suggestions": array of **at most 4** strings in the OUTPUT LANGUAGE (no duplicates): each string is **one** bullet
-line starting with "- " plus a compact tip (max ~110 characters per string including the "- "). Make suggestions specific
-and actionable using the RECRUITER REVIEW PRINCIPLES above — prefer fixes like turning a keyword-only bullet into
-What+How+Why+Where, adding plain-language business impact, adding a missing location, or tailoring to one job title.
+line starting with "- " plus a compact tip (max ~110 characters per string including the "- ").
+
+SUGGESTIONS MUST BE FIXABLE INSIDE THE 123Resume BUILDER (critical)
+- Every suggestion MUST be about EDITING THE CONTENT of a field the user can change in the builder:
+  the professional summary, a work-experience role summary or bullet, the skills list, a project description,
+  education details, certifications, or a missing contact field (location, LinkedIn, GitHub, website).
+- Each suggestion should make it obvious WHICH field to edit and WHAT to change (e.g. "Rewrite your summary to…",
+  "In your <role> experience, turn the tech list into What+How+Why+Where", "Add your city to your contact details",
+  "Add 2–3 core skills you actually used in your roles").
+- NEVER suggest anything about visual formatting, layout, design, fonts, font size, colors, spacing, margins,
+  templates, section styling, file/export format (PDF/Word), photo, or generic "use an ATS-friendly format" advice.
+  The builder handles all of that — such tips are off-limits and must not appear.
+- NEVER give vague advice ("proofread", "make it pop", "be more professional"); always point to a concrete field + edit.
+Make suggestions specific and actionable using the RECRUITER REVIEW PRINCIPLES above — prefer fixes like turning a
+keyword-only bullet into What+How+Why+Where, adding plain-language business impact, adding a missing location,
+adding a relevant skill, or tailoring a summary/role to one job title.
 {overall_fb_rule}
 
 {_RUBRIC_JSON_SHAPE}

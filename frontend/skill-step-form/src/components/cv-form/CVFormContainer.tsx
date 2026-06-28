@@ -221,7 +221,6 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
     // Merge styling to ensure defaults are set if not present
     const dataTemplate = initialData.template || "modern";
     const dataTemplateDefaultHeadingColor = getTemplateDefaultHeadingColor(dataTemplate);
-    const dataTemplateDefaultPersonalInfoTitleColor = getTemplateDefaultPersonalInfoTitleColor(dataTemplate);
 
     // Use template-specific headingColor for the data template
     const dataDefaultStyling = {
@@ -252,18 +251,17 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         ...initialData.styling,
         // Ensure headingColor matches template if not explicitly set
         headingColor: initialData.styling?.headingColor || dataTemplateDefaultHeadingColor,
-        // Ensure personalInfo section styling has template-specific default if not set
-        // IMPORTANT: Only set colors as defaults, NOT font sizes (titleSize/bodySize).
-        // If we set font size defaults here, they will override the global fontSize
-        // setting from the third tab. Let templates fall back to global styling.fontSize.
-        sectionStyling: {
-          ...initialData.styling?.sectionStyling,
-          personalInfo: initialData.styling?.sectionStyling?.personalInfo || {
-            titleColor: dataTemplateDefaultPersonalInfoTitleColor,
-            bodyColor: dataDefaultStyling.textColor,
-            // Do NOT set titleSize/bodySize here - let global fontSize apply
-          },
-        },
+        // personalInfo (name + Professional Summary) intentionally follows the GLOBAL
+        // colors/sizes (headingColor / textColor / fontSize). We must NOT inject a
+        // personalInfo sectionStyling override here: doing so froze the summary color
+        // to a stale snapshot of textColor, so later changes in the Settings tab were
+        // ignored. Strip any saved personalInfo override on load so the global wins.
+        sectionStyling: (() => {
+          const ss = initialData.styling?.sectionStyling;
+          if (!ss) return undefined;
+          const { personalInfo: _omitPersonalInfo, ...rest } = ss;
+          return Object.keys(rest).length > 0 ? rest : undefined;
+        })(),
       },
     };
   };

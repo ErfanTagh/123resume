@@ -47,9 +47,26 @@ export const StylingSettings = ({ data, currentStep, onStylingChange }: StylingS
   const styling = data.styling || {};
 
   const updateStyling = (updates: Partial<CVFormData['styling']>) => {
-    if (onStylingChange) {
-      onStylingChange({ ...styling, ...updates });
+    if (!onStylingChange) return;
+    const next = { ...styling, ...updates };
+    // The name + Professional Summary (personalInfo) are meant to follow the global
+    // colors. A stale personalInfo sectionStyling override would otherwise pin the
+    // summary to an old color and ignore changes made here. When a global color is
+    // changed, drop that override so the new global color applies everywhere.
+    const colorKeys: Array<keyof NonNullable<CVFormData['styling']>> = [
+      'textColor',
+      'headingColor',
+      'titleColor',
+      'linkColor',
+    ];
+    const changingColor = Object.keys(updates).some((k) =>
+      colorKeys.includes(k as keyof NonNullable<CVFormData['styling']>),
+    );
+    if (changingColor && next.sectionStyling?.personalInfo) {
+      const { personalInfo: _omitPersonalInfo, ...restSections } = next.sectionStyling;
+      next.sectionStyling = Object.keys(restSections).length > 0 ? restSections : undefined;
     }
+    onStylingChange(next);
   };
 
   const resetAllStyling = () => {

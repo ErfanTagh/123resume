@@ -96,6 +96,19 @@ def generate_cover_letter_with_deepseek(
             "3. Schlussabsatz — danken Sie der lesenden Person für die Zeit und das Lesen des Anschreibens und "
             "bringen Sie zum Ausdruck, dass sich der Kandidat auf ein Vorstellungsgespräch freut."
         )
+        natural_hint = (
+            "Schreiben Sie MENSCHLICH, nicht wie eine KI — in der Ich-Form des Kandidaten, in höflicher Sie-Form:\n"
+            "- Klare, konkrete Sprache; variieren Sie die Satzlänge. Vermeiden Sie steifes Behördendeutsch und Floskeln.\n"
+            "- Nennen Sie konkrete Fähigkeiten und Erfahrungen statt vager Begeisterung.\n"
+            "- VERMEIDEN Sie diese Klischees und ähnliche Formulierungen: „Mit großem Interesse habe ich Ihre "
+            "Stellenanzeige gelesen“, „Hiermit bewerbe ich mich“, „Ich bin davon überzeugt, dass ich“, „Ich bringe "
+            "… mit“ als Floskel, „ideale Besetzung“, „zeichnet sich durch … aus“, „in der heutigen schnelllebigen "
+            "Welt“ sowie leere Schmeichelei wie „Ihre renommierte/geschätzte/angesehene Firma“.\n"
+            "- Wiederholen Sie nicht einfach den Lebenslauf; verbinden Sie einige konkrete Punkte mit dem, was DIESE "
+            "Stelle braucht.\n"
+            "- Bleiben Sie formell (Sie-Form), aber natürlich — nicht aufdringlich oder übertrieben werbend. "
+            "Keine Aneinanderreihung von Gedankenstrichen."
+        )
     else:
         lang_rule = "Write the cover letter in **English** (professional US-style business letter)."
         greeting_hint = "Start with an appropriate greeting (e.g. Dear Hiring Manager, if no name is given)."
@@ -109,16 +122,34 @@ def generate_cover_letter_with_deepseek(
             "3. Closing paragraph — thank the reader for taking the time to read the letter and "
             "express that the candidate looks forward to discussing the role in an interview."
         )
+        natural_hint = (
+            "Make it sound HUMAN, not AI-generated, in the candidate's own first-person voice:\n"
+            "- Use plain, direct language and vary sentence length. Avoid a stiff, perfectly balanced rhythm.\n"
+            "- Be specific and concrete (real skills, real experiences) instead of vague enthusiasm.\n"
+            "- It is fine to start a sentence with \"And\" or \"But\" occasionally, and to use contractions (I'm, I've).\n"
+            "- BAN these AI/cliché phrases and close variants: \"I am writing to express my (keen) interest\", "
+            "\"I am excited about the opportunity\", \"I believe my skills make me a strong/perfect fit\", "
+            "\"proven track record\", \"I am confident that\", \"passionate about\", \"leverage\", \"synergy\", "
+            "\"delve\", \"in today's fast-paced world\", \"I am the ideal candidate\", "
+            "\"Furthermore\"/\"Moreover\"/\"Additionally\" as paragraph openers, and hollow flattery like "
+            "\"your esteemed/prestigious company\".\n"
+            "- Do not simply restate the resume; connect a couple of specifics to what THIS role needs.\n"
+            "- No em-dash overuse; at most one. Keep it genuine, not salesy or over-eager."
+        )
 
     system = (
-        "You write tailored job application cover letters. "
+        "You are the CANDIDATE writing your own cover letter in first person — not an AI assistant. "
+        "Write the way a thoughtful, competent person actually writes: plain, specific, and warm, "
+        "with natural sentence-length variation and no corporate filler. "
         "Reply with a single JSON object only (no markdown fences). "
         "Use only facts supported by the resume — do not invent employers, dates, degrees, or metrics."
     )
     user = f"""
-Write a tailored cover letter for this job application.
+Write a tailored cover letter for this job application, in the candidate's own first-person voice.
 
 {structure_hint}
+
+{natural_hint}
 
 Rules:
 - 3–4 short paragraphs plus greeting and sign-off, following the structure above.
@@ -150,7 +181,8 @@ Candidate resume (source of truth for facts):
             int(getattr(settings, "DEEPSEEK_COVER_LETTER_MAX_TOKENS", 2048)),
             2048,
         ),
-        temperature=0.35,
+        # Higher temperature for more natural, human-sounding variation (less robotic).
+        temperature=0.8,
     )
     raw = (completion.choices[0].message.content or "").strip()
     if not raw:

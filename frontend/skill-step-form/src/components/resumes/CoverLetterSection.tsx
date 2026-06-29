@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { resumeAPI } from "@/lib/api";
-import { generatePDF } from "@/lib/pdfGenerator";
+import { generateTextPdf } from "@/lib/pdfGenerator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,12 +92,12 @@ export function CoverLetterSection({
   };
 
   const handleDownloadPdf = async () => {
-    if (!printRef.current || !coverLetter.trim()) return;
+    if (!coverLetter.trim()) return;
 
     setIsDownloading(true);
     try {
       const base = sanitizeFilename(downloadName || jobTitle || "Cover-Letter");
-      await generatePDF(printRef.current, base);
+      generateTextPdf(coverLetter, base);
       toast({
         title: t("pages.resumes.jobMatching.coverLetter.downloadedTitle") || "Download started",
         description:

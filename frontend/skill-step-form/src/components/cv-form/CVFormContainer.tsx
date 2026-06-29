@@ -50,6 +50,8 @@ interface CVFormContainerProps {
 export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showSignupOverlay, setShowSignupOverlay] = useState(false);
+  /** True while an uploaded resume is being parsed — shows a loading overlay on the preview. */
+  const [isParsingResume, setIsParsingResume] = useState(false);
   /** Latest server AI score after step navigation (Next / Previous / progress). Guests: undefined. */
   const [navResumeScore, setNavResumeScore] = useState<ResumeScore | undefined>(undefined);
   const [navResumeScoreLoading, setNavResumeScoreLoading] = useState(false);
@@ -1094,7 +1096,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 {/* Live preview only — left on desktop */}
                 <div className="hidden lg:col-span-5 lg:block lg:col-start-1">
-                  <ResumePreviewPane data={formDataWithSkills} />
+                  <ResumePreviewPane data={formDataWithSkills} isParsing={isParsingResume} />
                 </div>
 
                 {/* Customize tools + form — right on desktop */}
@@ -1194,6 +1196,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                           }
                           reanalyzeAiScoreLoading={!!user && navResumeScoreLoading}
                         />
+                      ) : currentStep === 0 ? (
+                        <PersonalInfoStep form={form} onParsingChange={setIsParsingResume} />
                       ) : (
                         <CurrentStepComponent form={form} />
                       )}

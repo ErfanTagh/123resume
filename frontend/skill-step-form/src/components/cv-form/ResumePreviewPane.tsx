@@ -29,7 +29,7 @@ import type { ResumeEditorSideProps } from "./resumeEditorTypes";
 import { useResumePageMetrics } from "./useResumePageMetrics";
 import { renderResumeTemplate, RESUME_PREVIEW_INLINE_STYLES } from "./renderResumeTemplate";
 
-export const ResumePreviewPane = ({ data }: ResumeEditorSideProps) => {
+export const ResumePreviewPane = ({ data, isParsing = false }: ResumeEditorSideProps) => {
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
   const [templateChangeKey, setTemplateChangeKey] = useState(0);
@@ -139,6 +139,24 @@ export const ResumePreviewPane = ({ data }: ResumeEditorSideProps) => {
 
   return (
     <div className="sticky top-4 flex w-full min-w-0 flex-col rounded-xl border border-border bg-card shadow-sm">
+      {isParsing && (
+        <div
+          className="absolute inset-0 z-50 flex items-center justify-center rounded-xl bg-background/70 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-5 shadow-lg">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-primary/25 border-t-primary" />
+            <p className="text-sm font-semibold text-foreground">
+              {t("resume.preview.parsing") || "Parsing your resume…"}
+            </p>
+            <p className="max-w-[14rem] text-center text-xs text-muted-foreground">
+              {t("resume.preview.parsingHint") ||
+                "Reading your file and filling in the form. This takes a few seconds."}
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-muted/50 via-muted/25 to-transparent px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div

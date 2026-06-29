@@ -10,4 +10,6 @@ export interface ResumeEditorSideProps {
   onSectionOrderChange?: (sectionOrder: string[]) => void;
   onStylingChange?: (styling: CVFormData["styling"]) => void;
   currentStep?: number;
+  /** When true, show a "parsing your resume" loading overlay on the preview. */
+  isParsing?: boolean;
 }

@@ -451,7 +451,9 @@
       "title": "Preview",
       "notice": "Preview only — page breaks are approximate. Your PDF export will use the formatting you see when fields are filled in.",
       "pages": "pages",
-      "page": "Page"
+      "page": "Page",
+      "parsing": "Parsing your resume…",
+      "parsingHint": "Reading your file and filling in the form. This takes a few seconds."
     },
     "score": {
       "label": "Resume Score",

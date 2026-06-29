@@ -23,9 +23,11 @@ import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/li
 
 interface PersonalInfoStepProps {
   form: UseFormReturn<CVFormData>;
+  /** Propagates resume-parsing state up so the preview can show a loading overlay. */
+  onParsingChange?: (parsing: boolean) => void;
 }
 
-export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
+export const PersonalInfoStep = ({ form, onParsingChange }: PersonalInfoStepProps) => {
   const { t, language, setLanguage } = useLanguage();
   const { fields: interestFields, append: appendInterest, remove: removeInterest } = useFieldArray({
     control: form.control,
@@ -215,7 +217,7 @@ export const PersonalInfoStep = ({ form }: PersonalInfoStepProps) => {
       {/* Section Styling Controls */}
 
       {/* Resume Upload Option */}
-      <ResumeUpload onDataParsed={handleDataParsed} />
+      <ResumeUpload onDataParsed={handleDataParsed} onParsingChange={onParsingChange} />
       <Separator />
 
       {/* Language picker pill — sets the resume output language */}

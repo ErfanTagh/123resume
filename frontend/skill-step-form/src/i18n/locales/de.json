@@ -451,7 +451,9 @@
       "title": "Vorschau",
       "notice": "Nur Vorschau — Seitenumbrüche sind ungefähr. Im PDF-Export erscheinen nur die von Ihnen ausgefüllten Felder.",
       "pages": "Seiten",
-      "page": "Seite"
+      "page": "Seite",
+      "parsing": "Ihr Lebenslauf wird ausgelesen…",
+      "parsingHint": "Die Datei wird gelesen und das Formular ausgefüllt. Das dauert ein paar Sekunden."
     },
     "score": {
       "label": "Lebenslauf-Bewertung",

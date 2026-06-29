@@ -10,9 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ResumeUploadProps {
   onDataParsed: (data: Partial<CVFormData>) => void;
   onClose?: () => void;
+  /** Notifies the parent while the uploaded file is being parsed (for a preview overlay). */
+  onParsingChange?: (parsing: boolean) => void;
 }
 
-export const ResumeUpload = ({ onDataParsed, onClose }: ResumeUploadProps) => {
+export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -58,6 +60,7 @@ export const ResumeUpload = ({ onDataParsed, onClose }: ResumeUploadProps) => {
 
     setIsUploading(true);
     setError('');
+    onParsingChange?.(true);
 
     try {
       const parsedData = await resumeAPI.parseResume(selectedFile);
@@ -90,6 +93,7 @@ export const ResumeUpload = ({ onDataParsed, onClose }: ResumeUploadProps) => {
       });
     } finally {
       setIsUploading(false);
+      onParsingChange?.(false);
     }
   };
 

@@ -325,9 +325,9 @@ export function ResumeTailorSection({
     ? t("pages.resumes.jobMatching.tailor.maxRounds") || "Maximum improvement rounds reached."
     : hasFetched
       ? (t("pages.resumes.jobMatching.tailor.roundHint") ||
-          "Press again for the next ~20% improvement round.")
+          "Press again to look for any remaining improvements.")
       : (t("pages.resumes.jobMatching.tailor.firstHint") ||
-          "Each round suggests changes to improve match by ~20%.");
+          "Get a full set of suggestions to maximize your match — accept or reject each one.");
 
   return (
     <Card className="shadow-sm">

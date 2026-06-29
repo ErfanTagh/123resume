@@ -18,8 +18,12 @@ from .resume_ai_scoring import normalize_output_language
 logger = logging.getLogger(__name__)
 
 MAX_JOB_CHARS = 10_000
-ROUND_TARGET_BOOST = 20
+# One comprehensive pass aims for the full match; the user accepts/rejects each
+# suggestion individually, so there is no need to dribble out ~20% per round.
+ROUND_TARGET_BOOST = 100
 MAX_ROUNDS = 5
+# Max suggestions returned in a single comprehensive pass.
+MAX_SUGGESTIONS_PER_PASS = 10
 
 ALLOWED_SECTIONS = frozenset(
     {
@@ -363,17 +367,25 @@ def generate_tailor_suggestions(
 Tailor this resume for the job. Round {rnd} of {MAX_ROUNDS}.
 
 Rules:
-- Suggest 1 to 3 changes ONLY (prioritize highest impact for round {rnd}).
-- Target improving match from {current_pct:.0f}% toward ~{target_pct:.0f}% (+{ROUND_TARGET_BOOST}% this round).
-- Round 1: focus on professional_summary and skills if weak.
-- Later rounds: refine work_experience descriptions/responsibilities and project descriptions.
+- Suggest a COMPREHENSIVE set of changes in this single pass — up to {MAX_SUGGESTIONS_PER_PASS} — covering EVERY weak
+  area at once (professional_summary, skills, each relevant work_experience entry, projects, and title/location when
+  truthful). Do not hold anything back for "later rounds": propose every worthwhile change now.
+- Aim to raise the match from {current_pct:.0f}% as close to 100% as is TRUTHFULLY possible. The user reviews and
+  accepts or rejects each suggestion individually, so include every genuinely helpful edit.
+- Each suggestion must be independent so it can be accepted or rejected on its own.
 - Do NOT repeat suggestion ids already skipped: {list(skip) or "none"}.
 - Only use sections: professional_summary, professional_title, location, skills, work_experience, projects.
 - The snapshot's "education_context" and each entry's "technologies" are READ-ONLY context: use them to write more relevant edits, but never output a suggestion that edits education or a technologies list.
 {scope_rule}- professional_title: align the headline title with the target job title ONLY when truthful (e.g., add a specialization the resume supports). Never claim a seniority or role the resume does not back up.
 - location: only reformat or clarify the EXISTING location (e.g., add country, standard format). Do NOT invent a new city or imply relocation the resume doesn't state.
 - For work_experience use work_index (0-based) and field "description" or "responsibilities".
-- For skills: skills_after must list ALL skills (reordered with job-relevant ones first, keep every existing skill).
+- For skills: skills_after must list ALL existing skills, AND ADD any job-relevant skill the candidate already
+  DEMONSTRATES elsewhere in the resume — i.e. it appears in a work description/bullet, a project description, or a
+  technologies list — but is missing from the skills list. This is the main way to raise the skills match: surface
+  skills the resume PROVES but the skills list omits. Put job-relevant skills first; keep every existing skill.
+  When the job names a required skill and the resume shows evidence of it (e.g. it is in a project's technologies),
+  add it. Do NOT add a skill that appears NOWHERE in the resume (skills, work, projects, technologies, summary) —
+  that would be fabrication; if the job needs a skill the resume shows no evidence of, do not invent it.
   Skills are NAMES ONLY — never append proficiency levels, ratings, or labels (e.g. "Advanced", "Beginner",
   "Grundkenntnisse") to a skill; the builder has no skill-level field.
 - {lang_rule}
@@ -414,7 +426,7 @@ Current resume snapshot:
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=min(int(getattr(settings, "DEEPSEEK_TAILOR_MAX_TOKENS", 2048)), 2048),
+        max_tokens=min(int(getattr(settings, "DEEPSEEK_TAILOR_MAX_TOKENS", 4096)), 4096),
         temperature=0.35,
     )
     raw = (completion.choices[0].message.content or "").strip()

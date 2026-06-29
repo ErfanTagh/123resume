@@ -405,15 +405,24 @@ def resume_detail(request, pk):
         serializer = ResumeSerializer(data=request.data)
         if serializer.is_valid():
             try:
-                # Get quality scores from request (calculated on frontend)
-                # Default to 0.0 if not provided (should always be provided by frontend)
+                # Quality scores are calculated on the frontend and sent only on a
+                # full save (e.g. "Complete CV"). Per-step autosave PUTs omit them.
+                # Only update score fields that are actually provided — otherwise an
+                # autosave would wipe a previously computed score back to 0.0, making
+                # the resume listing disagree with the score the user saw. Absent
+                # scores are left untouched (preserved in MongoDB).
                 data = serializer.validated_data
+                _score_keys = (
+                    'completeness_score',
+                    'clarity_score',
+                    'formatting_score',
+                    'impact_score',
+                    'overall_score',
+                )
                 quality_scores = {
-                    'completeness_score': data.get('completeness_score', 0.0),
-                    'clarity_score': data.get('clarity_score', 0.0),
-                    'formatting_score': data.get('formatting_score', 0.0),
-                    'impact_score': data.get('impact_score', 0.0),
-                    'overall_score': data.get('overall_score', 0.0),
+                    key: data.get(key)
+                    for key in _score_keys
+                    if key in data and data.get(key) is not None
                 }
                 
                 # Update the resume in MongoDB
@@ -430,7 +439,11 @@ def resume_detail(request, pk):
                 
                 # Prepare update data - preserve created_at, update everything else
                 update_data = serializer.validated_data.copy()
-                update_data.update(quality_scores)  # Add scores to update
+                # Drop any score keys the copy may carry (incl. nulls), then set only
+                # the ones actually provided, so omitted scores stay as they were.
+                for key in _score_keys:
+                    update_data.pop(key, None)
+                update_data.update(quality_scores)  # Add provided scores only
                 # Do not let full-form saves clear public profile visibility (managed on My Resumes)
                 update_data['public_profile_enabled'] = existing_doc.get('public_profile_enabled', False)
                 update_data['public_profile_sections'] = _normalize_public_profile_sections(

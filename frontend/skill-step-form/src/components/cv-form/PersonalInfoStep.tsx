@@ -108,6 +108,13 @@ export const PersonalInfoStep = ({ form, onParsingChange }: PersonalInfoStepProp
     const mergedData = {
       ...currentValues,
       ...parsedData,
+      // Preserve the user's DESIGN choices — an uploaded resume should only fill
+      // content, never override the template/styling/section order the user picked.
+      // (The parser returns a default template like "modern" which would otherwise
+      // replace the selected one.)
+      template: currentValues.template,
+      styling: currentValues.styling,
+      sectionOrder: currentValues.sectionOrder,
       // Ensure arrays are properly merged
       personalInfo: {
         ...currentValues.personalInfo,

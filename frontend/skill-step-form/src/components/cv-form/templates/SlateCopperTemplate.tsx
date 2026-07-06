@@ -467,7 +467,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                   lang.language && (
                     <li key={i}>
                       {lang.language}
-                      {lang.proficiency ? ` · ${formatProficiency(lang.proficiency, language)}` : ""}
+                      {lang.proficiency ? ` · ${formatProficiency(t, lang.proficiency)}` : ""}
                     </li>
                   ),
               )}

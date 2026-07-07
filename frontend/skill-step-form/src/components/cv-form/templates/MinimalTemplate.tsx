@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { CVFormData } from "../types";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { makeResumeT } from "@/lib/resumeSectionHeadings";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
@@ -28,7 +29,8 @@ const SectionHeading = ({ title, fontSize, color }: { title: string; fontSize: s
 );
 
 export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
-  const { t, language } = useLanguage();
+  const { t: uiT, language } = useLanguage();
+  const t = makeResumeT(uiT, data.styling?.resumeLanguage);
   const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];

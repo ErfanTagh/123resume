@@ -28,10 +28,14 @@ import { withResumeSectionsSortedForDisplay } from "@/lib/resumeDisplaySort";
 import type { ResumeEditorSideProps } from "./resumeEditorTypes";
 import { useResumePageMetrics } from "./useResumePageMetrics";
 import { renderResumeTemplate, RESUME_PREVIEW_INLINE_STYLES } from "./renderResumeTemplate";
+import { ResumeTranslateControls } from "./ResumeTranslateControls";
+import { useResumeTranslate } from "./useResumeTranslate";
 
-export const ResumePreviewPane = ({ data, isParsing = false }: ResumeEditorSideProps) => {
+export const ResumePreviewPane = ({ data, form, onTranslated, isParsing = false }: ResumeEditorSideProps) => {
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
+  const [isTranslateOpen, setIsTranslateOpen] = useState(false);
+  const { loading: isTranslating, translate } = useResumeTranslate(form, onTranslated);
   const [templateChangeKey, setTemplateChangeKey] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -204,6 +208,43 @@ export const ResumePreviewPane = ({ data, isParsing = false }: ResumeEditorSideP
             <SelectItem value="de">{t("resume.form.sectionTitlesDeutsch")}</SelectItem>
           </SelectContent>
         </Select>
+        {form && user ? (
+          <Dialog
+            open={isTranslateOpen}
+            onOpenChange={(open) => {
+              if (!isTranslating) setIsTranslateOpen(open);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs text-muted-foreground hover:text-primary"
+              >
+                <Languages className="h-3.5 w-3.5" />
+                {t("resume.translate.cta") || "Translate"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{t("resume.translate.title") || "Translate my resume"}</DialogTitle>
+                <DialogDescription>
+                  {t("resume.translate.subtitle") ||
+                    "Translate your whole resume into another language. Your name, contact details and dates stay as-is. This replaces your current text — save to keep it."}
+                </DialogDescription>
+              </DialogHeader>
+              <ResumeTranslateControls
+                loading={isTranslating}
+                defaultTarget={language === "en" ? "de" : "en"}
+                onTranslate={async (target, categories) => {
+                  const ok = await translate(target, categories);
+                  if (ok) setIsTranslateOpen(false);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        ) : null}
         <Dialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
           <DialogTrigger asChild>
             <Button

@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { resumeAPI, Resume, ResumeData } from '@/lib/api';
+import { resumeAPI, aiAPI, Resume, ResumeData } from '@/lib/api';
+import {
+  translationLanguageNative,
+  type TranslationLanguageCode,
+} from '@/lib/translationLanguages';
+import type { TranslationCategory } from '@/lib/translationCategories';
+import { ResumeTranslateControls } from '@/components/cv-form/ResumeTranslateControls';
 import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
 import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
@@ -26,6 +32,8 @@ import {
   Check,
   MoreVertical,
   Copy,
+  Languages,
+  Loader2,
 } from 'lucide-react';
 import { downloadResumePDF } from '@/lib/resumePdfUtils';
 import {
@@ -79,7 +87,7 @@ const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio', 'bu
 type ResumesTab = (typeof RESUMES_TABS)[number];
 
 export default function Resumes() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const activeTab: ResumesTab = RESUMES_TABS.includes(tabParam as ResumesTab)
@@ -93,6 +101,8 @@ export default function Resumes() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingResumeId, setEditingResumeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+  const [translatingResumeId, setTranslatingResumeId] = useState<string | null>(null);
+  const [translateDialogResume, setTranslateDialogResume] = useState<Resume | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -338,6 +348,57 @@ export default function Resumes() {
         description: err.message || t('pages.resumes.toast.error.duplicateFailed') || 'Failed to duplicate resume',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleTranslate = async (
+    resume: Resume,
+    targetLang: TranslationLanguageCode,
+    categories: TranslationCategory[],
+  ) => {
+    if (translatingResumeId) return; // one at a time
+    setTranslatingResumeId(resume.id);
+    try {
+      // Get the full resume data, then translate the selected parts into targetLang.
+      const fullResume = await resumeAPI.getById(resume.id);
+      const { targetLanguage, resume: translated } = await aiAPI.translateResume(
+        fullResume as unknown as Record<string, unknown>,
+        { targetLanguage: targetLang, categories },
+      );
+
+      // Save as a NEW resume — the original is left untouched. Tag it with its
+      // content language so templates render section headings in it (set here,
+      // not only server-side, so it works regardless of backend state).
+      const langLabel = translationLanguageNative(targetLanguage);
+      const originalName = fullResume.name || generateDefaultResumeName(fullResume);
+      const translatedData: ResumeData = {
+        ...translated,
+        name: `Translated (${langLabel}): ${originalName}`,
+        styling: { ...(translated.styling || {}), resumeLanguage: targetLanguage },
+      };
+
+      await resumeAPI.create(translatedData);
+      await loadResumes();
+      setTranslateDialogResume(null);
+
+      toast({
+        title: t('pages.resumes.toast.translated.title') || 'Resume Translated',
+        description: (
+          t('pages.resumes.toast.translated.description') ||
+          'A translated copy ({lang}) was created and added to your list.'
+        ).replace('{lang}', langLabel),
+      });
+    } catch (err: any) {
+      toast({
+        title: t('pages.resumes.toast.error.title') || 'Error',
+        description:
+          err.message ||
+          t('pages.resumes.toast.error.translateFailed') ||
+          'Failed to translate resume',
+        variant: 'destructive',
+      });
+    } finally {
+      setTranslatingResumeId(null);
     }
   };
 
@@ -597,11 +658,11 @@ export default function Resumes() {
                         </Button>
                       </div>
 
-                      <div className="flex w-full justify-center">
+                      <div className="flex w-full items-center justify-center gap-2">
                         <Button
                           type="button"
                           size="sm"
-                          className="h-9 rounded-full border-0 bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="h-9 rounded-full border-0 bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDuplicate(resume);
@@ -610,6 +671,27 @@ export default function Resumes() {
                         >
                           <Copy className="mr-2 h-4 w-4 shrink-0 opacity-95" />
                           {t('pages.resumes.duplicate') || 'Duplicate'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-9 rounded-full px-6 text-sm font-semibold"
+                          disabled={translatingResumeId === resume.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTranslateDialogResume(resume);
+                          }}
+                          title={t('pages.resumes.actions.translate') || 'Translate'}
+                        >
+                          {translatingResumeId === resume.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+                          ) : (
+                            <Languages className="mr-2 h-4 w-4 shrink-0 opacity-95" />
+                          )}
+                          {translatingResumeId === resume.id
+                            ? t('pages.resumes.actions.translating') || 'Translating…'
+                            : t('pages.resumes.actions.translate') || 'Translate'}
                         </Button>
                       </div>
                     </div>
@@ -686,6 +768,33 @@ export default function Resumes() {
             <div className="flex items-center justify-center py-6">
               <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={!!translateDialogResume}
+          onOpenChange={(open) => {
+            // Don't let the user dismiss mid-translation.
+            if (!open && !translatingResumeId) setTranslateDialogResume(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{t('resume.translate.title') || 'Translate my resume'}</DialogTitle>
+              <DialogDescription>
+                {t('pages.resumes.translateDialog.description') ||
+                  'Pick a language and choose what to translate. A new translated copy is added to your list — the original is kept.'}
+              </DialogDescription>
+            </DialogHeader>
+            {translateDialogResume ? (
+              <ResumeTranslateControls
+                loading={translatingResumeId === translateDialogResume.id}
+                defaultTarget={language === 'en' ? 'de' : 'en'}
+                onTranslate={(target, categories) =>
+                  handleTranslate(translateDialogResume, target, categories)
+                }
+              />
+            ) : null}
           </DialogContent>
         </Dialog>
       </div>

@@ -2,6 +2,7 @@ import { CVFormData } from "../types";
 import { Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 import { formatMonthYear } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { makeResumeT } from "@/lib/resumeSectionHeadings";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
@@ -14,7 +15,8 @@ interface StarRoverTemplateProps {
 }
 
 export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
-  const { t, language } = useLanguage();
+  const { t: uiT, language } = useLanguage();
+  const t = makeResumeT(uiT, data.styling?.resumeLanguage);
   const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "education", "workExperience", "projects", "certificates", "skills", "languages", "interests"];

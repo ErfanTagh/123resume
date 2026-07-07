@@ -2,6 +2,7 @@ import { CVFormData } from "../types";
 import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar } from "lucide-react";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { makeResumeT } from "@/lib/resumeSectionHeadings";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
 import { getRenderableSkillGroups } from "@/lib/skillGroups";
@@ -14,7 +15,8 @@ interface ClassicTemplateProps {
 }
 
 export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
-  const { t, language } = useLanguage();
+  const { t: uiT, language } = useLanguage();
+  const t = makeResumeT(uiT, data.styling?.resumeLanguage);
   const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
 
   const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];

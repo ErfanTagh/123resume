@@ -591,6 +591,31 @@
       "noChanges": "Ihre Texte sind bereits stark — keine Überarbeitungen vorgeschlagen.",
       "error": "Verbesserungen konnten nicht erstellt werden. Bitte erneut versuchen."
     },
+    "translate": {
+      "title": "Lebenslauf übersetzen",
+      "subtitle": "Übersetzen Sie Ihren gesamten Lebenslauf in eine andere Sprache. Ihr Name, Kontaktdaten und Daten bleiben unverändert. Dies ersetzt Ihren aktuellen Text — zum Behalten speichern.",
+      "cta": "Übersetzen",
+      "targetLabel": "Übersetzen nach",
+      "whatToTranslate": "Was übersetzen",
+      "selectAll": "Alle",
+      "categories": {
+        "summary": "Zusammenfassung",
+        "titles": "Job- & Abschnittstitel",
+        "work": "Berufserfahrung (Text)",
+        "skills": "Fähigkeiten & Technologien",
+        "education": "Ausbildung (Text)",
+        "projects": "Projekte (Text)",
+        "certificates": "Zertifikate",
+        "organizations": "Firmen- & Schulnamen",
+        "locations": "Orte",
+        "languages": "Sprachbezeichnungen",
+        "interests": "Interessen"
+      },
+      "translating": "Ihr Lebenslauf wird übersetzt…",
+      "doneTitle": "Lebenslauf übersetzt",
+      "done": "Ihr Lebenslauf wurde nach {lang} übersetzt. Zum Behalten speichern.",
+      "error": "Der Lebenslauf konnte nicht übersetzt werden. Bitte erneut versuchen."
+    },
     "aiBullet": {
       "suggest": "Mit KI vorschlagen",
       "generating": "Wird erstellt…",
@@ -994,7 +1019,12 @@
         "view": "Anzeigen",
         "edit": "Bearbeiten",
         "pdf": "PDF",
-        "downloadPDF": "PDF herunterladen"
+        "downloadPDF": "PDF herunterladen",
+        "translate": "Übersetzen",
+        "translating": "Übersetze…"
+      },
+      "translateDialog": {
+        "description": "Wählen Sie eine Sprache und was übersetzt werden soll. Eine neue übersetzte Kopie wird Ihrer Liste hinzugefügt — das Original bleibt erhalten."
       },
       "delete": "Lebenslauf löschen",
       "duplicate": "Duplizieren",
@@ -1056,6 +1086,10 @@
           "title": "Lebenslauf dupliziert",
           "description": "Ihr Lebenslauf wurde erfolgreich dupliziert."
         },
+        "translated": {
+          "title": "Lebenslauf übersetzt",
+          "description": "Eine übersetzte Kopie ({lang}) wurde erstellt und Ihrer Liste hinzugefügt."
+        },
         "updated": {
           "title": "Lebenslauf aktualisiert",
           "description": "Der Lebenslauf-Name wurde aktualisiert."
@@ -1065,6 +1099,7 @@
           "deleteFailed": "Lebenslauf konnte nicht gelöscht werden",
           "pdfFailed": "PDF konnte nicht generiert werden",
           "duplicateFailed": "Lebenslauf konnte nicht dupliziert werden",
+          "translateFailed": "Lebenslauf konnte nicht übersetzt werden",
           "updateFailed": "Lebenslauf-Name konnte nicht aktualisiert werden"
         }
       }

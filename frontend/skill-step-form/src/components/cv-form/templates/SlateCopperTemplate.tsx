@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { CVFormData } from "../types";
 import { Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { makeResumeT } from "@/lib/resumeSectionHeadings";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasMeaningfulProfileLink, hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
@@ -36,7 +37,8 @@ interface SlateCopperTemplateProps {
 }
 
 export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
-  const { t, language } = useLanguage();
+  const { t: uiT, language } = useLanguage();
+  const t = makeResumeT(uiT, data.styling?.resumeLanguage);
   const {
     personalInfo,
     workExperience,

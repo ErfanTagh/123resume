@@ -102,6 +102,8 @@ DEEPSEEK_RESUME_SCORE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_SCORE_MAX_TOKE
 DEEPSEEK_RESUME_PARSE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_PARSE_MAX_TOKENS', '4096'))
 # Resume ↔ job match (JSON score + short rationale)
 DEEPSEEK_JOB_MATCH_MAX_TOKENS = int(os.getenv('DEEPSEEK_JOB_MATCH_MAX_TOKENS', '1024'))
+# Whole-resume translation EN<->DE (batch of prose fields → JSON)
+DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS', '4096'))
 # When true, log raw model text + parsed/structured result (may contain PII)
 DEEPSEEK_LOG_AI_RESPONSES = os.getenv('DEEPSEEK_LOG_AI_RESPONSES', '').strip().lower() in (
     '1', 'true', 'yes', 'on',

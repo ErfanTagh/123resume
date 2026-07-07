@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from .. import deepseek_chat
 from .. import resume_ai_improve
 from .. import resume_ai_scoring
+from .. import resume_ai_translate
 from .. import resume_ai_work_bullet
 from .. import resume_ai_work_description
 
@@ -233,6 +234,96 @@ def improve_resume(request):
         logger.exception("DeepSeek resume improve failed")
         return Response(
             {"error": "Could not generate improvements with AI. Try again later."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def translate_resume(request):
+    """
+    Translate a whole resume between English and German (DeepSeek).
+
+    Only free-text prose is translated (summary, interests, work descriptions and
+    bullets, education field/descriptions, project descriptions/highlights). Skills,
+    technologies, job titles, names, dates and links are left untouched. The caller
+    saves the returned resume as a NEW resume; the original is unchanged.
+
+    Body JSON:
+      - resume (required): CV JSON object (camelCase, same shape as resume-score)
+      - target_language / targetLanguage (required): ISO code of the language to
+        translate INTO. One of: en, de, es, fr, it, pt, tr.
+      - categories (optional): list of content categories to translate (from
+        TRANSLATION_CATEGORIES). Omit to translate everything.
+
+    Response:
+      - target_language: ISO code (language translated INTO)
+      - resume: translated CV JSON object
+    """
+    data = request.data or {}
+    resume = data.get("resume")
+
+    if not isinstance(resume, dict):
+        return Response(
+            {"error": "resume must be a JSON object"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    raw_target = data.get("target_language") or data.get("targetLanguage")
+    target = resume_ai_translate.normalize_translation_language(raw_target)
+    if target is None:
+        supported = ", ".join(sorted(resume_ai_translate.SUPPORTED_TRANSLATION_LANGUAGES))
+        return Response(
+            {"error": f"target_language is required and must be one of: {supported}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    categories = resume_ai_translate.normalize_categories(data.get("categories"))
+
+    # Size check ignores the profile photo (base64) — it is never sent to the model.
+    try:
+        raw_len = len(json.dumps(_resume_without_profile_images(resume), default=str))
+    except Exception:
+        raw_len = MAX_RESUME_JSON_CHARS + 1
+
+    if raw_len > MAX_RESUME_JSON_CHARS:
+        return Response(
+            {"error": "resume payload is too large"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not settings.DEEPSEEK_API_KEY:
+        return Response(
+            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    logger.info(
+        "resume_translate start user_id=%s target=%s categories=%s payload_chars=%s",
+        getattr(request.user, "pk", None),
+        target,
+        "all" if categories is None else sorted(categories),
+        raw_len,
+    )
+
+    try:
+        result = resume_ai_translate.translate_resume(resume, target, categories)
+        logger.info(
+            "resume_translate ok user_id=%s target=%s",
+            getattr(request.user, "pk", None),
+            result.get("target_language"),
+        )
+        return Response(result, status=status.HTTP_200_OK)
+    except RuntimeError as e:
+        logger.error("resume_translate configuration error: %s", e)
+        return Response(
+            {"error": "AI assistant is not configured."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception:
+        logger.exception("DeepSeek resume translate failed")
+        return Response(
+            {"error": "Could not translate this resume with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
         )
 

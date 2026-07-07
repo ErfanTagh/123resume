@@ -5,6 +5,7 @@
 
 import type { PublicProfileSections } from "@/lib/publicProfileSections";
 import type { PublicProfileThemeId } from "@/lib/publicProfileTheme";
+import type { TranslationLanguageCode } from "@/lib/translationLanguages";
 
 // Use environment variable if available, otherwise use relative path for Vite proxy
 // Remove trailing slash if present to avoid double slashes
@@ -436,6 +437,39 @@ export const aiAPI = {
     const response = await doFetch();
     return handleResponse(response, doFetch) as Promise<{ changes: ResumeImproveChange[] }>;
   },
+
+  /**
+   * Translate a whole resume into `targetLanguage` (DeepSeek). Only prose fields
+   * are translated (summary, work/education/project descriptions and bullets);
+   * skills, technologies, job titles, names and dates are left as-is. Returns the
+   * translated resume DATA — the caller saves it or applies it in place.
+   */
+  translateResume: async (
+    resume: Record<string, unknown>,
+    options: { targetLanguage: TranslationLanguageCode; categories?: string[] },
+  ): Promise<{ targetLanguage: TranslationLanguageCode; resume: ResumeData }> => {
+    const payload: Record<string, unknown> = {
+      resume,
+      targetLanguage: options.targetLanguage,
+    };
+    // Omit `categories` entirely to translate everything.
+    if (options.categories && options.categories.length > 0) {
+      payload.categories = options.categories;
+    }
+    const doFetch = () =>
+      fetch(`${API_BASE_URL}/ai/resume-translate/`, {
+        method: "POST",
+        headers: createHeaders(true, true),
+        body: JSON.stringify(payload),
+      });
+    const response = await doFetch();
+    // handleResponse snake_cases -> camelCases the response, so the backend's
+    // `target_language` arrives as `targetLanguage`.
+    return handleResponse(response, doFetch) as Promise<{
+      targetLanguage: TranslationLanguageCode;
+      resume: ResumeData;
+    }>;
+  },
 };
 
 export interface ResumeImproveChange {
@@ -526,6 +560,8 @@ export interface ResumeData {
   sectionOrder?: string[];
   template?: "modern" | "classic" | "minimal" | "creative" | "latex" | "starRover" | "slateCopper";
   styling?: {
+    /** ISO code of the resume's content language (set by the AI translator). */
+    resumeLanguage?: string;
     fontFamily?: string;
     fontSize?: "small" | "medium" | "large";
     titleColor?: string;

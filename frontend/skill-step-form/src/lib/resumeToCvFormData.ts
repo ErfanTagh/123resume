@@ -130,6 +130,8 @@ export function convertStyling(styling: any | undefined): CVFormData["styling"] 
   }
 
   return {
+    // Content language set by the AI translator (drives section-heading language).
+    resumeLanguage: styling.resumeLanguage ?? styling.resume_language,
     fontFamily,
     fontSize,
     titleColor,

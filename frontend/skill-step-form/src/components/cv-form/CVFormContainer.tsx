@@ -1096,7 +1096,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 {/* Live preview only — left on desktop */}
                 <div className="hidden lg:col-span-5 lg:block lg:col-start-1">
-                  <ResumePreviewPane data={formDataWithSkills} isParsing={isParsingResume} />
+                  <ResumePreviewPane
+                    data={formDataWithSkills}
+                    form={form}
+                    onTranslated={user ? () => fetchAiResumeScoreIfDirty({ force: true }) : undefined}
+                    isParsing={isParsingResume}
+                  />
                 </div>
 
                 {/* Customize tools + form — right on desktop */}

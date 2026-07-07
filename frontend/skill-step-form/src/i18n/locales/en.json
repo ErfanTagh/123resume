@@ -591,6 +591,31 @@
       "noChanges": "Your resume text already looks strong — no rewrites suggested.",
       "error": "Could not generate improvements. Try again."
     },
+    "translate": {
+      "title": "Translate my resume",
+      "subtitle": "Translate your whole resume into another language. Your name, contact details and dates stay as-is. This replaces your current text — save to keep it.",
+      "cta": "Translate",
+      "targetLabel": "Translate into",
+      "whatToTranslate": "What to translate",
+      "selectAll": "All",
+      "categories": {
+        "summary": "Professional summary",
+        "titles": "Job & section titles",
+        "work": "Work experience text",
+        "skills": "Skills & technologies",
+        "education": "Education details",
+        "projects": "Project details",
+        "certificates": "Certificates",
+        "organizations": "Company & school names",
+        "locations": "Locations",
+        "languages": "Language names",
+        "interests": "Interests"
+      },
+      "translating": "Translating your resume…",
+      "doneTitle": "Resume translated",
+      "done": "Your resume was translated to {lang}. Save to keep the changes.",
+      "error": "Could not translate the resume. Try again."
+    },
     "aiBullet": {
       "suggest": "Suggest with AI",
       "generating": "Generating…",
@@ -994,7 +1019,12 @@
         "view": "View",
         "edit": "Edit",
         "pdf": "PDF",
-        "downloadPDF": "Download PDF"
+        "downloadPDF": "Download PDF",
+        "translate": "Translate",
+        "translating": "Translating…"
+      },
+      "translateDialog": {
+        "description": "Pick a language and choose what to translate. A new translated copy is added to your list — the original is kept."
       },
       "delete": "Delete resume",
       "duplicate": "Duplicate",
@@ -1056,6 +1086,10 @@
           "title": "Resume Duplicated",
           "description": "Your resume has been duplicated successfully."
         },
+        "translated": {
+          "title": "Resume Translated",
+          "description": "A translated copy ({lang}) was created and added to your list."
+        },
         "updated": {
           "title": "Resume Updated",
           "description": "Resume name has been updated."
@@ -1065,6 +1099,7 @@
           "deleteFailed": "Failed to delete resume",
           "pdfFailed": "Failed to generate PDF",
           "duplicateFailed": "Failed to duplicate resume",
+          "translateFailed": "Failed to translate resume",
           "updateFailed": "Failed to update resume name"
         }
       }

@@ -121,6 +121,11 @@ export const cvFormSchema = z.object({
     .enum(["modern", "classic", "minimal", "creative", "latex", "starRover", "slateCopper", "prism"])
     .default("modern"),
   styling: z.object({
+    // ISO code of the language this resume's content is written in. Set by the AI
+    // translator so templates can render section headings in that language,
+    // independent of the app UI language. Stored inside styling to round-trip
+    // through the existing DictField without extra backend plumbing.
+    resumeLanguage: z.string().optional(),
     fontFamily: z.string().optional(),
     fontSize: z.enum(["small", "medium", "large"]).optional(),
     titleColor: z.string().optional(),

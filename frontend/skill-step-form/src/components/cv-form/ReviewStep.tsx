@@ -8,6 +8,7 @@ import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar, Edit } from "lu
 import { SectionOrderManager } from "./SectionOrderManager";
 import { CVRating } from "./CVRating";
 import { ResumeImprovePanel } from "./ResumeImprovePanel";
+import { ResumeTranslatePanel } from "./ResumeTranslatePanel";
 import type { ResumeScore } from "@/lib/resumeScorer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
@@ -85,6 +86,9 @@ export const ReviewStep = ({
 
       {/* One-click AI improvements with per-change accept/reject */}
       <ResumeImprovePanel form={form} onApplied={onReanalyzeAiScore} />
+
+      {/* One-click AI translation (EN <-> DE), applied in place */}
+      <ResumeTranslatePanel form={form} onApplied={onReanalyzeAiScore} />
 
       {/* Section Order Manager */}
       <SectionOrderManager

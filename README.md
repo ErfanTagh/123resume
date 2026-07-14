@@ -1,175 +1,187 @@
-# 123Resume
+<div align="center">
 
-A resume builder with a multi-step form. Live at [123resume.de](https://123resume.de).
+# 📄 123Resume
 
-## Quick start
+### The free, AI-powered, ATS-friendly resume builder
+
+Build a polished resume in minutes — with AI scoring, one-click rewrites, resume-to-job matching, and one-click translation into 7 languages.
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-123resume.de-2563eb?style=for-the-badge)](https://123resume.de)
+&nbsp;
+[![License](https://img.shields.io/badge/License-see_below-lightgrey?style=for-the-badge)](#-license)
+
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
+![Django](https://img.shields.io/badge/Django-REST-092E20?logo=django&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-6-47A248?logo=mongodb&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+
+**If this project is useful to you, please consider giving it a ⭐ — it really helps!**
+
+</div>
+
+---
+
+## ✨ Why 123Resume?
+
+Most resume builders lock the good stuff behind a paywall. 123Resume is a **full-stack, open** resume builder with a guided multi-step editor, a live preview, and a genuinely useful set of **AI features** — all producing clean, **ATS-friendly** PDFs.
+
+## 🤖 AI features
+
+Powered by an LLM API (DeepSeek, OpenAI-compatible):
+
+- **📊 AI resume scoring** — rate your resume against an ATS-style rubric with actionable feedback
+- **✍️ One-click "Improve"** — rewrite your summary, role descriptions and bullets; accept or reject each change
+- **📥 Smart resume import** — upload a PDF/DOCX and it's parsed into structured, editable fields
+- **🎯 Resume ↔ job matching** — paste a job ad, get a match score plus tailored suggestions
+- **📝 Cover-letter generation** — draft a cover letter from your resume and the job
+- **🌍 One-click translation** — translate your whole resume (or chosen sections) into **7 languages**: English, German, Spanish, French, Italian, Portuguese, Turkish — with localized section headings
+- **💬 Resume assistant** — a built-in chat helper for wording and job-search questions
+
+## 🚀 Core features
+
+- 🧭 **Guided multi-step editor** with a **live preview** as you type
+- 🎨 **8 templates** — Modern, Classic, Creative, Minimal, LaTeX, StarRover, SlateCopper, Prism
+- 🖨️ **High-quality PDF export**
+- 🔀 **Drag-and-drop** section reordering
+- 🗂️ **Multiple resumes** — save, duplicate, translate, and manage versions
+- 🌐 **Public hosted profile page**, **business card**, and a **job tracker**
+- 🇬🇧🇩🇪 **Bilingual UI** (English / German)
+- 🔐 **Accounts** — JWT auth, email verification, password reset, social login
+- 📱 **Responsive** and mobile-friendly
+
+## 🛠️ Tech stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Hook Form, Zod |
+| **Backend** | Django REST Framework, JWT auth, MongoDB (djongo) |
+| **AI** | DeepSeek API (OpenAI-compatible) |
+| **Infra** | Docker Compose, Nginx, Let's Encrypt, GitHub Actions CI/CD |
+
+## ⚡ Quick start
+
+Requires **Docker**:
 
 ```bash
-./START_ALL_DOCKER.sh
+git clone https://github.com/ErfanTagh/123resume.git
+cd 123resume
+cp .env.example .env          # then fill in the values (see below)
+docker compose up -d --build
 ```
 
-Runs at http://localhost:5173
+App runs at **http://localhost:5173** · API at **http://localhost:8000**
 
-Requires Docker:
+<details>
+<summary>Installing Docker (Ubuntu)</summary>
 
 ```bash
 sudo apt install docker.io docker-compose-plugin
 sudo systemctl start docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker $USER   # then log out and back in
 ```
+</details>
 
-Log out and back in after adding yourself to the docker group.
+### Environment
 
-## Features
-
-- Multi-step form for building resumes
-- Six templates: Modern, Classic, Creative, Minimal, LaTeX, StarRover
-- Live preview while you edit
-- Quality scoring (completeness, clarity, formatting)
-- Add responsibilities and skills one at a time
-- Drag-and-drop section reordering
-- PDF export
-- User accounts with email verification
-- Password reset via email
-- Save multiple resume versions
-- Mobile-friendly
-
-## Tech stack
-
-**Frontend:** React, TypeScript, Vite, Tailwind, shadcn/ui, React Hook Form, Zod
-
-**Backend:** Django REST Framework, JWT auth, MongoDB
-
-**Deployment:** Docker Compose, Nginx, Let's Encrypt, GitHub Actions
-
-## Development
-
-With Docker:
+Copy `.env.example` to `.env` and fill it in. The essentials:
 
 ```bash
-./START_ALL_DOCKER.sh    # start
-docker compose down      # stop
+SECRET_KEY=change-me                  # any long random string
+MONGODB_HOST=mongodb                  # docker service name
+MONGODB_NAME=resume_db
+
+DEEPSEEK_API_KEY=sk-...               # optional — AI endpoints return 503 without it
+
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+EMAIL_HOST=smtp.gmail.com             # SMTP (SendGrid, Gmail, …) for account emails
+EMAIL_HOST_USER=...
+EMAIL_HOST_PASSWORD=...
 ```
 
-Without Docker (frontend on your machine, API via Vite proxy):
+See [`.env.example`](.env.example) for the full list (social login, Mailgun, etc.).
 
-- Start MongoDB (or point `MONGODB_CONNECTION_STRING` in root `.env` at a running instance), then run the backend on **port 8000**.
-- The dev server proxies `/api` to **`http://127.0.0.1:8000`** by default. Override with `VITE_BACKEND_URL` if your API runs elsewhere.
+## 🧑‍💻 Development
+
+```bash
+docker compose up -d --build    # start everything
+docker compose down             # stop
+```
+
+**Without Docker** (frontend local, API via Vite proxy) — start MongoDB and the backend on port **8000**, then:
 
 ```bash
 # Backend
-cd backend
-source venv/bin/activate
-python manage.py runserver
+cd backend && source venv/bin/activate && python manage.py runserver
 
 # Frontend (separate terminal)
-cd frontend/skill-step-form
-npm install
-npm run dev
+cd frontend/skill-step-form && npm install && npm run dev
 ```
 
-## Usage
+The dev server proxies `/api` to `http://127.0.0.1:8000` (override with `VITE_BACKEND_URL`).
 
-1. Sign up and verify email
-2. Create Resume
-3. Fill in personal info, work experience, education, etc.
-4. Choose a template and reorder sections if needed
-5. Preview updates as you type
-6. Export to PDF when finished
+## 🔌 API overview
 
-Resumes are saved; you can edit or create new ones anytime.
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/auth/register/` | Sign up |
+| `POST` | `/api/auth/login/` | Log in |
+| `GET/POST` | `/api/resumes/` | List / create resumes |
+| `PUT/DELETE` | `/api/resumes/{id}/` | Update / delete |
+| `POST` | `/api/ai/resume-score/` | AI score |
+| `POST` | `/api/ai/resume-improve/` | AI rewrite suggestions |
+| `POST` | `/api/ai/resume-translate/` | Translate (7 languages) |
+| `POST` | `/api/resumes/{id}/match/` | Match resume to a job |
 
-## API
-
-**Frontend:** http://localhost:5173  
-**Backend:** http://localhost:8000
-
-Main routes:
-
-- `POST /api/auth/register/` – sign up
-- `POST /api/auth/login/` – login
-- `GET /api/resumes/` – list resumes
-- `POST /api/resumes/` – create
-- `PUT /api/resumes/{id}/` – update
-- `DELETE /api/resumes/{id}/` – delete
-
-## Useful commands
-
-```bash
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose restart
-
-# rebuild after code changes
-docker compose down && docker compose build && docker compose up -d
-
-docker exec -it resume_backend bash
-docker exec -it resume_mongodb mongosh
-```
-
-## Project structure
+## 📁 Project structure
 
 ```
-resume-app/
-├── backend/              # Django REST API
+123resume/
+├── backend/                 # Django REST API + AI services
 ├── frontend/
-│   └── skill-step-form/  # React app
-├── docker-compose.yml
-├── START_ALL_DOCKER.sh
+│   └── skill-step-form/     # React app (editor, templates, preview)
+├── docker-compose.yml       # local
+├── docker-compose.prod.yml  # production
 └── README.md
 ```
 
-## Email setup
+## 📦 Deployment
 
-**SendGrid (recommended):**
-
-1. Create account at sendgrid.com
-2. Create API key (Settings → API Keys)
-3. Verify sender email (Settings → Sender Authentication)
-4. Turn off click tracking (Settings → Tracking) to avoid SSL issues with verification links
-5. Add to `.env`:
-
-   ```
-   SENDGRID_API_KEY=SG.your_key
-   DEFAULT_FROM_EMAIL=noreply@yourdomain.com
-   ```
-
-**SMTP fallback (e.g. Gmail):**
-
-```
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-DEFAULT_FROM_EMAIL=your-email@gmail.com
-```
-
-Gmail has sending limits; SendGrid is better for production.
-
-## Deployment
-
-Push to main and GitHub Actions deploys to 123resume.de.
-
-Manual deploy:
+Push to `main` and GitHub Actions deploys to production. Manual:
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec backend python manage.py migrate
 ```
 
-## Troubleshooting
-
-**Port in use:**
+## 🧰 Useful commands
 
 ```bash
-sudo lsof -i :8000
-kill -9 <PID>
+docker compose logs -f backend        # tail logs
+docker compose restart                # restart services
+docker exec -it resume_backend bash   # shell into the API
+docker exec -it resume_mongodb mongosh
 ```
 
-**Docker won't start:** Ensure docker service is running and your user is in the docker group. Log out and back in after adding yourself.
+## 🐞 Troubleshooting
 
-**Frontend can't reach backend:** Check http://localhost:8000/api/health/ and run `docker compose restart` if needed.
+- **Port in use:** `sudo lsof -i :8000` then `kill -9 <PID>`
+- **Frontend can't reach backend:** check `http://localhost:8000/api/health/`, then `docker compose restart`
+- **AI endpoints return 503:** set `DEEPSEEK_API_KEY` in `.env` and rebuild
+- **MongoDB issues:** `docker compose logs mongodb` then `docker compose restart mongodb`
 
-**MongoDB issues:** `docker compose logs mongodb` then `docker compose restart mongodb`
+## 📄 License
+
+No open-source license is set yet — all rights reserved by the author. If you'd like to use or contribute to the code, please open an issue or reach out first.
+
+---
+
+<div align="center">
+
+Built with ❤️ by [Erfan Taghvaei](https://github.com/ErfanTagh) · Live at **[123resume.de](https://123resume.de)**
+
+**⭐ Star the repo if you like it!**
+
+</div>

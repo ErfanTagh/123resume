@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Check, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoGrowTextarea } from "@/components/cv-form/AutoGrowTextarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -139,13 +139,14 @@ export const AiImproveTextarea = ({
           </div>
         ) : null}
 
-        <Textarea
+        <AutoGrowTextarea
           id={fieldId}
           value={value}
+          resizeKey={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
-          className={`min-h-[108px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0${user ? " pr-[9.5rem]" : ""}`}
+          className={`min-h-[108px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0${user ? " pr-[9.5rem]" : ""}`}
         />
       </div>
 

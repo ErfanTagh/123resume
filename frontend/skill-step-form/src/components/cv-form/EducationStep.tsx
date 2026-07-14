@@ -2,7 +2,7 @@ import { UseFormReturn, useFieldArray, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoGrowTextarea } from "@/components/cv-form/AutoGrowTextarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MonthPicker } from "@/components/ui/month-picker";
@@ -233,16 +233,11 @@ const EducationItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index
         <div className="space-y-2">
           {descFields.map((field, descIndex) => (
             <div key={field.id} className="flex gap-2">
-              <Textarea
+              <AutoGrowTextarea
                 {...form.register(`education.${index}.descriptions.${descIndex}.description`)}
+                resizeKey={form.watch(`education.${index}.descriptions.${descIndex}.description`)}
                 placeholder={t('resume.placeholders.responsibility')}
-                rows={1}
-                className="flex-1 resize-none h-9 min-h-0 leading-5 py-1.5"
-                onInput={(e) => {
-                  const el = e.currentTarget;
-                  el.style.height = "auto";
-                  el.style.height = `${el.scrollHeight}px`;
-                }}
+                className="flex-1 min-h-9 leading-5 py-1.5"
               />
               <Button
                 type="button"

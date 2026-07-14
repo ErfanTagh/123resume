@@ -270,8 +270,11 @@ Fields to improve (JSON):
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=min(getattr(settings, "DEEPSEEK_MAX_OUTPUT_TOKENS", 2048), 2048),
+        # Long / German resumes produce many improved fields; a low cap truncated
+        # the JSON mid-string and broke parsing. Give ample room and force JSON mode.
+        max_tokens=getattr(settings, "DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS", 8192),
         temperature=0.3,
+        response_format={"type": "json_object"},
     )
     raw = (completion.choices[0].message.content or "").strip()
     if not raw:

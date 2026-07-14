@@ -177,7 +177,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
   // ── Section heading ─────────────────────────────────────────────────────
   const SectionHeading = ({ label, color, sizes: headingSizes }: { label: string; color: string; sizes: typeof fontSizeMap['medium'] }) => (
-    <div className="flex items-center gap-2.5 mb-2" style={{ marginTop: '2px' }}>
+    <div className="lx-heading flex items-center gap-2.5 mb-2" style={{ marginTop: '2px' }}>
       {/* Accent square */}
       <span style={{
         display: 'inline-block',
@@ -264,7 +264,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "projects":
         return projects && projects.length > 0 && projects.some(p => p.name) ? (
-          <div key="projects" style={{ marginBottom: '18px' }}>
+          <div key="projects" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.projects').toUpperCase()} color={sectionHeadingColor} sizes={projectsTitleSizes} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {projects.map((proj, index) => {
@@ -275,7 +275,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                   : [];
 
                 return (
-                  <div key={index} style={{ display: 'flex', gap: '10px' }}>
+                  <div key={index} className="lx-entry" style={{ display: 'flex', gap: '10px' }}>
                     <DateCol text={dateRange} color={projectsStyling.bodyColor} sizePx={projectsBodySizes.small} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '2px' }}>
@@ -314,14 +314,14 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "education":
         return education && education.length > 0 && education.some(e => e.degree || e.institution) ? (
-          <div key="education" style={{ marginBottom: '18px' }}>
+          <div key="education" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.education').toUpperCase()} color={sectionHeadingColor} sizes={educationTitleSizes} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {education.map((edu, index) => {
                 if (!edu.degree && !edu.institution) return null;
                 const dateRange = formatDateRangeLatex(edu.startDate, edu.endDate);
                 return (
-                  <div key={index} style={{ display: 'flex', gap: '10px' }}>
+                  <div key={index} className="lx-entry" style={{ display: 'flex', gap: '10px' }}>
                     <DateCol text={dateRange} color={educationStyling.bodyColor} sizePx={educationBodySizes.small} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '1px' }}>
@@ -372,7 +372,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "workExperience":
         return workExperience && workExperience.length > 0 && workExperience.some(e => e.position || e.company) ? (
-          <div key="workExperience" style={{ marginBottom: '18px' }}>
+          <div key="workExperience" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.experience').toUpperCase()} color={sectionHeadingColor} sizes={workExperienceTitleSizes} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {workExperience.map((exp, index) => {
@@ -384,7 +384,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                   : [];
 
                 return (
-                  <div key={index} style={{ display: 'flex', gap: '10px' }}>
+                  <div key={index} className="lx-entry" style={{ display: 'flex', gap: '10px' }}>
                     <DateCol text={dateRange} color={workExperienceStyling.bodyColor} sizePx={workExperienceBodySizes.small} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', marginBottom: '2px' }}>
@@ -444,14 +444,14 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "certificates":
         return certificates && certificates.length > 0 && certificates.some(c => c.name) ? (
-          <div key="certificates" style={{ marginBottom: '18px' }}>
+          <div key="certificates" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.certifications').toUpperCase()} color={sectionHeadingColor} sizes={certificatesTitleSizes} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {certificates.map((cert, index) => {
                 if (!cert.name) return null;
                 const dateRange = formatDateRangeLatex(cert.issueDate, cert.expirationDate);
                 return (
-                  <div key={index} style={{ display: 'flex', gap: '10px' }}>
+                  <div key={index} className="lx-entry" style={{ display: 'flex', gap: '10px' }}>
                     <DateCol text={dateRange || cert.issueDate || ''} color={certificatesStyling.bodyColor} sizePx={certificatesBodySizes.small} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
@@ -486,7 +486,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "languages":
         return languages && languages.length > 0 && languages.some(l => l.language) ? (
-          <div key="languages" style={{ marginBottom: '18px' }}>
+          <div key="languages" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.languages').toUpperCase()} color={sectionHeadingColor} sizes={languagesTitleSizes} />
             <div style={{ paddingLeft: '14%', display: 'flex', flexWrap: 'wrap', gap: '6px 18px' }}>
               {languages.filter(l => l.language).map((lang, index) => (
@@ -503,7 +503,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
 
       case "interests":
         return personalInfo.interests && personalInfo.interests.length > 0 && personalInfo.interests.some(i => i.interest) ? (
-          <div key="interests" style={{ marginBottom: '18px' }}>
+          <div key="interests" data-resume-section="true" style={{ marginBottom: '18px' }}>
             <SectionHeading label={t('resume.sections.interests').toUpperCase()} color={sectionHeadingColor} sizes={personalInfoTitleSizes} />
             <p style={{ paddingLeft: '14%', fontSize: personalInfoBodySizes.body, color: personalInfoBodyColor, lineHeight: 1.7, margin: 0 }}>
               {personalInfo.interests.filter(i => i.interest).map(i => i.interest).join(' · ')}
@@ -544,9 +544,23 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
             width: 210mm;
             margin: 0 auto;
           }
-          div[style*="margin-bottom"] {
+          /* Keep small blocks and individual entries intact, but let SECTIONS
+             (tagged with data-resume-section) flow across pages. A section-level
+             avoid pushed whole tall sections to the next page, leaving gaps. */
+          div[style*="margin-bottom"]:not([data-resume-section]) {
             page-break-inside: avoid;
             break-inside: avoid;
+          }
+          .lx-entry {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          /* Keep a section heading attached to what follows it */
+          .lx-heading {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
           }
           .resume-spacer {
             flex: 1 1 auto !important;

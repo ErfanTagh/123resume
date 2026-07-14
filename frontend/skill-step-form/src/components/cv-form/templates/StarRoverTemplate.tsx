@@ -176,7 +176,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
     color: string;
     sizePx: string;
   }) => (
-    <div style={{
+    <div className="sr-heading" style={{
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
@@ -575,12 +575,20 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
             width: 210mm;
             margin: 0 auto;
           }
-          .resume-page-container .sr-section,
-          .resume-page-container .sr-entry,
-          .resume-page-container [data-resume-section="true"] {
+          /* Keep individual entries intact, but let SECTIONS flow across pages.
+             A section-level avoid pushed whole tall sections to the next page,
+             leaving the previous page half empty. */
+          .resume-page-container .sr-entry {
             page-break-inside: avoid;
             break-inside: avoid;
             -webkit-column-break-inside: avoid;
+          }
+          /* Keep a section heading together and attached to what follows it */
+          .resume-page-container .sr-heading {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
           }
           .resume-spacer {
             flex: 1 1 auto !important;

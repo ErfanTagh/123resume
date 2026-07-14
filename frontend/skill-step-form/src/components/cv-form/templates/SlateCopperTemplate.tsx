@@ -159,7 +159,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
 
   const mainSectionHeading = (label: string, color: string) => (
     <h2
-      className="mb-2 border-t pb-1 pt-1 font-medium uppercase tracking-[0.08em]"
+      className="sc-heading mb-2 border-t pb-1 pt-1 font-medium uppercase tracking-[0.08em]"
       style={{
         fontSize: fs.heading,
         fontWeight: headingBold ? 500 : 400,
@@ -217,7 +217,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
               {workExperience.map(
                 (exp, index) =>
                   (exp.position || exp.company) && (
-                    <div key={index} className="space-y-1">
+                    <div key={index} className="sc-entry space-y-1">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3
                           className="font-medium"
@@ -301,7 +301,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
               {education.map(
                 (edu, index) =>
                   (edu.degree || edu.institution) && (
-                    <div key={index} className="space-y-1">
+                    <div key={index} className="sc-entry space-y-1">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="font-medium" style={{ fontSize: fsEd.entry, color: titleColor }}>
                           {edu.degree}
@@ -371,7 +371,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
               {projects.map(
                 (proj, index) =>
                   proj.name && (
-                    <div key={index} className="space-y-1">
+                    <div key={index} className="sc-entry space-y-1">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="font-medium" style={{ fontSize: fsPr.entry, color: titleColor }}>
                           <ProjectLinkedTitle
@@ -613,12 +613,22 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          .sc-two-col-root [data-resume-section="true"],
+          /* Keep individual entries and the (short) sidebar blocks intact, but let
+             main-column SECTIONS flow across pages. A section-level avoid pushed
+             whole tall sections to the next page, leaving half-empty pages. */
+          .sc-two-col-root .sc-entry,
           .sc-two-col-root .sc-sidebar-contact,
           .sc-two-col-root .sc-sidebar-section {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
             -webkit-column-break-inside: avoid !important;
+          }
+          /* Keep a main-column section heading attached to what follows it */
+          .sc-two-col-root .sc-heading {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
           .sc-two-col-root .sc-sidebar-contact h3,
           .sc-two-col-root .sc-sidebar-section h3 {

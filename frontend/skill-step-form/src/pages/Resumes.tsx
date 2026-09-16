@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resumeAPI, aiAPI, Resume, ResumeData } from '@/lib/api';
 import {
   translationLanguageNative,
@@ -21,15 +21,13 @@ import {
   FileText,
   Plus,
   Trash2,
-  Eye,
   AlertCircle,
   Clock,
-  Edit,
   X,
   Download,
   Pencil,
-  Check,
   MoreVertical,
+  Check,
   Copy,
   Languages,
   Loader2,
@@ -56,10 +54,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -85,6 +85,50 @@ const generateDefaultResumeName = (resume: Resume): string => {
 const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio', 'business-card'] as const;
 type ResumesTab = (typeof RESUMES_TABS)[number];
 
+/** Framed tints per action — full literal class strings so Tailwind keeps them. */
+const ROW_ACTION_TONES = {
+  primary: 'bg-primary/10 text-primary ring-primary/20 hover:bg-primary/20',
+  sky: 'bg-sky-500/10 text-sky-600 ring-sky-500/20 hover:bg-sky-500/20 dark:text-sky-400',
+  violet: 'bg-violet-500/10 text-violet-600 ring-violet-500/20 hover:bg-violet-500/20 dark:text-violet-400',
+  neutral: 'bg-muted text-muted-foreground ring-border hover:bg-muted/70 hover:text-foreground',
+} as const;
+
+const ROW_ACTION_FRAME =
+  'flex h-8 w-8 flex-none items-center justify-center rounded-lg ring-1 ring-inset transition-colors sm:h-9 sm:w-9 disabled:pointer-events-none disabled:opacity-60';
+
+/** One icon action on a resume row — tinted frame, label shown as a tooltip. */
+const RowAction = ({
+  label,
+  onClick,
+  disabled,
+  tone,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tone: keyof typeof ROW_ACTION_TONES;
+  children: React.ReactNode;
+}) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <button
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        className={`${ROW_ACTION_FRAME} ${ROW_ACTION_TONES[tone]}`}
+      >
+        {children}
+      </button>
+    </TooltipTrigger>
+    <TooltipContent>{label}</TooltipContent>
+  </Tooltip>
+);
+
 export default function Resumes() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -100,6 +144,7 @@ export default function Resumes() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingResumeId, setEditingResumeId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+  const renameFromMenuRef = useRef(false);
   const [translatingResumeId, setTranslatingResumeId] = useState<string | null>(null);
   const [translateDialogResume, setTranslateDialogResume] = useState<Resume | null>(null);
   const navigate = useNavigate();
@@ -556,19 +601,12 @@ export default function Resumes() {
                         </Button>
                       </div>
                     ) : (
-                      <div
-                        className="group/name flex cursor-pointer items-center gap-1.5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEditing(resume);
-                        }}
-                        title={t('pages.resumes.editName') || 'Click to edit resume name'}
+                      <Link
+                        to={`/resume/${resume.id}`}
+                        className="block truncate text-sm font-semibold text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline sm:text-base"
                       >
-                        <span className="truncate text-sm font-semibold transition-colors group-hover/name:text-primary sm:text-base">
-                          {resume.name || generateDefaultResumeName(resume)}
-                        </span>
-                        <Pencil className="h-3.5 w-3.5 flex-shrink-0 opacity-0 transition-opacity group-hover/name:opacity-60" />
-                      </div>
+                        {resume.name || generateDefaultResumeName(resume)}
+                      </Link>
                     )}
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="capitalize">{template}</span>
@@ -594,91 +632,80 @@ export default function Resumes() {
                     </Badge>
                   </div>
 
-                  {/* Actions — one filled (primary), a couple outlined, the rest behind the menu */}
-                  <div className="flex flex-none items-center gap-1.5 sm:gap-2">
-                    <Button
-                      size="sm"
-                      className="h-8 rounded-full px-2.5 sm:h-9 sm:px-4"
-                      onClick={() => navigate(`/create?edit=${resume.id}`)}
-                      title={t('pages.resumes.actions.edit') || 'Edit resume'}
-                    >
-                      <Edit className="h-3.5 w-3.5 sm:mr-1.5" />
-                      <span className="hidden sm:inline">{t('pages.resumes.actions.edit') || 'Edit'}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="hidden h-8 rounded-full px-2.5 md:inline-flex sm:h-9"
-                      onClick={() => navigate(`/resume/${resume.id}`)}
-                      title={t('pages.resumes.actions.view') || 'View'}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="hidden h-8 rounded-full px-2.5 lg:inline-flex sm:h-9"
+                  {/* Actions — icon buttons in tinted frames, labelled by tooltip. Rename
+                      and Delete are rarer and riskier, so they sit behind the menu. */}
+                  <div className="flex flex-none items-center gap-1 sm:gap-1.5">
+                    <RowAction
+                      tone="primary"
+                      label={t('pages.resumes.actions.downloadPDF') || 'Download PDF'}
                       onClick={() => handleDownloadPDF(resume)}
-                      title={t('pages.resumes.actions.downloadPDF') || 'Download PDF'}
                     >
-                      <Download className="h-3.5 w-3.5" />
-                    </Button>
+                      <Download className="h-4 w-4" />
+                    </RowAction>
+                    <RowAction
+                      tone="sky"
+                      label={t('pages.resumes.duplicate') || 'Duplicate'}
+                      onClick={() => handleDuplicate(resume)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </RowAction>
+                    <RowAction
+                      tone="violet"
+                      label={
+                        translatingResumeId === resume.id
+                          ? t('pages.resumes.actions.translating') || 'Translating…'
+                          : t('pages.resumes.actions.translate') || 'Translate'
+                      }
+                      onClick={() => setTranslateDialogResume(resume)}
+                      disabled={translatingResumeId === resume.id}
+                    >
+                      {translatingResumeId === resume.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Languages className="h-4 w-4" />
+                      )}
+                    </RowAction>
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted sm:h-9 sm:w-9"
-                          title={t('pages.resumes.menu') || 'Resume options'}
+                          className={`${ROW_ACTION_FRAME} ${ROW_ACTION_TONES.neutral}`}
                           aria-label={t('pages.resumes.menu') || 'Resume options'}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem className="cursor-pointer md:hidden" onClick={() => navigate(`/resume/${resume.id}`)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          <span>{t('pages.resumes.actions.view') || 'View'}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer lg:hidden" onClick={() => handleDownloadPDF(resume)}>
-                          <Download className="mr-2 h-4 w-4" />
-                          <span>{t('pages.resumes.actions.downloadPDF') || 'Download PDF'}</span>
-                        </DropdownMenuItem>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}
+                        onCloseAutoFocus={(e) => {
+                          // The menu returns focus to its trigger on close, which would
+                          // steal it from the rename input that has just mounted.
+                          if (renameFromMenuRef.current) {
+                            e.preventDefault();
+                            renameFromMenuRef.current = false;
+                          }
+                        }}
+                      >
                         <DropdownMenuItem
                           className="cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDuplicate(resume);
+                            renameFromMenuRef.current = true;
+                            startEditing(resume);
                           }}
                         >
-                          <Copy className="mr-2 h-4 w-4" />
-                          <span>{t('pages.resumes.duplicate') || 'Duplicate'}</span>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>{t('pages.resumes.actions.rename') || 'Rename'}</span>
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="cursor-pointer"
-                          disabled={translatingResumeId === resume.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTranslateDialogResume(resume);
-                          }}
-                        >
-                          {translatingResumeId === resume.id ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Languages className="mr-2 h-4 w-4" />
-                          )}
-                          <span>
-                            {translatingResumeId === resume.id
-                              ? t('pages.resumes.actions.translating') || 'Translating…'
-                              : t('pages.resumes.actions.translate') || 'Translate'}
-                          </span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive focus:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             setDeleteId(resume.id);
                           }}
-                          className="cursor-pointer text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>{t('pages.resumes.delete') || 'Delete'}</span>

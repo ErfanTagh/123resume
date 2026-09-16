@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { resumeAPI, Resume } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, AlertCircle, Download } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Download, Edit } from 'lucide-react';
 import { downloadResumePDFFromElement } from '@/lib/resumePdfUtils';
 import {
   Dialog,
@@ -175,10 +175,18 @@ export default function ResumeView() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('common.back')}
             </Button>
-            <Button onClick={handleDownloadPDF}>
-              <Download className="mr-2 h-4 w-4" />
-              {t('common.downloadPDF')}
-            </Button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {/* Edit lives here now rather than on every list row — it's the
+                  common next step after looking at a resume */}
+              <Button onClick={() => navigate(`/create?edit=${id}`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                {t('pages.resumes.actions.edit') || 'Edit'}
+              </Button>
+              <Button variant="outline" onClick={handleDownloadPDF}>
+                <Download className="mr-2 h-4 w-4" />
+                {t('common.downloadPDF')}
+              </Button>
+            </div>
           </div>
         </div>
 

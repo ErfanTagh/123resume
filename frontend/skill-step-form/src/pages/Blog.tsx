@@ -438,27 +438,27 @@ const Blog = () => {
         keywords="resume tips, career advice, job search, ATS resume, resume writing, career development, job interview tips"
         url="https://123resume.de/blog"
       />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="pt-16 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 bg-muted/30">
+      <section className="pt-16 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 bg-white border-b border-gray-200">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent border border-border text-xs sm:text-sm font-medium text-accent-foreground mb-4">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gray-100 text-xs sm:text-sm font-medium text-gray-600 mb-4">
             <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
             {t('blog.badge')}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl sm:text-5xl font-bold text-[#242424] mb-4">
             {t('blog.title')}
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto mb-8">
             {t('blog.subtitle')}
           </p>
-          
+
           {/* Search Bar */}
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder={t('blog.searchPlaceholder')} 
-              className="pl-10 rounded-full bg-background border-border"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder={t('blog.searchPlaceholder')}
+              className="pl-10 rounded-full bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
             />
           </div>
         </div>
@@ -469,11 +469,11 @@ const Blog = () => {
         <div className="container mx-auto max-w-6xl">
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading blog posts...</p>
+              <p className="text-gray-500">Loading blog posts...</p>
             </div>
           ) : blogPosts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No blog posts available.</p>
+              <p className="text-gray-500">No blog posts available.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
@@ -481,7 +481,7 @@ const Blog = () => {
                 const hasImage = post.image && typeof post.image === 'string';
                 return (
                   <Link to={`/blog/${post.id}`} key={post.id} className="h-full">
-                    <article className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:shadow-[0_20px_40px_-15px_hsl(var(--primary)/0.25)] hover:border-primary/40 transition-all duration-500 cursor-pointer hover:-translate-y-2 h-full flex flex-col">
+                    <article className="group relative bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 cursor-pointer hover:-translate-y-1 h-full flex flex-col">
                       {/* Hero Image or Decorative background pattern */}
                       {hasImage ? (
                         <div className="aspect-[16/9] relative overflow-hidden">
@@ -518,29 +518,29 @@ const Blog = () => {
                       )}
                       <div className="p-6 sm:p-8 flex flex-col flex-1">
                         <div className="flex items-center gap-2 mb-4 flex-wrap">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 hover:bg-primary/15 transition-colors">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                             {post.category}
                           </span>
                           {post.tags && post.tags.length > 0 && (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {post.tags.slice(0, 3).map((tag, index) => (
-                                <span key={index} className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
+                                <span key={index} className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
                                   {tag}
                                 </span>
                               ))}
                               {post.tags.length > 3 && (
-                                <span className="text-xs text-muted-foreground">+{post.tags.length - 3}</span>
+                                <span className="text-xs text-gray-400">+{post.tags.length - 3}</span>
                               )}
                             </div>
                           )}
                         </div>
-                        <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors duration-300 line-clamp-2 leading-tight">
+                        <h3 className="text-lg sm:text-xl font-bold text-[#242424] mb-4 group-hover:underline line-clamp-2 leading-tight">
                           {post.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground mb-5 line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-gray-500 mb-5 line-clamp-2 leading-relaxed">
                           {post.excerpt}
                         </p>
-                        <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground pt-5 border-t border-border/50">
+                        <div className="mt-auto flex items-center justify-between text-xs text-gray-400 pt-5 border-t border-gray-100">
                           <div className="flex items-center gap-1.5 font-medium">
                             <Clock className="w-3.5 h-3.5" />
                             {post.readTime}
@@ -549,8 +549,8 @@ const Blog = () => {
                         </div>
                       </div>
                       {/* Hover arrow indicator */}
-                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                        <ArrowRight className="w-4 h-4 text-primary" />
+                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+                        <ArrowRight className="w-4 h-4 text-gray-700" />
                       </div>
                     </article>
                   </Link>
@@ -562,12 +562,12 @@ const Blog = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50 border-t border-gray-200">
         <div className="container mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl sm:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-4xl font-bold text-[#242424] mb-4">
             {t('blog.ctaTitle')}
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground mb-8">
+          <p className="text-base sm:text-lg text-gray-500 mb-8">
             {t('blog.ctaSubtitle')}
           </p>
           <Link to="/create/start">

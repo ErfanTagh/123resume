@@ -96,8 +96,25 @@ ADMIN_NOTIFICATION_EMAIL = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'contact@123res
 # Keys: https://platform.deepseek.com/ — set DEEPSEEK_API_KEY in .env (never commit it).
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '').strip()
 DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com').strip().rstrip('/')
-# e.g. deepseek-chat, deepseek-reasoner, or newer IDs from DeepSeek model list
-DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat').strip()
+# Current IDs (GET /models, Sep 2026): deepseek-flash, deepseek-v4-pro.
+# `deepseek-chat` is an unlisted legacy alias DeepSeek routes to deepseek-flash —
+# always use a real name so a retired alias can't take every AI feature down.
+#
+# Fast by design: users wait on these calls. With reasoning, a 2-page resume
+# took ~45-53s to parse and ~38s to score, so reasoning stays off.
+DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-v4-pro').strip()
+# Both models reason by default when called by name, so "off" must be sent
+# explicitly (see deepseek_request_options).
+DEEPSEEK_THINKING = os.getenv('DEEPSEEK_THINKING', '').strip().lower() in ('1', 'true', 'yes', 'on')
+# Only used when DEEPSEEK_THINKING is on: reasoning tokens count against
+# max_tokens, and every per-feature cap below is sized for the visible answer
+# alone, so this is added on top (see deepseek_max_tokens).
+DEEPSEEK_REASONING_TOKEN_BUDGET = int(os.getenv('DEEPSEEK_REASONING_TOKEN_BUDGET', '16000'))
+# Per-attempt limit for one DeepSeek request. With one retry the worst case is
+# ~2x this, which must stay under gunicorn's --timeout and nginx's
+# proxy_read_timeout (both 60s) so a stuck call fails cleanly instead of the
+# worker being killed mid-request.
+DEEPSEEK_TIMEOUT_SECONDS = float(os.getenv('DEEPSEEK_TIMEOUT_SECONDS', '28'))
 DEEPSEEK_MAX_OUTPUT_TOKENS = int(os.getenv('DEEPSEEK_MAX_OUTPUT_TOKENS', '1024'))
 # Larger budget for structured resume scoring JSON
 DEEPSEEK_RESUME_SCORE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_SCORE_MAX_TOKENS', '2048'))

@@ -11,7 +11,7 @@ from typing import Any, Dict
 from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import get_deepseek_client
+from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
 from .resume_ai_scoring import normalize_output_language
 
 logger = logging.getLogger(__name__)
@@ -172,15 +172,15 @@ Candidate resume (source of truth for facts):
 
     client = get_deepseek_client()
     completion = client.chat.completions.create(
-        model=settings.DEEPSEEK_MODEL,
+        **deepseek_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=min(
+        max_tokens=deepseek_max_tokens(min(
             int(getattr(settings, "DEEPSEEK_COVER_LETTER_MAX_TOKENS", 2048)),
             2048,
-        ),
+        )),
         # Higher temperature for more natural, human-sounding variation (less robotic).
         temperature=0.8,
     )

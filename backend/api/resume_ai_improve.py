@@ -21,7 +21,7 @@ from typing import Any, Dict, List
 from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import get_deepseek_client
+from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
 from .resume_ai_scoring import normalize_output_language
 
 logger = logging.getLogger(__name__)
@@ -265,14 +265,14 @@ Fields to improve (JSON):
 
     client = get_deepseek_client()
     completion = client.chat.completions.create(
-        model=settings.DEEPSEEK_MODEL,
+        **deepseek_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
         # Long / German resumes produce many improved fields; a low cap truncated
         # the JSON mid-string and broke parsing. Give ample room and force JSON mode.
-        max_tokens=getattr(settings, "DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS", 8192),
+        max_tokens=deepseek_max_tokens(getattr(settings, "DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS", 8192)),
         temperature=0.3,
         response_format={"type": "json_object"},
     )

@@ -14,7 +14,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import get_deepseek_client
+from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
 
 logger = logging.getLogger(__name__)
 
@@ -430,7 +430,7 @@ adding a relevant skill, or tailoring a summary/role to one job title.
     client = get_deepseek_client()
     max_out = settings.DEEPSEEK_RESUME_SCORE_MAX_TOKENS
     completion = client.chat.completions.create(
-        model=settings.DEEPSEEK_MODEL,
+        **deepseek_request_options(),
         messages=[
             {
                 "role": "system",
@@ -441,7 +441,7 @@ adding a relevant skill, or tailoring a summary/role to one job title.
             },
             {"role": "user", "content": user_msg},
         ],
-        max_tokens=max_out,
+        max_tokens=deepseek_max_tokens(max_out),
         # Deterministic output: same prompt => same score (no run-to-run jitter).
         temperature=0,
     )

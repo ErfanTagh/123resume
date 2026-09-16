@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import get_deepseek_client
+from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
 from .resume_ai_scoring import normalize_output_language
 
 logger = logging.getLogger(__name__)
@@ -155,12 +155,12 @@ Existing bullets:
 
     client = get_deepseek_client()
     completion = client.chat.completions.create(
-        model=settings.DEEPSEEK_MODEL,
+        **deepseek_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=min(settings.DEEPSEEK_MAX_OUTPUT_TOKENS, 512),
+        max_tokens=deepseek_max_tokens(min(settings.DEEPSEEK_MAX_OUTPUT_TOKENS, 512)),
         temperature=0.35,
     )
     raw = (completion.choices[0].message.content or "").strip()

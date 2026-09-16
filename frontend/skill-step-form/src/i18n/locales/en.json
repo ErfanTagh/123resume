@@ -397,6 +397,26 @@
         "senior": { "title": "Senior", "hint": "Drives direction; shapes quality across the team." },
         "lead": { "title": "Lead / staff / executive", "hint": "Sets strategy; broad influence or people leadership." }
       },
+      "regionLabel": "Where are you applying?",
+      "regionSubtitle": "Hiring conventions differ by country — especially whether a photo belongs on your resume.",
+      "region": {
+        "us": {
+          "title": "United States or Canada",
+          "hint": "No photo and no date of birth; one page early in your career."
+        },
+        "uk": {
+          "title": "United Kingdom or Ireland",
+          "hint": "No photo; two pages is normal, often with a short personal statement."
+        },
+        "dach": {
+          "title": "Germany, Austria or Switzerland",
+          "hint": "A photo is still customary on a Lebenslauf."
+        },
+        "eu": {
+          "title": "Elsewhere in Europe",
+          "hint": "A photo is optional; clean layouts travel well across markets."
+        }
+      },
       "focusLabel": "What matters most for this resume right now?",
       "focus": {
         "ats": { "title": "Pass ATS & recruiters first", "hint": "Conservative layout; maximum clarity for screening software." },
@@ -416,7 +436,9 @@
         "reasonEarlyModern": "Early-career resumes often have shorter sections—a clear two-column flow uses space well and stays easy to scan.",
         "reasonMidBalanced": "A contemporary layout keeps plenty of room for achievements while staying familiar to most hiring managers.",
         "reasonSeniorClassic": "With more history to tell, a timeless single-column flow keeps chronology obvious and professional.",
-        "reasonLeadershipDistinction": "For senior or leadership positioning, a refined distinctive look signals confidence while staying readable."
+        "reasonLeadershipDistinction": "For senior or leadership positioning, a refined distinctive look signals confidence while staying readable.",
+        "reasonRegionNoPhoto": "Employers there expect a resume without a photo, so we picked a clean single-column layout — which also parses most reliably in applicant tracking systems.",
+        "reasonRegionPhoto": "A photo is still customary there, so we picked a layout with a place for one that keeps your experience easy to scan."
       }
     },
     "form": {
@@ -1021,7 +1043,8 @@
         "pdf": "PDF",
         "downloadPDF": "Download PDF",
         "translate": "Translate",
-        "translating": "Translating…"
+        "translating": "Translating…",
+        "rename": "Rename"
       },
       "translateDialog": {
         "description": "Pick a language and choose what to translate. A new translated copy is added to your list — the original is kept."

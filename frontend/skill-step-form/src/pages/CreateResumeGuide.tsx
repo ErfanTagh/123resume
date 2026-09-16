@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { LandingTemplatePreview } from "@/pages/LandingTemplatePreview";
 import {
   getTemplateRecommendation,
+  type ApplicationRegion,
   type ExperienceBand,
   type JobSearchFocus,
   type SeniorityLevel,
@@ -17,9 +18,9 @@ import type { CVTemplate } from "@/components/cv-form/types";
 import { RESUME_COLOR_THEMES, DEFAULT_RESUME_THEME_ID, getResumeThemeAccent } from "@/lib/resumeColorThemes";
 import { ArrowRight, ChevronLeft, Sparkles, Check } from "lucide-react";
 
-/** Questionnaire steps (0 = language … 3 = focus); step 4 = result */
-const TOTAL_GUIDE_STEPS = 4;
-const RESULT_STEP_INDEX = 4;
+/** Questionnaire steps (0 = language … 4 = focus); step 5 = result */
+const TOTAL_GUIDE_STEPS = 5;
+const RESULT_STEP_INDEX = 5;
 
 const TEMPLATE_TITLE_KEY: Record<CVTemplate, string> = {
   modern: "templateModern",
@@ -48,6 +49,7 @@ const CreateResumeGuide = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [guideLang, setGuideLang] = useState<"en" | "de">(() => (language === "de" ? "de" : "en"));
+  const [region, setRegion] = useState<ApplicationRegion | "">("");
   const [years, setYears] = useState<ExperienceBand | "">("");
   const [seniority, setSeniority] = useState<SeniorityLevel | "">("");
   const [focus, setFocus] = useState<JobSearchFocus | "">("");
@@ -55,8 +57,8 @@ const CreateResumeGuide = () => {
 
   const recommendation = useMemo(() => {
     if (!years || !seniority || !focus) return null;
-    return getTemplateRecommendation(years, seniority, focus);
-  }, [years, seniority, focus]);
+    return getTemplateRecommendation(years, seniority, focus, region || undefined);
+  }, [years, seniority, focus, region]);
 
   const applyGuideLanguage = (lang: "en" | "de") => {
     setGuideLang(lang);
@@ -65,9 +67,10 @@ const CreateResumeGuide = () => {
 
   const canNext =
     (step === 0) ||
-    (step === 1 && years !== "") ||
-    (step === 2 && seniority !== "") ||
-    (step === 3 && focus !== "");
+    (step === 1 && region !== "") ||
+    (step === 2 && years !== "") ||
+    (step === 3 && seniority !== "") ||
+    (step === 4 && focus !== "");
 
   const templateTitle = (id: CVTemplate) => t(`landing.${TEMPLATE_TITLE_KEY[id]}`);
   const templateDescription = (id: CVTemplate) => t(`landing.${TEMPLATE_DESC_KEY[id]}`);
@@ -134,6 +137,33 @@ const CreateResumeGuide = () => {
 
               {step === 1 && (
                 <div className="space-y-3">
+                  <Label className="text-base font-semibold">{t("resume.templateGuide.regionLabel")}</Label>
+                  <p className="text-sm text-muted-foreground">{t("resume.templateGuide.regionSubtitle")}</p>
+                  <RadioGroup
+                    value={region}
+                    onValueChange={(v) => setRegion(v as ApplicationRegion)}
+                    className="grid gap-3"
+                  >
+                    {(["us", "uk", "dach", "eu"] as const).map((id) => (
+                      <label
+                        key={id}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/40 ${
+                          region === id ? "border-primary ring-2 ring-primary/20" : "border-border"
+                        }`}
+                      >
+                        <RadioGroupItem value={id} id={`region-${id}`} className="mt-1" />
+                        <div className="space-y-1">
+                          <span className="font-medium leading-none">{t(`resume.templateGuide.region.${id}.title`)}</span>
+                          <p className="text-sm text-muted-foreground">{t(`resume.templateGuide.region.${id}.hint`)}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-3">
                   <Label className="text-base font-semibold">{t("resume.templateGuide.yearsLabel")}</Label>
                   <RadioGroup
                     value={years}
@@ -165,7 +195,7 @@ const CreateResumeGuide = () => {
                 </div>
               )}
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">{t("resume.templateGuide.seniorityLabel")}</Label>
                   <RadioGroup
@@ -198,7 +228,7 @@ const CreateResumeGuide = () => {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">{t("resume.templateGuide.focusLabel")}</Label>
                   <RadioGroup

@@ -397,6 +397,26 @@
         "senior": { "title": "Senior", "hint": "Prägt Richtung und Qualität über das Team hinweg." },
         "lead": { "title": "Lead / Staff / Führung", "hint": "Strategie, große Wirkung oder Personalverantwortung." }
       },
+      "regionLabel": "Wo bewirbst du dich?",
+      "regionSubtitle": "Die Erwartungen unterscheiden sich je nach Land — vor allem, ob ein Foto in den Lebenslauf gehört.",
+      "region": {
+        "us": {
+          "title": "USA oder Kanada",
+          "hint": "Kein Foto, kein Geburtsdatum; am Anfang der Laufbahn nur eine Seite."
+        },
+        "uk": {
+          "title": "Großbritannien oder Irland",
+          "hint": "Kein Foto; zwei Seiten sind üblich, oft mit kurzem Profiltext."
+        },
+        "dach": {
+          "title": "Deutschland, Österreich oder Schweiz",
+          "hint": "Ein Foto ist im Lebenslauf weiterhin üblich."
+        },
+        "eu": {
+          "title": "Anderswo in Europa",
+          "hint": "Foto optional; klare Layouts funktionieren länderübergreifend."
+        }
+      },
       "focusLabel": "Was ist für diesen Lebenslauf gerade am wichtigsten?",
       "focus": {
         "ats": { "title": "ATS & Recruiting zuerst", "hint": "Zurückhaltendes Layout; maximale Klarheit für Software und erste Sichtung." },
@@ -416,7 +436,9 @@
         "reasonEarlyModern": "In der Frühphase gibt es oft weniger Abschnitte — ein klarer zweispaltiger Aufbau nutzt den Platz und bleibt gut scannbar.",
         "reasonMidBalanced": "Ein zeitgemäßes Layout bietet Raum für Erfolge und bleibt dennoch den meisten Hiring Managern vertraut.",
         "reasonSeniorClassic": "Mit mehr Historie sorgt ein zeitloser einteiliger Fluss für klare Chronologie und seriösen Eindruck.",
-        "reasonLeadershipDistinction": "Für Führung oder sehr senior wirkt ein markantes, dennoch lesbares Design oft souverän."
+        "reasonLeadershipDistinction": "Für Führung oder sehr senior wirkt ein markantes, dennoch lesbares Design oft souverän.",
+        "reasonRegionNoPhoto": "Dort wird ein Lebenslauf ohne Foto erwartet. Wir haben deshalb ein klares einspaltiges Layout gewählt, das auch von Bewerbermanagement-Systemen zuverlässig gelesen wird.",
+        "reasonRegionPhoto": "Dort ist ein Foto weiterhin üblich. Wir haben deshalb ein Layout mit Platz dafür gewählt, das deine Erfahrung trotzdem übersichtlich zeigt."
       }
     },
     "form": {
@@ -1021,7 +1043,8 @@
         "pdf": "PDF",
         "downloadPDF": "PDF herunterladen",
         "translate": "Übersetzen",
-        "translating": "Übersetze…"
+        "translating": "Übersetze…",
+        "rename": "Umbenennen"
       },
       "translateDialog": {
         "description": "Wählen Sie eine Sprache und was übersetzt werden soll. Eine neue übersetzte Kopie wird Ihrer Liste hinzugefügt — das Original bleibt erhalten."

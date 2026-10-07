@@ -134,10 +134,10 @@ DEEPSEEK_LOG_AI_RESPONSES = os.getenv('DEEPSEEK_LOG_AI_RESPONSES', '').strip().l
 DEEPSEEK_LOG_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_MAX_CHARS', '12000'))
 DEEPSEEK_LOG_RESULT_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_RESULT_MAX_CHARS', '32000'))
 
-# Claude (Anthropic API). AI_PROVIDER picks who answers every AI feature;
-# switching back to DeepSeek is a one-line .env change and a restart.
+# Claude (Anthropic API) answers every AI feature. AI_PROVIDER=deepseek
+# switches back to DeepSeek with a one-line .env change and a restart.
 # The DEEPSEEK_* timeout, token caps and logging settings above apply to both.
-AI_PROVIDER = os.getenv('AI_PROVIDER', 'deepseek').strip().lower()
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'anthropic').strip().lower()
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '').strip()
 # Only for a key that is not scoped to a workspace (the API then demands this header).
 ANTHROPIC_WORKSPACE_ID = os.getenv('ANTHROPIC_WORKSPACE_ID', '').strip()

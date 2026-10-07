@@ -677,11 +677,10 @@ def send_job_tools_announcement_email(to_email: str, username: str = "") -> bool
 
 
 
-# --- AI model upgrade announcement -------------------------------------------
+# --- Claude AI announcement --------------------------------------------------
 #
-# Real, unedited output from the "Improve my resume" feature on deepseek-v4-pro.
-# Chosen because the rewrite is stronger *without* adding claims the person never
-# made — an example that overstates would be a bad thing to teach users to accept.
+# Real improve-output examples kept because they show stronger wording without
+# inventing claims the candidate never made.
 AI_MODEL_EXAMPLES_EN = [
     ("made reports about how the posts did",
      "Analyzed social media performance and compiled reports to inform marketing strategies."),
@@ -721,27 +720,38 @@ def _ai_model_announcement_plain(greet: str) -> str:
     de = "\n".join(f"  Vorher:  {b}\n  Nachher: {a}\n" for b, a in AI_MODEL_EXAMPLES_DE)
     return f"""Hi {greet},
 
-We've upgraded the AI behind 123Resume to a newer, more capable model. It writes clearer, stronger resume text, and it still does it in seconds.
+Big news: 123Resume now runs on Claude — one of the world's most advanced AI models.
 
-Here's what it does to real resume lines:
+That means sharper solutions for your resume, fresher career-ready tips, and suggestions that help you stand out ahead of your competition. Think clearer wording, stronger impact, and guidance that feels current — not generic.
+
+What you get with Claude on 123Resume:
+• Smarter resume scores and actionable feedback
+• Stronger bullet points, summaries, and improvements you can accept or reject
+• Up-to-date tips that help your application feel polished and competitive
+
+See the difference on real resume lines:
 
 {en}
-THE SECRET TO LANDING INTERVIEWS
-A strong, professional resume. It's the first thing a recruiter sees, and often the only thing they read before deciding whether to call you.
+Your edge in the job market starts with a resume that sounds like you at your best.
 
-Try it: open a resume and click "Improve my resume". You review every suggestion and keep only the ones you like.
+Open any resume and try Improve my resume, AI score, or job matching — you stay in control of every change.
 https://123resume.de/resumes
 
 ---
 
 Hallo {greet},
 
-wir haben die KI hinter 123Resume auf ein neueres, leistungsstärkeres Modell umgestellt. Sie formuliert Ihren Lebenslauf klarer und überzeugender, und das in wenigen Sekunden.
+gute Nachrichten: 123Resume läuft jetzt mit Claude — einem der fortschrittlichsten KI-Modelle der Welt.
+
+Sie erhalten präzisere Lösungen für Ihren Lebenslauf, aktuellere Tipps und Vorschläge, die Ihnen helfen, sich von der Konkurrenz abzuheben: klarere Formulierungen, mehr Wirkung und Feedback, das wirklich weiterhilft.
+
+Was Claude für Sie tut:
+• Intelligentere Lebenslauf-Bewertung mit konkreten Hinweisen
+• Stärkere Bullet Points und Zusammenfassungen — Sie entscheiden, was übernommen wird
+• Aktuelle Tipps, damit Ihre Bewerbung professionell und wettbewerbsfähig wirkt
 
 {de}
-Das Geheimnis für mehr Vorstellungsgespräche ist ein starker, professioneller Lebenslauf.
-
-Öffnen Sie einen Lebenslauf und klicken Sie auf „Lebenslauf verbessern“. Sie prüfen jeden Vorschlag selbst.
+Öffnen Sie einen Lebenslauf und testen Sie „Lebenslauf verbessern“, die KI-Bewertung oder den Stellenabgleich.
 https://123resume.de/resumes
 
 Best regards / Mit freundlichen Grüßen,
@@ -763,47 +773,56 @@ def _ai_model_announcement_html(greet: str) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your resume just got a smarter AI</title>
+  <title>123Resume now runs on Claude</title>
 </head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#1e293b;background:#fdf2f8;margin:0;padding:0;">
-  <!-- inbox preview text -->
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">See how the new AI rewrites real resume lines, plus the one thing that gets you more interviews.</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">123Resume now uses Claude AI — sharper resume tips, stronger wording, and a real edge over the competition.</div>
   <table role="presentation" style="width:100%;border-collapse:collapse;background:#fdf2f8;">
     <tr><td style="padding:24px 12px;">
       <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(225,29,99,0.12);">
         <tr>
-          <!-- bgcolor is the fallback for clients without gradient support (Outlook) -->
           <td bgcolor="{_ROSE}" style="padding:36px 36px 32px;background-color:{_ROSE};background-image:linear-gradient(135deg,{_ROSE} 0%,#c026d3 55%,{_VIOLET} 100%);">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#fce7f3;letter-spacing:0.12em;text-transform:uppercase;">✨ AI upgrade</p>
-            <h1 style="margin:0;font-size:28px;color:#ffffff;font-weight:800;line-height:1.2;">Your resume just got<br>a smarter AI</h1>
-            <p style="margin:12px 0 0;font-size:15px;color:#fce7f3;">Clearer, stronger wording in seconds</p>
+            <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#fce7f3;letter-spacing:0.12em;text-transform:uppercase;">Powered by Claude</p>
+            <h1 style="margin:0;font-size:28px;color:#ffffff;font-weight:800;line-height:1.2;">Your career toolkit<br>just leveled up</h1>
+            <p style="margin:12px 0 0;font-size:15px;color:#fce7f3;">Sharper tips. Stronger wording. A real edge.</p>
           </td>
         </tr>
         <tr>
           <td style="padding:30px 36px 6px;">
             <p style="margin:0 0 14px;font-size:16px;color:#334155;">Hi {g},</p>
-            <p style="margin:0 0 22px;font-size:15px;color:#475569;">We've upgraded the AI behind <strong style="color:{_ROSE};">123Resume</strong> to a newer, more capable model. It writes clearer, stronger resume text, and it still does it in seconds. Here's what it does to real resume lines:</p>
-{en_examples}
-            <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 22px;">
-              <tr><td bgcolor="#fdf4ff" style="padding:20px 22px;background:#fdf4ff;border-radius:12px;border:1px solid #f5d0fe;">
-                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:{_VIOLET};letter-spacing:0.1em;text-transform:uppercase;">The secret to landing interviews</p>
-                <p style="margin:0;font-size:16px;color:#1e293b;"><strong>A strong, professional resume.</strong> It's the first thing a recruiter sees, and often the only thing they read before deciding whether to call you.</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#475569;">Big news: <strong style="color:{_ROSE};">123Resume</strong> now runs on <strong>Claude</strong> — one of the world's most advanced AI models.</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#475569;">That means smarter solutions for your resume, fresher career-ready guidance, and suggestions that help you <strong>stand out ahead of your competition</strong> with wording that feels current, confident, and recruiter-ready.</p>
+
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 18px;">
+              <tr><td style="padding:14px 16px;background:#fdf2f8;border-left:4px solid {_ROSE};border-radius:0 8px 8px 0;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:{_ROSE};">What Claude unlocks for you</p>
+                <p style="margin:0;font-size:14px;color:#475569;">Smarter scores · stronger bullets &amp; summaries · up-to-date tips you can accept or reject</p>
               </td></tr>
             </table>
 
-            <p style="margin:0 0 8px;font-size:15px;color:#475569;">Open a resume and click <strong>Improve my resume</strong>. You review every suggestion and keep only the ones you like.</p>
+            <p style="margin:0 0 14px;font-size:15px;color:#475569;">See the difference on real resume lines:</p>
+{en_examples}
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 22px;">
+              <tr><td bgcolor="#fdf4ff" style="padding:20px 22px;background:#fdf4ff;border-radius:12px;border:1px solid #f5d0fe;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:{_VIOLET};letter-spacing:0.1em;text-transform:uppercase;">Your competitive edge</p>
+                <p style="margin:0;font-size:16px;color:#1e293b;">A polished, professional resume is still the first filter. Claude helps you sound like <strong>you at your best</strong> — so you go into applications with an unfair advantage.</p>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 8px;font-size:15px;color:#475569;">Open a resume and try <strong>Improve my resume</strong>, AI score, or job matching. You stay in control of every change.</p>
             <p style="margin:18px 0 26px;">
-              <a href="https://123resume.de/resumes" style="display:inline-block;padding:14px 28px;background:{_ROSE};color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;">Improve my resume →</a>
+              <a href="https://123resume.de/resumes" style="display:inline-block;padding:14px 28px;background:{_ROSE};color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;">Try Claude on my resume →</a>
             </p>
 
             <hr style="border:none;border-top:1px solid #fbcfe8;margin:8px 0 26px;">
 
             <p style="margin:0 0 14px;font-size:16px;color:#334155;">Hallo {g},</p>
-            <p style="margin:0 0 20px;font-size:15px;color:#475569;">wir haben die KI hinter <strong style="color:{_ROSE};">123Resume</strong> auf ein neueres, leistungsstärkeres Modell umgestellt. Sie formuliert Ihren Lebenslauf klarer und überzeugender, und das in wenigen Sekunden:</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#475569;">gute Nachrichten: <strong style="color:{_ROSE};">123Resume</strong> läuft jetzt mit <strong>Claude</strong> — einem der fortschrittlichsten KI-Modelle der Welt.</p>
+            <p style="margin:0 0 18px;font-size:15px;color:#475569;">Sie erhalten präzisere Lösungen, aktuellere Tipps und Vorschläge, die Ihnen helfen, sich <strong>von der Konkurrenz abzuheben</strong>.</p>
 {de_examples}
-            <p style="margin:18px 0 8px;font-size:15px;color:#475569;"><strong>Das Geheimnis für mehr Vorstellungsgespräche</strong> ist ein starker, professioneller Lebenslauf. Öffnen Sie einen Lebenslauf und klicken Sie auf <strong>„Lebenslauf verbessern“</strong>. Sie prüfen jeden Vorschlag selbst.</p>
+            <p style="margin:18px 0 8px;font-size:15px;color:#475569;">Öffnen Sie einen Lebenslauf und testen Sie <strong>„Lebenslauf verbessern“</strong>, die KI-Bewertung oder den Stellenabgleich. Sie behalten die volle Kontrolle.</p>
             <p style="margin:18px 0 26px;">
-              <a href="https://123resume.de/resumes" style="display:inline-block;padding:12px 24px;background:#ffffff;color:{_ROSE};text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;border:2px solid {_ROSE};">Lebenslauf verbessern →</a>
+              <a href="https://123resume.de/resumes" style="display:inline-block;padding:12px 24px;background:#ffffff;color:{_ROSE};text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;border:2px solid {_ROSE};">Claude ausprobieren →</a>
             </p>
 
             <p style="margin:0 0 26px;font-size:15px;color:#334155;">Best regards / Mit freundlichen Grüßen,<br><strong>Erfan</strong></p>
@@ -826,11 +845,11 @@ def _ai_model_announcement_html(greet: str) -> str:
 
 
 def send_ai_model_announcement_email(to_email: str, name: str = "") -> bool:
-    """Product update: the AI now runs on a newer model, with before/after examples (Mailgun)."""
+    """Product update: Claude-powered AI on 123Resume (Mailgun)."""
     greet = (name or "").strip() or "there"
     from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
     return _send_with_mailgun(
-        subject="Your resume just got a smarter AI ✨",
+        subject="123Resume now runs on Claude — get ahead of the competition",
         plain_message=_ai_model_announcement_plain(greet),
         html_message=_ai_model_announcement_html(greet),
         to_email=to_email,

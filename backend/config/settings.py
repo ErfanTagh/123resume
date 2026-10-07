@@ -134,6 +134,25 @@ DEEPSEEK_LOG_AI_RESPONSES = os.getenv('DEEPSEEK_LOG_AI_RESPONSES', '').strip().l
 DEEPSEEK_LOG_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_MAX_CHARS', '12000'))
 DEEPSEEK_LOG_RESULT_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_RESULT_MAX_CHARS', '32000'))
 
+# Claude (Anthropic API). AI_PROVIDER picks who answers every AI feature;
+# switching back to DeepSeek is a one-line .env change and a restart.
+# The DEEPSEEK_* timeout, token caps and logging settings above apply to both.
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'deepseek').strip().lower()
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '').strip()
+# Only for a key that is not scoped to a workspace (the API then demands this header).
+ANTHROPIC_WORKSPACE_ID = os.getenv('ANTHROPIC_WORKSPACE_ID', '').strip()
+ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-5-5').strip()
+# low | medium | high. Thinking is kept off for speed (see deepseek_chat).
+ANTHROPIC_EFFORT = os.getenv('ANTHROPIC_EFFORT', 'medium').strip().lower()
+# If Sonnet 5.5's safety classifier declines a request, the API retries it on
+# Anthropic's recommended fallback model inside the same call.
+ANTHROPIC_FALLBACKS = os.getenv('ANTHROPIC_FALLBACKS', 'on').strip().lower() in ('1', 'true', 'yes', 'on')
+
+USE_CLAUDE = AI_PROVIDER == 'anthropic'
+AI_MODEL = ANTHROPIC_MODEL if USE_CLAUDE else DEEPSEEK_MODEL
+# Whether the active provider has a key. Views check this before calling the AI.
+AI_ENABLED = bool(ANTHROPIC_API_KEY if USE_CLAUDE else DEEPSEEK_API_KEY)
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

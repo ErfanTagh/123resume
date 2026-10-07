@@ -285,8 +285,8 @@ def generate_tailor_suggestions(
     allowed_work_indexes: List[int] | None = None,
     allowed_project_indexes: List[int] | None = None,
 ) -> Dict[str, Any]:
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     snapshot = build_resume_snapshot(resume_doc)

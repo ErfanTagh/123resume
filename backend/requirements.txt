@@ -38,4 +38,6 @@ requests>=2.31.0
 
 # DeepSeek / OpenAI-compatible chat (resume assistant for authenticated users)
 openai>=1.54.0
+# Claude, when AI_PROVIDER=anthropic
+anthropic>=1.11.0,<2
 

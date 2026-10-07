@@ -93,8 +93,8 @@ def suggest_work_experience_bullet(
     """
     Returns one new resume bullet (plain text, no leading bullet marker).
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     bullets = [

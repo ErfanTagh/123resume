@@ -70,8 +70,8 @@ def improve_work_role_description(
     """
     Returns an improved role summary (plain text, 1–2 sentences).
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     description = _clip(description, MAX_DESCRIPTION_CHARS)
@@ -147,8 +147,8 @@ def improve_professional_summary(
     professional_title: str = "",
     output_language: str = "en",
 ) -> str:
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     description = _clip(description, MAX_DESCRIPTION_CHARS)
@@ -200,8 +200,8 @@ def improve_project_description(
     project_name: str = "",
     output_language: str = "en",
 ) -> str:
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     description = _clip(description, MAX_DESCRIPTION_CHARS)

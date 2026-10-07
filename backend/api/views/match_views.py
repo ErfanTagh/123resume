@@ -211,7 +211,7 @@ def match_resume_to_job(request, resume_id):
     POST body: { "title": optional, "description": required }
 
     Query:
-    - matcher=auto (default): DeepSeek when DEEPSEEK_API_KEY is set; else embeddings;
+    - matcher=auto (default): AI when an AI provider key is set; else embeddings;
       on AI failure in auto mode, falls back to embeddings.
     - matcher=ai: DeepSeek only (502 on failure).
     - matcher=embeddings: sentence-transformers only.
@@ -243,14 +243,14 @@ def match_resume_to_job(request, resume_id):
             )
 
         matcher = (request.query_params.get("matcher") or "auto").lower()
-        if matcher == "ai" and not settings.DEEPSEEK_API_KEY:
+        if matcher == "ai" and not settings.AI_ENABLED:
             return Response(
-                {"error": "AI job matching requires DEEPSEEK_API_KEY on the server."},
+                {"error": "AI job matching requires an AI provider key on the server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         use_ai = matcher == "ai" or (
-            matcher == "auto" and bool(settings.DEEPSEEK_API_KEY)
+            matcher == "auto" and settings.AI_ENABLED
         )
 
         if use_ai and matcher != "embeddings":
@@ -318,9 +318,9 @@ def generate_resume_cover_letter(request, resume_id):
       - output_language / outputLanguage (optional): en | de
     """
     try:
-        if not settings.DEEPSEEK_API_KEY:
+        if not settings.AI_ENABLED:
             return Response(
-                {"error": "AI cover letters require DEEPSEEK_API_KEY on the server."},
+                {"error": "AI cover letters require an AI provider key on the server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -424,9 +424,9 @@ def tailor_resume_suggestions(request, resume_id):
       - output_language / outputLanguage (optional): en | de
     """
     try:
-        if not settings.DEEPSEEK_API_KEY:
+        if not settings.AI_ENABLED:
             return Response(
-                {"error": "AI tailoring requires DEEPSEEK_API_KEY on the server."},
+                {"error": "AI tailoring requires an AI provider key on the server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 

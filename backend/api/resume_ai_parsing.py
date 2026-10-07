@@ -274,8 +274,8 @@ def parse_resume_text_with_deepseek(text: str) -> Dict[str, Any]:
     Full pipeline: truncate → DeepSeek → normalize.
     Raises on configuration or model/JSON errors (caller may fall back to regex parser).
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     t = (text or "").strip()
     if not t:

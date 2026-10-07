@@ -45,7 +45,7 @@ def _score_cache_key(resume: Dict[str, Any], lang: str) -> str:
     except Exception:
         canonical = repr(resume)
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    model = getattr(settings, "DEEPSEEK_MODEL", "")
+    model = getattr(settings, "AI_MODEL", "")
     return f"resume_score:{SCORE_CACHE_VERSION}:{model}:{lang}:{digest}"
 
 # Must match frontend resumeScorer + CVFormContainer category mapping

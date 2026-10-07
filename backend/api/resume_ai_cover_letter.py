@@ -64,8 +64,8 @@ def generate_cover_letter_with_deepseek(
     job_description: str,
     output_language: str = "en",
 ) -> str:
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     rt = (resume_text or "").strip()

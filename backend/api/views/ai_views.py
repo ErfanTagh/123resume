@@ -61,10 +61,10 @@ def resume_assistant_chat(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
             {
-                "error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server.",
+                "error": "AI assistant is not configured. Set the AI provider key on the server.",
             },
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
@@ -119,9 +119,9 @@ def resume_score(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
-            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            {"error": "AI assistant is not configured. Set the AI provider key on the server."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
@@ -199,9 +199,9 @@ def improve_resume(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
-            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            {"error": "AI assistant is not configured. Set the AI provider key on the server."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
@@ -292,9 +292,9 @@ def translate_resume(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
-            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            {"error": "AI assistant is not configured. Set the AI provider key on the server."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
@@ -357,9 +357,9 @@ def suggest_work_bullet(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
-            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            {"error": "AI assistant is not configured. Set the AI provider key on the server."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
@@ -443,9 +443,9 @@ def improve_work_description(request):
     """
     data = request.data or {}
 
-    if not settings.DEEPSEEK_API_KEY:
+    if not settings.AI_ENABLED:
         return Response(
-            {"error": "AI assistant is not configured. Set DEEPSEEK_API_KEY on the server."},
+            {"error": "AI assistant is not configured. Set the AI provider key on the server."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 

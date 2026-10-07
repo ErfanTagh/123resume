@@ -211,8 +211,8 @@ def improve_resume_fields(
     Only fields whose improved text differs meaningfully from the original are
     returned. Empty list means "nothing to improve".
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     items = collect_improvable_items(resume)

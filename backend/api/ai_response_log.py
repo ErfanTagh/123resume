@@ -52,7 +52,7 @@ def log_deepseek_exchange(
         return
     max_raw = int(getattr(settings, "DEEPSEEK_LOG_MAX_CHARS", 12000))
     max_result = int(getattr(settings, "DEEPSEEK_LOG_RESULT_MAX_CHARS", 32000))
-    model = getattr(completion, "model", None) or getattr(settings, "DEEPSEEK_MODEL", "")
+    model = getattr(completion, "model", None) or getattr(settings, "AI_MODEL", "")
     usage = _usage_str(completion)
     raw = raw_text or ""
     raw_snippet = raw[:max_raw]

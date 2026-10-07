@@ -309,8 +309,8 @@ def translate_resume(
     The input `resume` is not mutated. Raises ValueError for an unsupported
     target. If there is nothing translatable, the resume is returned unchanged.
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     target = normalize_translation_language(target_language)
     if target is None:

@@ -47,7 +47,7 @@ _RESUME = {
 }
 
 
-@override_settings(DEEPSEEK_API_KEY="test-key-for-resume-score-endpoint")
+@override_settings(AI_ENABLED=True)
 class ResumeScoreViewTests(SimpleTestCase):
     databases = []  # do not require DB setup for this suite
 
@@ -83,7 +83,7 @@ class ResumeScoreViewTests(SimpleTestCase):
             (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
         )
 
-    @override_settings(DEEPSEEK_API_KEY="")
+    @override_settings(AI_ENABLED=False)
     def test_resume_score_503_without_api_key(self):
         request = self.factory.post(
             "/api/ai/resume-score/",

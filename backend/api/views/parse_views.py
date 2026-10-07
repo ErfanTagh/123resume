@@ -23,7 +23,7 @@ def parse_resume(request):
     POST /api/resumes/parse/
 
     Query:
-    - parser=auto (default): DeepSeek JSON extraction when DEEPSEEK_API_KEY is set,
+    - parser=auto (default): AI JSON extraction when an AI provider key is set,
       otherwise the classic rules-based parser; on AI failure, falls back to rules.
     - parser=ai: DeepSeek only (502 if AI fails).
     - parser=rules: classic parser only.
@@ -77,15 +77,15 @@ def parse_resume(request):
             )
 
         parser_mode = (request.query_params.get("parser") or "auto").lower()
-        if parser_mode == "ai" and not settings.DEEPSEEK_API_KEY:
+        if parser_mode == "ai" and not settings.AI_ENABLED:
             return Response(
-                {"error": "AI resume parsing requires DEEPSEEK_API_KEY on the server."},
+                {"error": "AI resume parsing requires an AI provider key on the server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         parsed_data = None
         use_ai = parser_mode == "ai" or (
-            parser_mode == "auto" and bool(settings.DEEPSEEK_API_KEY)
+            parser_mode == "auto" and settings.AI_ENABLED
         )
 
         if use_ai and parser_mode != "rules":

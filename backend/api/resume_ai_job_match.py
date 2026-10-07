@@ -35,8 +35,8 @@ def match_job_with_deepseek(
     """
     Returns keys: match_percentage (0–100), similarity (0–1), resume_summary (str).
     """
-    if not settings.DEEPSEEK_API_KEY:
-        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    if not settings.AI_ENABLED:
+        raise RuntimeError("AI provider is not configured")
 
     rt = (resume_text or "").strip()
     if len(rt) > MAX_RESUME_CHARS:

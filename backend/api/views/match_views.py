@@ -315,7 +315,7 @@ def generate_resume_cover_letter(request, resume_id):
     POST body:
       - title (optional)
       - description (required)
-      - output_language / outputLanguage (optional): en | de
+      - output_language / outputLanguage (optional): language code for the letter (en, de, tr, fr, ...)
     """
     try:
         if not settings.AI_ENABLED:
@@ -421,7 +421,7 @@ def tailor_resume_suggestions(request, resume_id):
       - round / roundNumber (optional, 1-5)
       - current_match_percentage / currentMatchPercentage (optional)
       - skip_ids / skipIds (optional): suggestion ids already shown or applied
-      - output_language / outputLanguage (optional): en | de
+      - output_language / outputLanguage (optional): fallback language code (suggestions follow the resume's own language)
     """
     try:
         if not settings.AI_ENABLED:

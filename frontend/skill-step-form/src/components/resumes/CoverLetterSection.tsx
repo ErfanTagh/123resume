@@ -16,8 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Download, FileText, RefreshCw, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-type CoverLetterLanguage = "en" | "de";
+import { TRANSLATION_LANGUAGES, type TranslationLanguageCode } from "@/lib/translationLanguages";
 
 type CoverLetterSectionProps = {
   resumeId: string;
@@ -39,8 +38,10 @@ export function CoverLetterSection({
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const [letterLanguage, setLetterLanguage] = useState<CoverLetterLanguage>(
-    language === "de" ? "de" : "en",
+  const [letterLanguage, setLetterLanguage] = useState<TranslationLanguageCode>(
+    TRANSLATION_LANGUAGES.some((l) => l.code === language)
+      ? (language as TranslationLanguageCode)
+      : "en",
   );
 
   const [coverLetter, setCoverLetter] = useState("");
@@ -153,18 +154,20 @@ export function CoverLetterSection({
             </Label>
             <Select
               value={letterLanguage}
-              onValueChange={(value) => setLetterLanguage(value as CoverLetterLanguage)}
+              onValueChange={(value) => setLetterLanguage(value as TranslationLanguageCode)}
             >
               <SelectTrigger id="cover-letter-language">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en">
-                  {t("pages.resumes.jobMatching.coverLetter.languageEn") || "English"}
-                </SelectItem>
-                <SelectItem value="de">
-                  {t("pages.resumes.jobMatching.coverLetter.languageDe") || "German"}
-                </SelectItem>
+                {TRANSLATION_LANGUAGES.map((l) => (
+                  <SelectItem key={l.code} value={l.code}>
+                    {l.native}
+                    {l.native !== l.label && (
+                      <span className="ml-1.5 text-muted-foreground">{l.label}</span>
+                    )}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

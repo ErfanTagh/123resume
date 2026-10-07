@@ -873,7 +873,7 @@ export const resumeAPI = {
     resumeId: string,
     jobTitle: string,
     jobDescription: string,
-    options?: { outputLanguage?: "en" | "de" },
+    options?: { outputLanguage?: TranslationLanguageCode },
   ): Promise<{
     resume_id: string;
     job_title: string;

@@ -1,5 +1,5 @@
 """
-Generate a tailored cover letter via DeepSeek from resume + job posting.
+Generate a tailored cover letter from resume + job posting, in the language the user picks.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
-from .resume_ai_scoring import normalize_output_language
+from .ai_language import language_name, normalize_output_language
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +135,20 @@ def generate_cover_letter_with_deepseek(
             "\"your esteemed/prestigious company\".\n"
             "- Do not simply restate the resume; connect a couple of specifics to what THIS role needs.\n"
             "- No em-dash overuse; at most one. Keep it genuine, not salesy or over-eager."
+        )
+
+    if lang not in ("en", "de"):
+        # The instructions above stay in English; only the letter itself switches language.
+        name = language_name(lang)
+        lang_rule = (
+            f"Write the whole cover letter in **{name}**, following the business-letter conventions "
+            f"native {name} speakers use (formal register; the formal \"you\" where {name} has one)."
+        )
+        greeting_hint = f"Start with the usual formal {name} greeting for when no name is given."
+        closing_hint = f"End with the usual formal {name} sign-off and the candidate's name from the resume."
+        natural_hint += (
+            f"\n- The banned phrases above are English examples: avoid their {name} equivalents "
+            f"and the stock phrases of {name} cover letters too."
         )
 
     system = (

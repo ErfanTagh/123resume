@@ -10,6 +10,7 @@ import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI, type ResumeImproveChange } from "@/lib/api";
 import type { CVFormData } from "./types";
+import { celebrate } from "@/lib/celebrate";
 
 type ChangeStatus = "pending" | "accepted" | "rejected";
 
@@ -174,7 +175,10 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
               </p>
               <div className="flex items-center gap-2">
                 {pendingCount > 0 ? (
-                  <Button type="button" size="sm" className="gap-1.5" onClick={acceptAll}>
+                  <Button type="button" size="sm" className="gap-1.5" onClick={(e) => {
+                    acceptAll();
+                    celebrate(e.currentTarget, "big");
+                  }}>
                     <Check className="h-3.5 w-3.5" />
                     {t("resume.improve.acceptAll") || "Accept all"}
                   </Button>
@@ -245,7 +249,10 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
                         type="button"
                         size="sm"
                         className="h-8 gap-1.5 bg-primary hover:bg-primary/90"
-                        onClick={() => setStatus(index, "accepted")}
+                        onClick={(e) => {
+                          setStatus(index, "accepted");
+                          celebrate(e.currentTarget);
+                        }}
                       >
                         <Check className="h-3.5 w-3.5" />
                         {t("resume.improve.accept") || "Accept"}

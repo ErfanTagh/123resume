@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { textProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI, type AiImproveFieldType } from "@/lib/api";
+import { celebrate } from "@/lib/celebrate";
 
 export interface AiImproveTextareaProps {
   fieldType: AiImproveFieldType;
@@ -181,7 +182,10 @@ export const AiImproveTextarea = ({
               type="button"
               size="sm"
               className="h-8 gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={handleApply}
+              onClick={(e) => {
+                handleApply();
+                celebrate(e.currentTarget);
+              }}
               disabled={loading}
             >
               <Check className="h-3.5 w-3.5" />

@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { textProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI } from "@/lib/api";
+import { celebrate } from "@/lib/celebrate";
 
 interface WorkBulletAiSuggestProps {
   position: string;
@@ -147,7 +148,10 @@ export const WorkBulletAiSuggest = ({
               type="button"
               size="sm"
               className="h-8 gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={handleAdd}
+              onClick={(e) => {
+                handleAdd();
+                celebrate(e.currentTarget);
+              }}
               disabled={loading}
             >
               <Check className="h-3.5 w-3.5" />

@@ -1,15 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  Sparkles, 
-  ArrowRight
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
 import { HiredAtSection } from "@/components/landing/HiredAtSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeatureTabs } from "@/components/landing/FeatureTabs";
+import { PoweredByClaude } from "@/components/landing/PoweredByClaude";
 
 const Landing = () => {
   const { t } = useLanguage();
@@ -37,10 +35,8 @@ const Landing = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center space-y-8 sm:space-y-10">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-primary/10 border border-primary/20 text-xs sm:text-sm font-semibold text-primary animate-fade-in">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              {t('landing.badge')}
-              <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <div className="animate-fade-in">
+              <PoweredByClaude />
             </div>
 
             {/* Single H1 for SEO — both lines are one heading (avoid duplicate h1). */}

@@ -40,7 +40,7 @@ services:
       mongodb:
         condition: service_healthy
     # Ensure openai SDK exists (avoids ModuleNotFoundError if image predates Dockerfile openai line)
-    command: sh -c "pip install -q 'openai>=1.54.0' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "pip install -q 'openai>=1.54.0' 'anthropic>=1.11.0,<2' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
     networks:
       - resume-network
 

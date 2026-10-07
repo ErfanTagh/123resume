@@ -2,6 +2,9 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./i18n/config";
+import { installClientActionTracker } from "@/lib/clientActionContext";
+
+installClientActionTracker();
 
 const container = document.getElementById("root")!;
 

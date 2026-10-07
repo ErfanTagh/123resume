@@ -449,12 +449,14 @@ def _send_with_mailgun(
     to_email,
     reply_to=None,
     from_formatted=None,
+    extra=None,
 ):
     """
     Internal helper to send email via Mailgun HTTP API using configuration from settings.
 
     from_formatted: optional full RFC5322 From, e.g. "123Resume <contact@123resume.de>".
         If omitted, uses noreply@<MAILGUN_DOMAIN> (must be authorized in Mailgun).
+    extra: optional extra Mailgun form fields (tags, List-Unsubscribe, tracking).
     """
     api_key = getattr(settings, "MAILGUN_API_KEY", "")
     domain = getattr(settings, "MAILGUN_DOMAIN", "")
@@ -483,6 +485,9 @@ def _send_with_mailgun(
 
     if reply_to:
         data["h:Reply-To"] = reply_to
+
+    if extra:
+        data.update(extra)
 
     try:
         resp = requests.post(url, auth=("api", api_key), data=data, timeout=10)
@@ -670,3 +675,173 @@ def send_job_tools_announcement_email(to_email: str, username: str = "") -> bool
         from_formatted=from_formatted,
     )
 
+
+
+# --- AI model upgrade announcement -------------------------------------------
+#
+# Real, unedited output from the "Improve my resume" feature on deepseek-v4-pro.
+# Chosen because the rewrite is stronger *without* adding claims the person never
+# made — an example that overstates would be a bad thing to teach users to accept.
+AI_MODEL_EXAMPLES_EN = [
+    ("made reports about how the posts did",
+     "Analyzed social media performance and compiled reports to inform marketing strategies."),
+    ("did training for new people",
+     "Conducted training sessions for new team members."),
+    ("helped set up the new store displays",
+     "Assisted in setting up new store displays to enhance visual merchandising."),
+]
+AI_MODEL_EXAMPLES_DE = [
+    ("habe neue Kollegen eingearbeitet",
+     "Arbeitete neue Kollegen ein und unterstützte deren Integration ins Team."),
+    ("war zuständig für die Kundenbetreuung am Telefon",
+     "Betreute Kunden telefonisch und gewährleistete eine professionelle Beratung."),
+]
+
+_ROSE = "#e11d63"
+_VIOLET = "#7c3aed"
+
+
+def _ai_model_example_html(before: str, after: str, before_label: str, after_label: str) -> str:
+    from html import escape
+    return f"""
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 14px;">
+              <tr><td style="padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-bottom:none;border-radius:10px 10px 0 0;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.08em;color:#94a3b8;">{before_label}</p>
+                <p style="margin:0;font-size:14px;color:#64748b;">{escape(before)}</p>
+              </td></tr>
+              <tr><td style="padding:12px 16px;background:#fdf2f8;border:1px solid #fbcfe8;border-left:4px solid {_ROSE};border-radius:0 0 10px 10px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.08em;color:{_ROSE};">{after_label}</p>
+                <p style="margin:0;font-size:15px;font-weight:600;color:#1e293b;">{escape(after)}</p>
+              </td></tr>
+            </table>"""
+
+
+def _ai_model_announcement_plain(greet: str) -> str:
+    en = "\n".join(f"  Before: {b}\n  After:  {a}\n" for b, a in AI_MODEL_EXAMPLES_EN)
+    de = "\n".join(f"  Vorher:  {b}\n  Nachher: {a}\n" for b, a in AI_MODEL_EXAMPLES_DE)
+    return f"""Hi {greet},
+
+We've upgraded the AI behind 123Resume to a newer, more capable model. It writes clearer, stronger resume text, and it still does it in seconds.
+
+Here's what it does to real resume lines:
+
+{en}
+THE SECRET TO LANDING INTERVIEWS
+A strong, professional resume. It's the first thing a recruiter sees, and often the only thing they read before deciding whether to call you.
+
+Try it: open a resume and click "Improve my resume". You review every suggestion and keep only the ones you like.
+https://123resume.de/resumes
+
+---
+
+Hallo {greet},
+
+wir haben die KI hinter 123Resume auf ein neueres, leistungsstärkeres Modell umgestellt. Sie formuliert Ihren Lebenslauf klarer und überzeugender, und das in wenigen Sekunden.
+
+{de}
+Das Geheimnis für mehr Vorstellungsgespräche ist ein starker, professioneller Lebenslauf.
+
+Öffnen Sie einen Lebenslauf und klicken Sie auf „Lebenslauf verbessern“. Sie prüfen jeden Vorschlag selbst.
+https://123resume.de/resumes
+
+Best regards / Mit freundlichen Grüßen,
+Erfan
+123Resume
+https://123resume.de
+
+Unsubscribe: %tag_unsubscribe_url%
+"""
+
+
+def _ai_model_announcement_html(greet: str) -> str:
+    from html import escape
+    g = escape(greet)
+    en_examples = "".join(_ai_model_example_html(b, a, "BEFORE", "AFTER") for b, a in AI_MODEL_EXAMPLES_EN)
+    de_examples = "".join(_ai_model_example_html(b, a, "VORHER", "NACHHER") for b, a in AI_MODEL_EXAMPLES_DE)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your resume just got a smarter AI</title>
+</head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#1e293b;background:#fdf2f8;margin:0;padding:0;">
+  <!-- inbox preview text -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">See how the new AI rewrites real resume lines, plus the one thing that gets you more interviews.</div>
+  <table role="presentation" style="width:100%;border-collapse:collapse;background:#fdf2f8;">
+    <tr><td style="padding:24px 12px;">
+      <table role="presentation" style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(225,29,99,0.12);">
+        <tr>
+          <!-- bgcolor is the fallback for clients without gradient support (Outlook) -->
+          <td bgcolor="{_ROSE}" style="padding:36px 36px 32px;background-color:{_ROSE};background-image:linear-gradient(135deg,{_ROSE} 0%,#c026d3 55%,{_VIOLET} 100%);">
+            <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#fce7f3;letter-spacing:0.12em;text-transform:uppercase;">✨ AI upgrade</p>
+            <h1 style="margin:0;font-size:28px;color:#ffffff;font-weight:800;line-height:1.2;">Your resume just got<br>a smarter AI</h1>
+            <p style="margin:12px 0 0;font-size:15px;color:#fce7f3;">Clearer, stronger wording in seconds</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 36px 6px;">
+            <p style="margin:0 0 14px;font-size:16px;color:#334155;">Hi {g},</p>
+            <p style="margin:0 0 22px;font-size:15px;color:#475569;">We've upgraded the AI behind <strong style="color:{_ROSE};">123Resume</strong> to a newer, more capable model. It writes clearer, stronger resume text, and it still does it in seconds. Here's what it does to real resume lines:</p>
+{en_examples}
+            <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 22px;">
+              <tr><td bgcolor="#fdf4ff" style="padding:20px 22px;background:#fdf4ff;border-radius:12px;border:1px solid #f5d0fe;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:{_VIOLET};letter-spacing:0.1em;text-transform:uppercase;">The secret to landing interviews</p>
+                <p style="margin:0;font-size:16px;color:#1e293b;"><strong>A strong, professional resume.</strong> It's the first thing a recruiter sees, and often the only thing they read before deciding whether to call you.</p>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 8px;font-size:15px;color:#475569;">Open a resume and click <strong>Improve my resume</strong>. You review every suggestion and keep only the ones you like.</p>
+            <p style="margin:18px 0 26px;">
+              <a href="https://123resume.de/resumes" style="display:inline-block;padding:14px 28px;background:{_ROSE};color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;">Improve my resume →</a>
+            </p>
+
+            <hr style="border:none;border-top:1px solid #fbcfe8;margin:8px 0 26px;">
+
+            <p style="margin:0 0 14px;font-size:16px;color:#334155;">Hallo {g},</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#475569;">wir haben die KI hinter <strong style="color:{_ROSE};">123Resume</strong> auf ein neueres, leistungsstärkeres Modell umgestellt. Sie formuliert Ihren Lebenslauf klarer und überzeugender, und das in wenigen Sekunden:</p>
+{de_examples}
+            <p style="margin:18px 0 8px;font-size:15px;color:#475569;"><strong>Das Geheimnis für mehr Vorstellungsgespräche</strong> ist ein starker, professioneller Lebenslauf. Öffnen Sie einen Lebenslauf und klicken Sie auf <strong>„Lebenslauf verbessern“</strong>. Sie prüfen jeden Vorschlag selbst.</p>
+            <p style="margin:18px 0 26px;">
+              <a href="https://123resume.de/resumes" style="display:inline-block;padding:12px 24px;background:#ffffff;color:{_ROSE};text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;border:2px solid {_ROSE};">Lebenslauf verbessern →</a>
+            </p>
+
+            <p style="margin:0 0 26px;font-size:15px;color:#334155;">Best regards / Mit freundlichen Grüßen,<br><strong>Erfan</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 36px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#64748b;">
+              <a href="https://123resume.de" style="color:{_ROSE};text-decoration:none;font-weight:600;">123resume.de</a>
+              &nbsp;·&nbsp; contact@123resume.de
+              &nbsp;·&nbsp; <a href="%tag_unsubscribe_url%" style="color:#64748b;">Unsubscribe</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_ai_model_announcement_email(to_email: str, name: str = "") -> bool:
+    """Product update: the AI now runs on a newer model, with before/after examples (Mailgun)."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="Your resume just got a smarter AI ✨",
+        plain_message=_ai_model_announcement_plain(greet),
+        html_message=_ai_model_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            # Tag-based unsubscribe: opting out of product updates must not
+            # suppress password-reset / verification mail from this domain.
+            "o:tag": "product-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )

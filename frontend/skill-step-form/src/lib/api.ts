@@ -6,6 +6,7 @@
 import type { PublicProfileSections } from "@/lib/publicProfileSections";
 import type { PublicProfileThemeId } from "@/lib/publicProfileTheme";
 import type { TranslationLanguageCode } from "@/lib/translationLanguages";
+import { getClientAction, getClientPath } from "@/lib/clientActionContext";
 
 // Use environment variable if available, otherwise use relative path for Vite proxy
 // Remove trailing slash if present to avoid double slashes
@@ -89,6 +90,16 @@ const createHeaders = (includeAuth = true, noCache = false) => {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+  }
+
+  // Page/action context for server-side error alerts
+  const clientPath = getClientPath();
+  if (clientPath) {
+    headers['X-Client-Path'] = clientPath;
+  }
+  const clientAction = getClientAction();
+  if (clientAction) {
+    headers['X-Client-Action'] = clientAction;
   }
 
   return headers;

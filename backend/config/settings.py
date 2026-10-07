@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.error_alert_middleware.ErrorAlertMiddleware',
 ]
 
 # OAuth Provider Configuration
@@ -91,6 +92,9 @@ XING_CLIENT_SECRET = os.getenv('XING_CLIENT_SECRET', '').strip()
 
 # Where "new user signed up" alerts are sent. Empty disables the notification.
 ADMIN_NOTIFICATION_EMAIL = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'contact@123resume.de').strip()
+
+# Operator inbox for API error alerts.
+ERROR_ALERT_EMAIL = os.getenv('ERROR_ALERT_EMAIL', '').strip() or ADMIN_NOTIFICATION_EMAIL
 
 # DeepSeek — OpenAI-compatible HTTP API (cheaper than GPT for many workloads).
 # Keys: https://platform.deepseek.com/ — set DEEPSEEK_API_KEY in .env (never commit it).
@@ -254,6 +258,13 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Allow page/action context headers from the SPA (API error alerts).
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-client-path',
+    'x-client-action',
+]
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -270,6 +281,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'EXCEPTION_HANDLER': 'api.exception_handlers.custom_exception_handler',
 }
 
 # JWT Settings

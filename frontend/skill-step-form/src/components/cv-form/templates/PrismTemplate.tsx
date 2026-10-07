@@ -265,6 +265,13 @@ export const PrismTemplate = ({ data }: PrismTemplateProps) => {
                     )}
                   </div>
                   {proj.description && <p style={{ fontSize: bodySizes.sm, color: ss.bodyColor, lineHeight: '1.6', margin: '3px 0 0' }}>{proj.description}</p>}
+                  {proj.highlights && proj.highlights.some(h => h.highlight) && (
+                    <ul style={{ fontSize: bodySizes.sm, color: ss.bodyColor, lineHeight: '1.6', marginTop: '4px', paddingLeft: 0, listStyle: 'none' }}>
+                      {proj.highlights.map((h, hi) => h.highlight && (
+                        <li key={hi} style={{ display: 'flex', gap: '8px' }}><span style={{ opacity: 0.4 }}>•</span>{h.highlight}</li>
+                      ))}
+                    </ul>
+                  )}
                   {proj.technologies && proj.technologies.some(t => t.technology) && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '5px' }}>
                       {proj.technologies.filter(t => t.technology).map((tech, ti) => (

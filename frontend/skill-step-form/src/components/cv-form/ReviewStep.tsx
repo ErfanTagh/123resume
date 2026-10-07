@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { CVFormData } from "./types";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,8 @@ import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar, Edit } from "lu
 import { SectionOrderManager } from "./SectionOrderManager";
 import { CVRating } from "./CVRating";
 import { ResumeImprovePanel } from "./ResumeImprovePanel";
-import type { ResumeScore } from "@/lib/resumeScorer";
+import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
+import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
@@ -34,9 +35,34 @@ export const ReviewStep = ({
   onReanalyzeAiScore,
   reanalyzeAiScoreLoading,
 }: ReviewStepProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const data = form.watch();
   const displayData = useMemo(() => withResumeSectionsSortedForDisplay(data), [data]);
+
+  // The number is our own deterministic score, so it can follow every edit
+  // (an accepted AI suggestion included) instantly. Only the AI's written
+  // feedback waits for the next server round trip.
+  const liveRating = useMemo(() => {
+    if (!resumeScoreFromNav) return undefined;
+    const local = calculateResumeScore(data, resumeProseLanguage(data, language));
+    return {
+      ...resumeScoreFromNav,
+      overallScore: local.overallScore,
+      categories: resumeScoreFromNav.categories.map((c) => {
+        const live = local.categories.find((l) => l.name === c.name);
+        return live ? { ...c, score: live.score } : c;
+      }),
+    };
+  }, [resumeScoreFromNav, data, language]);
+
+  // Several accepts in a row → one AI refresh, not one per click.
+  const rescoreTimer = useRef<number>();
+  const scheduleAiRescore = useCallback(() => {
+    if (!onReanalyzeAiScore) return;
+    window.clearTimeout(rescoreTimer.current);
+    rescoreTimer.current = window.setTimeout(onReanalyzeAiScore, 1500);
+  }, [onReanalyzeAiScore]);
+  useEffect(() => () => window.clearTimeout(rescoreTimer.current), []);
 
   useEffect(() => {
     logResumeScore("ui:review-step-props", {
@@ -79,12 +105,12 @@ export const ReviewStep = ({
       <CVRating
         onAnalyze={onReanalyzeAiScore}
         isAnalyzing={reanalyzeAiScoreLoading}
-        rating={resumeScoreFromNav}
+        rating={liveRating}
         ratingLoading={resumeScoreLoadingFromNav}
       />
 
       {/* One-click AI improvements with per-change accept/reject */}
-      <ResumeImprovePanel form={form} onApplied={onReanalyzeAiScore} />
+      <ResumeImprovePanel form={form} onApplied={scheduleAiRescore} />
 
       {/* Section Order Manager */}
       <SectionOrderManager

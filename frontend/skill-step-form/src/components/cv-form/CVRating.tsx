@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,56 @@ interface CVRatingProps {
 
 const LOGGED_IN_PLACEHOLDER_OVERALL = 2.5;
 
+/** Animates a number toward `target` (ease-out), rounded to one decimal. */
+function useCountUp(target: number, durationMs = 900): number {
+  const [value, setValue] = useState(target);
+  const current = useRef(target);
+  useEffect(() => {
+    const from = current.current;
+    if (from === target) return;
+    let reduced = false;
+    try {
+      reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      /* no matchMedia: animate */
+    }
+    if (reduced) {
+      current.current = target;
+      setValue(target);
+      return;
+    }
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / durationMs);
+      const next = from + (target - from) * (1 - Math.pow(1 - p, 3));
+      current.current = next;
+      setValue(next);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return Math.round(value * 10) / 10;
+}
+
+/** Briefly shows how much the score just moved ("+0.6"). */
+function useScoreDelta(score: number | undefined): number | null {
+  const [delta, setDelta] = useState<number | null>(null);
+  const previous = useRef(score);
+  useEffect(() => {
+    const prev = previous.current;
+    previous.current = score;
+    if (prev == null || score == null) return;
+    const d = Math.round((score - prev) * 10) / 10;
+    if (d === 0) return;
+    setDelta(d);
+    const id = window.setTimeout(() => setDelta(null), 2400);
+    return () => window.clearTimeout(id);
+  }, [score]);
+  return delta;
+}
+
 export const CVRating = ({
   onAnalyze,
   isAnalyzing,
@@ -42,6 +93,8 @@ export const CVRating = ({
   const { t } = useLanguage();
   const { user } = useAuth();
   const isAuthenticated = !!user;
+  const animatedScore = useCountUp(parentRating?.overallScore ?? 0);
+  const scoreDelta = useScoreDelta(parentRating?.overallScore);
 
   if (!isAuthenticated) {
     return (
@@ -161,25 +214,31 @@ export const CVRating = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3 text-center">
+          {/* The number is computed locally and always current, so it stays
+              visible while the AI rewrites the feedback text below. */}
           <div
-            className={`relative flex min-h-[3.5rem] items-baseline justify-center gap-1 font-bold ${
-              ratingLoading || isAnalyzing ? "text-muted-foreground" : getOverallScoreColor(rating.overallScore)
-            }`}
+            className={`relative flex min-h-[3.5rem] items-baseline justify-center gap-1 font-bold transition-colors duration-500 ${getOverallScoreColor(animatedScore)}`}
           >
-            {ratingLoading || isAnalyzing ? (
-              <ResumeScoreNumberShimmer size="xl" />
-            ) : (
-              <>
-                <span className="text-5xl leading-snug tabular-nums tracking-tight">{rating.overallScore}</span>
-                <span className="text-2xl leading-snug text-muted-foreground">/10</span>
-              </>
-            )}
+            <span className="relative text-5xl leading-snug tabular-nums tracking-tight">
+              {animatedScore.toFixed(1)}
+              {scoreDelta != null ? (
+                <span
+                  key={`${scoreDelta}-${rating.overallScore}`}
+                  className={`absolute -right-3 top-1 translate-x-full rounded-full px-2 py-0.5 text-sm font-semibold animate-in fade-in slide-in-from-bottom-3 duration-500 ${
+                    scoreDelta > 0
+                      ? "bg-green-500/15 text-green-600 dark:text-green-400"
+                      : "bg-red-500/10 text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {scoreDelta > 0 ? "+" : ""}
+                  {scoreDelta.toFixed(1)}
+                </span>
+              ) : null}
+            </span>
+            <span className="text-2xl leading-snug text-muted-foreground">/10</span>
           </div>
           <Badge className={status.color}>{status.label}</Badge>
-          <Progress
-            value={rating.overallScore * 10}
-            className={`h-3 ${ratingLoading || isAnalyzing ? "animate-pulse opacity-60" : ""}`}
-          />
+          <Progress value={animatedScore * 10} className="h-3" />
         </div>
 
         {suggestions.length > 0 ? (

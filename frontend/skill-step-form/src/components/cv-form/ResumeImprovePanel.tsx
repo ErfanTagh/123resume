@@ -84,37 +84,34 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
     }
   };
 
+  // Form writes happen here, before onApplied, never inside a setChanges
+  // updater: React runs updaters later, so the score refresh snapshotted the
+  // old text and then threw its own answer away as stale.
   const setStatus = (index: number, status: ChangeStatus) => {
-    setChanges((prev) => {
-      if (!prev) return prev;
-      const next = [...prev];
-      const target = next[index];
-      if (!target) return prev;
-      if (status === "accepted") {
-        writeField(target, target.improved);
-      } else if (target.status === "accepted") {
-        // Leaving an accepted change (Undo / Reject) restores the original text.
-        writeField(target, target.original);
-      }
-      next[index] = { ...target, status };
-      return next;
-    });
+    const target = changes?.[index];
+    if (!changes || !target) return;
+    if (status === "accepted") {
+      writeField(target, target.improved);
+    } else if (target.status === "accepted") {
+      // Leaving an accepted change (Undo / Reject) restores the original text.
+      writeField(target, target.original);
+    }
+    setChanges(changes.map((c, i) => (i === index ? { ...c, status } : c)));
     // Content changed → let the parent refresh the score so the displayed number
     // matches what will be saved.
     onApplied?.();
   };
 
   const acceptAll = () => {
-    setChanges((prev) => {
-      if (!prev) return prev;
-      return prev.map((c) => {
-        if (c.status === "pending") {
-          writeField(c, c.improved);
-          return { ...c, status: "accepted" as ChangeStatus };
-        }
-        return c;
-      });
-    });
+    if (!changes) return;
+    for (const c of changes) {
+      if (c.status === "pending") writeField(c, c.improved);
+    }
+    setChanges(
+      changes.map((c) =>
+        c.status === "pending" ? { ...c, status: "accepted" as ChangeStatus } : c,
+      ),
+    );
     toast({
       title: t("resume.improve.appliedAllTitle") || "Improvements applied",
       description:

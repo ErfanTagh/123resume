@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Tuple
 from django.conf import settings
 from django.core.cache import cache
 
+from .ai_language import normalize_output_language, output_language_rule  # noqa: F401 (re-exported)
 from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
 
@@ -24,7 +25,7 @@ OVERALL_SCORE_BASE = 2.5
 # Cache identical resumes so repeated "Get score" returns the SAME number (no LLM jitter)
 # and avoids redundant API calls. Bump SCORE_CACHE_VERSION whenever the rubric/prompt
 # changes so previously cached scores are invalidated.
-SCORE_CACHE_VERSION = "v6"
+SCORE_CACHE_VERSION = "v7"
 SCORE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
@@ -57,16 +58,6 @@ EXPECTED_CATEGORIES: List[Tuple[str, float]] = [
     ("Education & Certifications", 0.5),
     ("ATS Optimization", 0.5),
 ]
-
-
-def normalize_output_language(raw: Any) -> str:
-    """UI / résumé section language: 'de' or 'en' (default)."""
-    if not isinstance(raw, str):
-        return "en"
-    v = raw.strip().lower()
-    if v in ("de", "deutsch", "german"):
-        return "de"
-    return "en"
 
 
 def summarize_resume_payload_for_log(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,30 +286,15 @@ def score_resume_with_deepseek(
     estimated_pages = estimate_resume_pages(resume)
     payload = resume_json_for_prompt(resume)
 
-    if lang == "de":
-        lang_rules = """
-OUTPUT LANGUAGE (critical)
-- Write **all** human-readable strings in **German** (professional Hochdeutsch): each category's "feedback",
-  every string in "suggestions", and the full "overall_feedback" text.
-- Use **Sie**-Form for tips addressed to the candidate.
+    lang_rules = output_language_rule(
+        lang,
+        writes='every human-readable string: each category\'s "feedback", every string in "suggestions" and the full "overall_feedback"',
+    ) + """
 - JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly
-  (English names below are required for the app parser).
+  (the English names below are required by the app parser), whatever language the prose is in.
 """
-        overall_fb_rule = """
-Also return "overall_feedback": **one string** in **German** formatted as a **short bullet list only**:
-- Use **3 to 5 lines** separated by newline characters.
-- Each line MUST start with "- " (dash + space) followed by **at most ~90 characters** of text (one compact idea per line).
-- Cover: top strength, main gap/risk, top 1-2 fix priorities. No score numbers. No long paragraphs.
-"""
-    else:
-        lang_rules = """
-OUTPUT LANGUAGE (critical)
-- Write **all** human-readable strings in **English**: each category's "feedback", every string in "suggestions",
-  and the full "overall_feedback" text.
-- JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly.
-"""
-        overall_fb_rule = """
-Also return "overall_feedback": **one string** in **English** formatted as a **short bullet list only**:
+    overall_fb_rule = """
+Also return "overall_feedback": **one string**, in the OUTPUT LANGUAGE, formatted as a **short bullet list only**:
 - Use **3 to 5 lines** separated by newline characters.
 - Each line MUST start with "- " (dash + space) followed by **at most ~90 characters** of text (one compact idea per line).
 - Cover: top strength, main gap/risk, top 1-2 fix priorities. No score numbers. No long paragraphs.

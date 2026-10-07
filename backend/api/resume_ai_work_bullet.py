@@ -12,7 +12,7 @@ from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
-from .resume_ai_scoring import normalize_output_language
+from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
 
@@ -113,13 +113,7 @@ def suggest_work_experience_bullet(
     if not any([position, company, description, bullets]):
         raise ValueError("insufficient context")
 
-    if lang == "de":
-        lang_rule = (
-            "Schreiben Sie die neue Aufzählung auf **Deutsch** (professionelles Hochdeutsch). "
-            "Verwenden Sie die Sie-Form nicht — es ist ein Lebenslauf-Eintrag in der Ich-Form / neutral."
-        )
-    else:
-        lang_rule = "Write the new bullet in **English** (professional US-style resume tone)."
+    lang_rule = output_language_rule(lang, writes="the new bullet", source="the role's existing text (bullets, description, job title)")
 
     system = (
         "You help candidates write strong resume bullet points for work experience. "

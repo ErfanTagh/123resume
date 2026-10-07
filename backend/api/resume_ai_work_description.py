@@ -12,7 +12,7 @@ from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
-from .resume_ai_scoring import normalize_output_language
+from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +81,7 @@ def improve_work_role_description(
     if not description and not (position or company):
         raise ValueError("insufficient context")
 
-    if lang == "de":
-        lang_rule = "Schreiben Sie die verbesserte Zusammenfassung auf **Deutsch** (professionelles Hochdeutsch)."
-    else:
-        lang_rule = "Write the improved summary in **English** (professional US-style resume tone)."
+    lang_rule = output_language_rule(lang, writes="the improved summary", source="the original text")
 
     system = (
         "You improve resume role summaries for work experience. "
@@ -157,10 +154,7 @@ def improve_professional_summary(
     if not description and not professional_title:
         raise ValueError("insufficient context")
 
-    if lang == "de":
-        lang_rule = "Schreiben Sie die verbesserte Zusammenfassung auf **Deutsch** (professionelles Hochdeutsch)."
-    else:
-        lang_rule = "Write the improved summary in **English** (professional US-style resume tone)."
+    lang_rule = output_language_rule(lang, writes="the improved summary", source="the original text")
 
     system = (
         "You improve professional summaries at the top of resumes. "
@@ -210,10 +204,7 @@ def improve_project_description(
     if not description and not project_name:
         raise ValueError("insufficient context")
 
-    if lang == "de":
-        lang_rule = "Schreiben Sie die verbesserte Beschreibung auf **Deutsch** (professionelles Hochdeutsch)."
-    else:
-        lang_rule = "Write the improved description in **English** (professional US-style resume tone)."
+    lang_rule = output_language_rule(lang, writes="the improved description", source="the original text")
 
     system = (
         "You improve project descriptions on resumes. "

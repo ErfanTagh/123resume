@@ -304,6 +304,11 @@ export const ReviewStep = ({
                       {proj.description && (
                         <p className="text-sm text-muted-foreground">{proj.description}</p>
                       )}
+                      {proj.highlights?.some((h) => h.highlight) && (
+                        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-0.5">
+                          {proj.highlights.map((h, i) => (h.highlight ? <li key={i}>{h.highlight}</li> : null))}
+                        </ul>
+                      )}
                       {proj.technologies && proj.technologies.length > 0 && proj.technologies.some(t => t.technology) && (
                         <p className="text-xs text-muted-foreground">
                           <span className="font-medium">Technologies:</span> {proj.technologies.map(t => t.technology).filter(Boolean).join(", ")}

@@ -341,6 +341,13 @@ const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: 
     control: form.control,
     name: `projects.${index}.technologies`,
   });
+  // Highlights are shown on every template and the AI can suggest them, so
+  // they need a place here to be seen, edited and removed.
+  const { fields: highlightFields, append: appendHighlight, remove: removeHighlight } = useFieldArray({
+    control: form.control,
+    name: `projects.${index}.highlights`,
+  });
+  const highlights = form.watch(`projects.${index}.highlights`) || [];
 
   const projectName = form.watch(`projects.${index}.name`) || "";
 
@@ -369,6 +376,43 @@ const ProjectItem = ({ form, index }: { form: UseFormReturn<CVFormData>; index: 
           />
         )}
       />
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <Label>{t('resume.labels.projectHighlights')}</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => appendHighlight({ highlight: "" })}
+            className="h-8"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {t('resume.labels.add')}
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {highlightFields.map((field, highlightIndex) => (
+            <div key={field.id} className="flex gap-2">
+              <AutoGrowTextarea
+                {...form.register(`projects.${index}.highlights.${highlightIndex}.highlight`)}
+                resizeKey={highlights[highlightIndex]?.highlight}
+                placeholder={t('resume.placeholders.highlight')}
+                className="flex-1 min-h-9 leading-5 py-1.5"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeHighlight(highlightIndex)}
+                className="shrink-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-3">
         <div>
@@ -522,6 +566,7 @@ export const ProjectsStep = ({ form }: ExperienceStepProps) => {
                 name: "",
                 description: "",
                 technologies: [],
+                highlights: [],
                 startDate: "",
                 endDate: "",
                 link: ""
@@ -557,6 +602,7 @@ export const ProjectsStep = ({ form }: ExperienceStepProps) => {
               name: "",
               description: "",
               technologies: [],
+              highlights: [],
               startDate: "",
               endDate: "",
               link: ""

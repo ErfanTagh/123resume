@@ -8,8 +8,14 @@ Rewrites ONLY free-text fields the user can edit in the builder:
 
 Returns a list of proposed changes — each with the react-hook-form field
 `path`, a human `label`, the `original` text, and the `improved` text — so the
-frontend can present an Accept/Reject card per change. No facts are invented:
-the model only refines wording of text that already exists.
+frontend can present an Accept/Reject card per change.
+
+Two kinds of change:
+  - rewrites of text that already exists (no facts invented), and
+  - additions (kind "add"): new skills, work bullets and project highlights
+    that fit the candidate's roles. These are proposals: the user is told to
+    accept only what is true for them, and the model may not invent numbers.
+    For an addition, `path` is the array to append to and `original` is "".
 """
 from __future__ import annotations
 
@@ -30,6 +36,11 @@ logger = logging.getLogger(__name__)
 MAX_ITEMS = 24
 MAX_ITEM_CHARS = 1200
 MAX_OUTPUT_CHARS = 600
+MAX_NEW_SKILLS = 5
+MAX_NEW_BULLETS_PER_ROLE = 2
+MAX_NEW_BULLETS = 6
+MAX_NEW_HIGHLIGHTS = 3
+MAX_ADDITION_CHARS = 220
 
 
 def _norm(text: Any) -> str:
@@ -188,6 +199,95 @@ def collect_improvable_items(resume: Dict[str, Any]) -> List[Dict[str, str]]:
     return items
 
 
+def _roles_and_skills(resume: Dict[str, Any]) -> Dict[str, Any]:
+    """What the model needs to propose additions: roles, projects, existing skills."""
+    roles = []
+    work = _get_block(resume, "workExperience", "work_experience") or []
+    if isinstance(work, list):
+        for idx, exp in enumerate(work):
+            if isinstance(exp, dict) and (_norm(exp.get("position")) or _norm(exp.get("company"))):
+                bullets = [
+                    _norm_subitem(r, "responsibility") for r in (exp.get("responsibilities") or [])
+                ]
+                roles.append({
+                    "role": idx,
+                    "position": _norm(exp.get("position")),
+                    "company": _norm(exp.get("company")),
+                    "existing_bullets": [b for b in bullets if b][:8],
+                })
+    projects = []
+    for idx, proj in enumerate(resume.get("projects") or []):
+        if isinstance(proj, dict) and _norm(proj.get("name")):
+            projects.append({"project": idx, "name": _norm(proj.get("name")),
+                             "description": _norm(proj.get("description"))[:300]})
+
+    skills = [_norm_subitem(sk, "skill") for sk in (resume.get("skills") or [])]
+    groups = resume.get("skillGroups") or resume.get("skill_groups") or []
+    for g in groups if isinstance(groups, list) else []:
+        if isinstance(g, dict):
+            skills += [_norm_subitem(sk, "skill") for sk in (g.get("skills") or [])]
+    skills = [sk for sk in skills if sk]
+
+    # New skills go where the user keeps theirs: the flat list, or the first group.
+    flat = [sk for sk in (resume.get("skills") or []) if _norm_subitem(sk, "skill")]
+    skills_path = "skills"
+    if not flat and isinstance(groups, list) and groups and isinstance(groups[0], dict):
+        skills_path = "skillGroups.0.skills"
+    return {"roles": roles, "projects": projects, "skills": skills, "skills_path": skills_path}
+
+
+def _collect_additions(parsed: Dict[str, Any], ctx: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Validate the model's proposed additions into change dicts (kind "add")."""
+    adds = parsed.get("additions") if isinstance(parsed.get("additions"), dict) else {}
+    out: List[Dict[str, str]] = []
+
+    have = {sk.lower() for sk in ctx["skills"]}
+    for raw in (adds.get("skills") or [])[: MAX_NEW_SKILLS * 2]:
+        skill = _norm(raw)[:60]
+        if skill and skill.lower() not in have and len([c for c in out if c["kind"] == "add"]) < MAX_NEW_SKILLS:
+            have.add(skill.lower())
+            out.append({"path": ctx["skills_path"], "label": "New skill", "original": "",
+                        "improved": skill, "kind": "add"})
+
+    roles = {r["role"]: r for r in ctx["roles"]}
+    per_role: Dict[int, int] = {}
+    n_bullets = 0
+    for row in adds.get("bullets") or []:
+        if not isinstance(row, dict) or n_bullets >= MAX_NEW_BULLETS:
+            continue
+        try:
+            idx = int(row.get("role"))
+        except (TypeError, ValueError):
+            continue
+        text = _norm(row.get("text"))[:MAX_ADDITION_CHARS].lstrip("-• ").strip()
+        role = roles.get(idx)
+        if not role or not text or per_role.get(idx, 0) >= MAX_NEW_BULLETS_PER_ROLE:
+            continue
+        if text.lower() in {b.lower() for b in role["existing_bullets"]}:
+            continue
+        per_role[idx] = per_role.get(idx, 0) + 1
+        n_bullets += 1
+        label_role = " at ".join([p for p in (role["position"], role["company"]) if p])
+        out.append({"path": f"workExperience.{idx}.responsibilities", "label": f"New bullet — {label_role}",
+                    "original": "", "improved": text, "kind": "add"})
+
+    projects = {p["project"]: p for p in ctx["projects"]}
+    n_high = 0
+    for row in adds.get("highlights") or []:
+        if not isinstance(row, dict) or n_high >= MAX_NEW_HIGHLIGHTS:
+            continue
+        try:
+            idx = int(row.get("project"))
+        except (TypeError, ValueError):
+            continue
+        text = _norm(row.get("text"))[:MAX_ADDITION_CHARS].lstrip("-• ").strip()
+        if idx in projects and text:
+            n_high += 1
+            out.append({"path": f"projects.{idx}.highlights", "label": f"New highlight — {projects[idx]['name']}",
+                        "original": "", "improved": text, "kind": "add"})
+    return out
+
+
 def _extract_json_object(text: str) -> Dict[str, Any]:
     text = (text or "").strip()
     m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
@@ -206,17 +306,18 @@ def improve_resume_fields(
     output_language: str = "en",
 ) -> List[Dict[str, str]]:
     """
-    Returns a list of accepted-candidate changes:
-      [{path, label, original, improved}, ...]
-    Only fields whose improved text differs meaningfully from the original are
-    returned. Empty list means "nothing to improve".
+    Returns a list of proposed changes:
+      [{path, label, original, improved, kind?}, ...]
+    Rewrites only where the improved text differs meaningfully from the original,
+    then additions (kind "add"). Empty list means "nothing to improve".
     """
     if not settings.AI_ENABLED:
         raise RuntimeError("AI provider is not configured")
 
     lang = normalize_output_language(output_language)
     items = collect_improvable_items(resume)
-    if not items:
+    ctx = _roles_and_skills(resume)
+    if not items and not ctx["roles"]:
         return []
 
     lang_rule = output_language_rule(lang, writes="each improved text", source="that field's original text")
@@ -228,10 +329,9 @@ def improve_resume_fields(
     ]
 
     system = (
-        "You improve the wording of existing resume text fields. "
+        "You improve resumes: you rewrite existing text fields and propose relevant additions. "
         "Reply with a single JSON object only (no markdown fences). "
-        "Refine clarity, tone, and impact while KEEPING the same facts — never invent employers, "
-        "dates, numbers, metrics, technologies, or achievements not present in the original."
+        "Rewrites keep the same facts; never invent employers, dates, numbers or metrics."
     )
     user = f"""
 Improve each resume text field below. Return a better version of the SAME content.
@@ -251,11 +351,29 @@ Rules:
 - If a field is already strong and you cannot meaningfully improve it, return its text unchanged.
 - {lang_rule}
 
-Return JSON exactly as: {{"items": [{{"id": "<id>", "improved": "<improved text>"}}, ...]}}
-Include one object per input id, preserving ids.
+PART 2 — ADDITIONS. Also propose new content the candidate can add, whenever you find anything relevant:
+- "skills": up to {MAX_NEW_SKILLS} skills that fit their roles and title and are NOT already in their skills list
+  (core tools and abilities someone in these roles almost certainly uses).
+- "bullets": for each role, up to {MAX_NEW_BULLETS_PER_ROLE} new bullet points (max {MAX_NEW_BULLETS} in total) about work
+  someone in that position at that company very likely did, judging from the title, company and existing text.
+  Start with a strong action verb. Don't repeat what an existing bullet already says.
+- "highlights": up to {MAX_NEW_HIGHLIGHTS} new project highlights, only when a project's description supports them.
+The candidate decides whether each addition is true for them, so: NEVER put numbers, percentages, amounts,
+team sizes or other metrics in an addition, and never name employers, clients or certifications that aren't in the resume.
+Write additions in the resume's own language. Return empty lists when nothing fits.
+
+Return JSON exactly as:
+{{"items": [{{"id": "<id>", "improved": "<improved text>"}}, ...],
+  "additions": {{"skills": ["<skill>", ...],
+                 "bullets": [{{"role": <role number>, "text": "<bullet>"}}, ...],
+                 "highlights": [{{"project": <project number>, "text": "<highlight>"}}, ...]}}}}
+Include one item per input id, preserving ids.
 
 Fields to improve (JSON):
 {json.dumps(model_items, ensure_ascii=False)}
+
+Roles, projects and current skills (for additions; "role"/"project" are the numbers to return):
+{json.dumps({"roles": ctx["roles"], "projects": ctx["projects"], "skills": ctx["skills"]}, ensure_ascii=False)}
 """.strip()
 
     client = get_deepseek_client()
@@ -305,6 +423,8 @@ Fields to improve (JSON):
                 "improved": improved,
             }
         )
+
+    changes += _collect_additions(parsed, ctx)
 
     logger.info(
         "resume_improve model_ok lang=%s items_in=%d changes_out=%d",

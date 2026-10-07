@@ -7,6 +7,7 @@ import {
   type ResumeScore,
 } from "@/lib/resumeScorer";
 import { resumeProseLanguage, type ResumeProseLanguage } from "@/lib/resumeContentLanguage";
+import type { ResumeTextChange } from "@/lib/resumeTextChanges";
 
 /** Never send profile photos to the scoring API — not used by the rubric and they bloat the payload. */
 function cloneResumeForAiScore(data: CVFormData): CVFormData {
@@ -26,15 +27,15 @@ function cloneResumeForAiScore(data: CVFormData): CVFormData {
 }
 
 /**
- * Combine a deterministic score with the AI's written feedback.
+ * Turn the server's AI review into a ResumeScore.
  *
- * The NUMBERS (overall score + per-category scores) come from the local
- * rule-based scorer, so they are reproducible and monotonic: identical input
- * always yields the identical score, and a small improvement reliably nudges the
- * score up. The AI supplies only the qualitative PROSE — per-category feedback,
- * suggestions, and the overall summary — matched to categories by name.
+ * The NUMBERS are the AI's judgment of the resume's interview chances for its
+ * target role (1 = thrown out, 10 = very likely an interview). Identical
+ * resumes get identical scores from the server's content cache. The local
+ * rule-based scorer only fills gaps: category names/maxima the UI expects, and
+ * text for a category the AI left out.
  */
-function mergeDeterministicScoreWithAiText(
+function aiScoreToResumeScore(
   data: CVFormData,
   lang: ResumeProseLanguage,
   raw: {
@@ -59,17 +60,17 @@ function mergeDeterministicScoreWithAiText(
   const aiSuggestions = Array.isArray(raw.suggestions)
     ? raw.suggestions.filter((s) => typeof s === "string" && s.trim())
     : [];
+  const overall = Number(raw.overallScore);
 
   return {
-    // Deterministic headline + category numbers.
-    overallScore: local.overallScore,
+    overallScore: Number.isFinite(overall) ? overall : local.overallScore,
     categories: local.categories.map((c) => {
       const ai = aiByName.get(c.name);
+      const aiScore = Number(ai?.score);
       return {
         name: c.name,
-        score: c.score,
+        score: ai && Number.isFinite(aiScore) ? aiScore : c.score,
         maxScore: c.maxScore,
-        // Prefer the AI's richer feedback text; fall back to the local note.
         feedback: (ai?.feedback || c.feedback || "").trim(),
       };
     }),
@@ -84,6 +85,8 @@ export type GetResumeScoreOptions = {
   fallbackToLocal?: boolean;
   /** Language of the AI prose and canned tips. Defaults to the resume's own language. */
   outputLanguage?: "en" | "de";
+  /** The last score and what changed since, so a re-score reflects the edits. */
+  previous?: { score: number; changes: ResumeTextChange[] };
 };
 
 /**
@@ -114,6 +117,7 @@ export async function getResumeScoreWithOptionalAI(
   try {
     const raw = await aiAPI.scoreResume(payloadForApi, {
       outputLanguage,
+      previous: options?.previous,
     });
     logResumeScore("client:getResumeScoreWithOptionalAI:api-ok", {
       overall: raw.overallScore,
@@ -125,7 +129,7 @@ export async function getResumeScoreWithOptionalAI(
         suggestionCount: raw.suggestions?.length ?? 0,
       });
     }
-    return mergeDeterministicScoreWithAiText(data, outputLanguage, raw);
+    return aiScoreToResumeScore(data, outputLanguage, raw);
   } catch (err) {
     logResumeScore("client:getResumeScoreWithOptionalAI:api-error", {
       err: err instanceof Error ? err.message : String(err),

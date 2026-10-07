@@ -14,6 +14,13 @@ import { celebrate } from "@/lib/celebrate";
 
 type ChangeStatus = "pending" | "accepted" | "rejected";
 
+// Item key inside each array an addition can go into.
+const ITEM_KEY: Record<string, string> = {
+  responsibilities: "responsibility",
+  highlights: "highlight",
+  skills: "skill",
+};
+
 interface TrackedChange extends ResumeImproveChange {
   status: ChangeStatus;
 }
@@ -47,6 +54,27 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
       shouldTouch: true,
     });
   };
+
+  // Additions append to an array (e.g. "skills") and Undo removes that item again.
+  const writeAddition = (change: TrackedChange, present: boolean) => {
+    const path = change.path as FieldPath<CVFormData>;
+    const key = ITEM_KEY[change.path.split(".").pop() ?? ""] ?? "text";
+    const items = ((form.getValues(path) as unknown) as Array<Record<string, string>> | undefined) ?? [];
+    let next: Array<Record<string, string>>;
+    if (present) {
+      next = [...items, { [key]: change.improved }];
+    } else {
+      const at = items.map((it) => it?.[key]).lastIndexOf(change.improved);
+      if (at < 0) return;
+      next = items.filter((_, i) => i !== at);
+    }
+    form.setValue(path, next as never, { shouldDirty: true, shouldTouch: true });
+  };
+
+  const apply = (change: TrackedChange) =>
+    change.kind === "add" ? writeAddition(change, true) : writeField(change, change.improved);
+  const revert = (change: TrackedChange) =>
+    change.kind === "add" ? writeAddition(change, false) : writeField(change, change.original);
 
   const fetchImprovements = async () => {
     setLoading(true);
@@ -91,10 +119,10 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
     const target = changes?.[index];
     if (!changes || !target) return;
     if (status === "accepted") {
-      writeField(target, target.improved);
+      apply(target);
     } else if (target.status === "accepted") {
       // Leaving an accepted change (Undo / Reject) restores the original text.
-      writeField(target, target.original);
+      revert(target);
     }
     setChanges(changes.map((c, i) => (i === index ? { ...c, status } : c)));
     // Content changed → let the parent refresh the score so the displayed number
@@ -105,7 +133,7 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
   const acceptAll = () => {
     if (!changes) return;
     for (const c of changes) {
-      if (c.status === "pending") writeField(c, c.improved);
+      if (c.status === "pending") apply(c);
     }
     setChanges(
       changes.map((c) =>
@@ -201,7 +229,14 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
                   className="overflow-hidden rounded-lg border border-border"
                 >
                   <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
-                    <span className="text-sm font-medium text-foreground">{change.label}</span>
+                    <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      {change.kind === "add" ? (
+                        <Badge variant="outline" className="border-primary/30 text-primary">
+                          {t("resume.improve.newBadge") || "New"}
+                        </Badge>
+                      ) : null}
+                      {change.label}
+                    </span>
                     {change.status === "accepted" ? (
                       <Badge className="bg-green-500 hover:bg-green-500">
                         {t("resume.improve.accepted") || "Accepted"}
@@ -211,6 +246,16 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
                     ) : null}
                   </div>
 
+                  {change.kind === "add" ? (
+                    <div className="space-y-2 p-3">
+                      <p className="rounded-md bg-primary/5 p-2 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                        {change.improved}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("resume.improve.addNote") || "Only accept this if it's true for you."}
+                      </p>
+                    </div>
+                  ) : (
                   <div className="grid gap-3 p-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -229,6 +274,7 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
                       </p>
                     </div>
                   </div>
+                  )}
 
                   {change.status === "pending" ? (
                     <div className="flex items-center justify-end gap-2 border-t border-border bg-background/60 px-3 py-2">

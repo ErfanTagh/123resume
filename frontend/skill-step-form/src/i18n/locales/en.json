@@ -594,6 +594,8 @@
       }
     },
     "improve": {
+      "newBadge": "New",
+      "addNote": "Only accept this if it's true for you.",
       "title": "Improve my resume with AI",
       "subtitle": "Let AI rewrite your summary and descriptions. Review each change and accept or reject it.",
       "cta": "Improve my resume",

@@ -23,6 +23,7 @@ import { getTestProfile, getTestProfileNames } from "@/lib/testData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
+import { resumeTextChanges, type ResumeTextChange } from "@/lib/resumeTextChanges";
 import { stableSerializeCvPayload } from "@/lib/stableSerializeCvPayload";
 import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
 import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
@@ -58,6 +59,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   const [navResumeScoreLoading, setNavResumeScoreLoading] = useState(false);
   const navResumeScoreRef = useRef<ResumeScore | undefined>(undefined);
   const lastSuccessfulScorePayloadRef = useRef<string | null>(null);
+  /** The last resume version the AI scored, kept (unlike the ref above) so the next
+   *  re-score can tell the AI what changed since. Reset only when the resume changes. */
+  const lastScoredRef = useRef<{ score: number; snapshot: string } | null>(null);
   const scoreRequestIdRef = useRef(0);
   /** Tracks language for AI score refetch (skip first run after mount / login). */
   const previousLanguageRef = useRef<"en" | "de" | null>(null);
@@ -85,6 +89,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
   useEffect(() => {
     lastSuccessfulScorePayloadRef.current = null;
+    lastScoredRef.current = null;
     scoreRequestIdRef.current = 0;
     setNavResumeScore(undefined);
   }, [editId]);
@@ -354,11 +359,25 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
     const requestId = ++scoreRequestIdRef.current;
     logResumeScore("fetch:loading-true", { requestId });
+    let previous: { score: number; changes: ResumeTextChange[] } | undefined;
+    const lastScored = lastScoredRef.current;
+    if (lastScored) {
+      try {
+        previous = {
+          score: lastScored.score,
+          changes: resumeTextChanges(JSON.parse(lastScored.snapshot), form.getValues()),
+        };
+      } catch {
+        previous = undefined;
+      }
+    }
+
     void getResumeScoreWithOptionalAI(form.getValues(), true, {
-      // When the server has no API key (503) or DeepSeek errors (502), still show the local heuristic
+      // When the server has no API key (503) or the AI errors (502), still show the local heuristic
       // so logged-in users see a score instead of a blank card + error toast.
       fallbackToLocal: true,
       outputLanguage: resumeProseLanguage(form.getValues(), language),
+      previous,
     })
       .then((score) => {
         if (requestId !== scoreRequestIdRef.current) {
@@ -399,6 +418,9 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         }
         setNavResumeScore(score);
         lastSuccessfulScorePayloadRef.current = snapshot;
+        if (score.fromAi && snapshot) {
+          lastScoredRef.current = { score: score.overallScore, snapshot };
+        }
         logResumeScore("fetch:then-success", {
           requestId,
           overall: score.overallScore,
@@ -619,6 +641,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       form.reset(normalizedProfile);
       setCurrentStep(0);
       lastSuccessfulScorePayloadRef.current = null;
+      lastScoredRef.current = null;
       scoreRequestIdRef.current = 0;
       setNavResumeScore(undefined);
       toast({

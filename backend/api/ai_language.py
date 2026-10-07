@@ -42,15 +42,17 @@ def output_language_rule(fallback: str, writes: str, source: str = "the resume")
 
     `writes` names the prose ("every feedback and suggestion string"),
     `source` names the text whose language decides ("the resume", "the original text").
+    `fallback` is the app's best guess. It is stated as the default because an
+    open "detect the language" rule let unrelated details in the prompt (German
+    style notes) pull English resumes into German.
     """
-    return f"""
+    name = language_name(fallback)
+    rule = f"""
 OUTPUT LANGUAGE (critical)
-- Write {writes} in the language {source} is written in. Detect it from the prose itself
-  (summary, descriptions, bullet points), not from names, company names, tools or skills,
-  which are often English in any resume.
-- Turkish text gets Turkish output, French gets French, Spanish gets Spanish, and so on for any language.
-- Only if there is too little prose to tell, write in {language_name(fallback)}.
-- Use the professional resume register native speakers use: professional Hochdeutsch for German,
-  a professional US-style tone for English. Where a language has a formal "you" (German Sie,
-  Turkish siz, French vous), use it when addressing the candidate.
-""".strip()
+- Write {writes} in the language {source} is written in. The app's best guess is {name}: use {name}
+  unless the prose itself (summary, descriptions, bullet points; not names, company names, tools or skills)
+  is clearly in another language. Then use that language: Turkish prose gets Turkish, French gets French, and so on.
+- Use the professional register native speakers use on resumes, and the formal "you" where the language has one."""
+    if fallback == "de":
+        rule += "\n- For German: professional Hochdeutsch, Sie-Form."
+    return rule.strip()

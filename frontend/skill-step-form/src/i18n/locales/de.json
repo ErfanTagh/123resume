@@ -594,6 +594,8 @@
       }
     },
     "improve": {
+      "newBadge": "Neu",
+      "addNote": "Übernehmen Sie das nur, wenn es auf Sie zutrifft.",
       "title": "Lebenslauf mit KI verbessern",
       "subtitle": "Lassen Sie die KI Ihre Zusammenfassung und Beschreibungen überarbeiten. Prüfen Sie jede Änderung und nehmen Sie sie an oder lehnen Sie sie ab.",
       "cta": "Lebenslauf verbessern",

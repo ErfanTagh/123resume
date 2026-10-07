@@ -94,8 +94,10 @@ def resume_score(request):
 
     Body JSON:
       - resume (required): CV JSON object
-      - output_language or outputLanguage (optional): "en" | "de" — language for all prose fields
-        (category feedback, suggestions, overall_feedback). Defaults to "en".
+      - output_language or outputLanguage (optional): fallback language for the prose
+        (it follows the resume's own language). Defaults to "en".
+      - previous (optional): {score, changes: [{path, before, after}]} when re-scoring after edits,
+        so the new score reflects what changed (see resume_ai_scoring._previous_review_block).
     """
     data = request.data or {}
     resume = data.get("resume")
@@ -139,7 +141,7 @@ def resume_score(request):
     )
 
     try:
-        result = resume_ai_scoring.score_resume_with_deepseek(resume, out_lang)
+        result = resume_ai_scoring.score_resume_with_deepseek(resume, out_lang, data.get("previous"))
         logger.info(
             "resume_score ok user_id=%s overall=%s categories=%s",
             getattr(request.user, "pk", None),

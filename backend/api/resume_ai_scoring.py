@@ -8,7 +8,7 @@ import hashlib
 import json
 import logging
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.core.cache import cache
@@ -19,13 +19,13 @@ from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_de
 
 logger = logging.getLogger(__name__)
 
-# Holistic overall_score floor after model + length adjustments (matches rubric baseline for DeepSeek).
-OVERALL_SCORE_BASE = 2.5
+# The score is the model's judgment of interview chances: 1 = thrown out, 10 = very likely.
+SCORE_MIN, SCORE_MAX = 1.0, 10.0
 
 # Cache identical resumes so repeated "Get score" returns the SAME number (no LLM jitter)
 # and avoids redundant API calls. Bump SCORE_CACHE_VERSION whenever the rubric/prompt
 # changes so previously cached scores are invalidated.
-SCORE_CACHE_VERSION = "v7"
+SCORE_CACHE_VERSION = "v8"
 SCORE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
@@ -191,15 +191,6 @@ def resume_json_for_prompt(data: Dict[str, Any], max_chars: int = 26000) -> str:
     return json.dumps(d, default=str, ensure_ascii=False)[:max_chars]
 
 
-def _length_penalty(estimated_pages: float, overall: float) -> float:
-    """Harsh deduction when content exceeds ~2 pages."""
-    if estimated_pages <= 2.0:
-        return overall
-    excess = estimated_pages - 2.0
-    penalty = min(3.0, excess * 1.5)
-    return max(0.0, round((overall - penalty) * 10) / 10)
-
-
 def _extract_json_object(text: str) -> Dict[str, Any]:
     text = (text or "").strip()
     m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
@@ -260,15 +251,54 @@ Return ONLY valid JSON with this shape (no markdown, no prose outside JSON):
 """.strip()
 
 
+def _previous_review_block(previous: Optional[Dict[str, Any]]) -> str:
+    """
+    Prompt context for a re-score after the user edited the resume.
+
+    Without it every re-score was judged from scratch, so the number drifted for
+    reasons unrelated to what the user changed. With the old score and the exact
+    edits, the model judges whether those edits moved the interview chances.
+    """
+    if not isinstance(previous, dict):
+        return ""
+    try:
+        score = float(previous.get("score"))
+    except (TypeError, ValueError):
+        return ""
+    lines = []
+    for ch in (previous.get("changes") or [])[:20]:
+        if not isinstance(ch, dict):
+            continue
+        before = str(ch.get("before") or "").strip()[:300]
+        after = str(ch.get("after") or "").strip()[:300]
+        if before == after:
+            continue
+        where = str(ch.get("path") or "").strip()[:80]
+        lines.append(f'- {where}: "{before or "(empty)"}" -> "{after or "(removed)"}"')
+    if not lines:
+        return ""
+    return f"""
+PREVIOUS REVIEW
+This resume scored {score:.1f} before the candidate made these edits (many are suggestions from our AI they accepted):
+{chr(10).join(lines)}
+Score the CURRENT resume on its own merits, but stay consistent with that earlier review: edits that genuinely
+improve the interview chances should raise the score by as much as they are worth; do not move the score for
+reasons unrelated to these edits.
+"""
+
+
 def score_resume_with_deepseek(
     resume: Dict[str, Any],
     output_language: str = "en",
+    previous: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Returns dict with keys: overall_score, estimated_pages, categories, suggestions, overall_feedback
     (snake_case for DRF JSON).
 
-    output_language: 'en' or 'de' — all prose fields (feedback, suggestions, overall_feedback) should match.
+    output_language: fallback language for the prose (it follows the resume's own language).
+    previous: optional {score, changes:[{path, before, after}]} from the last score, see
+    _previous_review_block. Not part of the cache key: the same resume gets the same score.
     """
     lang = normalize_output_language(output_language)
 
@@ -293,106 +323,45 @@ def score_resume_with_deepseek(
 - JSON **keys** stay in English. Each category "name" and numeric "max_score" MUST match the rubric exactly
   (the English names below are required by the app parser), whatever language the prose is in.
 """
-    overall_fb_rule = """
-Also return "overall_feedback": **one string**, in the OUTPUT LANGUAGE, formatted as a **short bullet list only**:
-- Use **3 to 5 lines** separated by newline characters.
-- Each line MUST start with "- " (dash + space) followed by **at most ~90 characters** of text (one compact idea per line).
-- Cover: top strength, main gap/risk, top 1-2 fix priorities. No score numbers. No long paragraphs.
-"""
+    target_role = ""
+    pi = resume.get("personalInfo") or resume.get("personal_info") or {}
+    if isinstance(pi, dict):
+        target_role = str(pi.get("professionalTitle") or pi.get("professional_title") or "").strip()
+    if not target_role:
+        work = resume.get("workExperience") or resume.get("work_experience") or []
+        if isinstance(work, list) and work and isinstance(work[0], dict):
+            target_role = str(work[0].get("position") or "").strip()
 
     rubric = f"""
-You score a resume JSON for the 123Resume builder. Apply this rubric strictly:
+You are an experienced recruiter reviewing a resume for the 123Resume builder.
 {lang_rules}
 
-OVERALL SCORE BASELINE (critical)
-- Treat **2.5 / 10** as the **baseline** overall_score for a minimal but structurally valid resume (little real content filled in).
-- **Build upward from 2.5** as the candidate demonstrates quality across the categories; cap at **10.0**.
-- Use **below 2.5** only for clearly unusable, empty, irrelevant, or broken submissions (rare).
-- Your **overall_score** must be a single number from **0 to 10** (one decimal), reflecting this baseline (for typical resumes you will usually output **2.5–10.0**).
+THE SCORE
+Give "overall_score" from 1 to 10 (one decimal): your honest judgment of how likely this resume is to get
+the candidate an INTERVIEW for the role it targets: {target_role or "the role its experience points to"}.
+- 10 = very high chance of an interview call for that role.
+- 1 = the resume would be thrown out within seconds for that role.
+Judge it the way a real recruiter for that role would in a 30-second read: relevant experience and
+concrete achievements, a clear story for that one role, skills that match it, and nothing missing that
+gets resumes rejected (no location, no dates, empty sections). More than 2 pages (estimated_pages) hurts.
 
-WEIGHTING
-- Work experience (maps mainly to "Experience Section" and partly "Content Quality"):
-  Award BIG points for EACH job entry that has a solid description.
-  Add EXTRA points when optional fields are filled: location, start/end dates, technologies,
-  competencies, responsibilities, company link, richer description.
-- Education (maps mainly to "Education & Certifications"):
-  Award BIG points for EACH education entry; EXTRA when optional fields are filled:
-  location, dates, field of study, key courses, extra descriptions, link.
-- Projects: FAIR (moderate) points — reflect mainly under "Content Quality" and a little under ATS if relevant.
-- Certifications: FAIR (moderate) points — under "Education & Certifications" together with degrees.
-- Personal website: PLUS (noticeable bonus within relevant categories / overall balance).
-- LinkedIn: PLUS.
-- GitHub: PLUS.
-- Length: estimated_pages (~250 words per resume page). If >2, treat as a serious issue:
-  lower relevant category scores, add strong concision suggestions, and reflect the problem in overall_score.
-  (The server may apply an additional length adjustment to overall_score.)
+Also rate six areas, each "score" from 0 to its max_score by the same judgment (how much that area helps
+the interview chance), with "feedback": **one** short line in the OUTPUT LANGUAGE starting with "- " (max ~120 characters):
+1) Content Quality (max 3)  2) Professional Summary (max 1)  3) Experience Section (max 2)
+4) Skills & Proficiency (max 1)  5) Education & Certifications (max 0.5)  6) ATS Optimization (max 0.5)
+{_previous_review_block(previous)}
+SUGGESTIONS: "suggestions" is an array of **at most 4** strings in the OUTPUT LANGUAGE, the edits that would most
+raise the interview chance. Each is **one** line starting with "- " (max ~110 characters).
+- Each must point at a field the user can edit in the builder and say what to change: the summary, a role's
+  description or bullets, the skills list, a project, education, certificates, or a missing location/LinkedIn/
+  GitHub/website (`personalInfo.location`, `.linkedin`, `.github`, `.website`).
+- CHECK the JSON first: never suggest adding something that is already filled in (a job's company link is
+  `workExperience[i].link`); for filled fields, suggest how to strengthen them instead.
+- Never suggest layout, design, fonts, templates, photos, file formats or "ATS-friendly formatting": the builder
+  handles those. Never suggest skill levels or ratings. Never "open to relocation". No vague advice like "proofread".
 
-RECRUITER REVIEW PRINCIPLES (apply when scoring AND when writing feedback/suggestions — a real recruiter spends ~20s and hunts for QUALIFICATIONS, not keywords):
-- QUALIFICATIONS OVER KEYWORDS: a strong experience/project bullet states WHAT (tech/skill) + HOW it was used + WHY it
-  mattered in plain business terms + WHERE (team / product / industry). A bullet that is only a list of technologies with
-  no how/why is weak ("keyword soup") — score it low and, in suggestions, show how to rewrite it as What+How+Why+Where.
-- BUSINESS IMPACT IN PLAIN LANGUAGE: reward outcomes a non-technical manager understands (revenue, cost saved, time saved,
-  uptime, users, risk reduced). Raw metrics or jargon with no business reason are weaker than impact tied to a reason.
-- AVOID OVER-TECHNICAL, TOOL-DROPPING BULLETS: naming tools (e.g., S3, Lambda, Glue, Pinecone, SageMaker, Bedrock) without
-  explaining why they mattered adds little — flag it.
-- FOCUS ON ONE JOB TITLE: if the resume mixes distinct target titles (e.g., Full-Stack Engineer + Data Engineer), relevance
-  is diluted — note it and suggest tailoring to a single target title.
-- CONTACT/LOCATION: if a location (city/country) is missing from personalInfo, flag it as a likely rejection risk. NEVER
-  suggest writing "open to relocation".
-- NO DUPLICATE KEYWORDS within the same role's bullets — suggest consolidating instead of repeating the same tech.
-- COMMUNICATION: value evidence of explaining technical work to non-technical stakeholders.
-- Strong bullets usually surface ~3+ relevant skills used in real context (not a bare keyword list).
-
-FIELD MAP — READ THE RESUME BEFORE SUGGESTING (critical)
-- The professional title / headline is `personalInfo.professionalTitle`.
-- Each job's role title is `workExperience[i].position`; the employer is `workExperience[i].company`.
-- The COMPANY LINK for a job is `workExperience[i].link`. A project's link is `projects[i].link`; an education
-  entry's link is `education[i].link`; a certificate's link is `certificates[i].url`.
-- The professional summary is `personalInfo.summary`. Location is `personalInfo.location`.
-  Links are `personalInfo.linkedin`, `personalInfo.github`, `personalInfo.website`.
-- Skills are in `skills[]` and `skillGroups[]`. Education is in `education[]`. Projects in `projects[]`.
-- BEFORE writing any suggestion, CHECK whether that field is already filled in the JSON — including links.
-  NEVER tell the candidate to "add a link/role/title/summary/location/skill" that is ALREADY present
-  (e.g. if `workExperience[i].link` is non-empty, do NOT suggest adding a company link; if professionalTitle
-  or a position is filled, do NOT suggest adding a role/title). Only suggest adding something for entries where
-  that exact field is genuinely empty.
-  If a field already has content, your only valid suggestion about it is to IMPROVE the existing wording —
-  and say so explicitly ("Strengthen your <field> by …"), never "add" it.
-
-CATEGORIES (exact names and max_score — you MUST output all six):
-1) Content Quality — max_score 3
-2) Professional Summary — max_score 1
-3) Experience Section — max_score 2
-4) Skills & Proficiency — max_score 1
-5) Education & Certifications — max_score 0.5
-6) ATS Optimization — max_score 0.5
-
-Each category needs: "name" (exact string above), "score" (0 to max_score inclusive), "max_score" (exact as listed),
-and "feedback": **one** short bullet line in the OUTPUT LANGUAGE (start with "- ", max ~120 characters total).
-
-Also return "overall_score" from 0 to 10 (float, one decimal) using the **2.5 baseline** described above,
-and "suggestions": array of **at most 4** strings in the OUTPUT LANGUAGE (no duplicates): each string is **one** bullet
-line starting with "- " plus a compact tip (max ~110 characters per string including the "- ").
-
-SUGGESTIONS MUST BE FIXABLE INSIDE THE 123Resume BUILDER (critical)
-- Every suggestion MUST be about EDITING THE CONTENT of a field the user can change in the builder:
-  the professional summary, a work-experience role summary or bullet, the skills list, a project description,
-  education details, certifications, or a missing contact field (location, LinkedIn, GitHub, website).
-- Each suggestion should make it obvious WHICH field to edit and WHAT to change (e.g. "Rewrite your summary to…",
-  "In your <role> experience, turn the tech list into What+How+Why+Where", "Add your city to your contact details",
-  "Add 2–3 core skills you actually used in your roles").
-- NEVER suggest anything about visual formatting, layout, design, fonts, font size, colors, spacing, margins,
-  templates, section styling, file/export format (PDF/Word), photo, or generic "use an ATS-friendly format" advice.
-  The builder handles all of that — such tips are off-limits and must not appear.
-- NEVER suggest adding proficiency levels, skill levels, ratings, percentages, or bars to SKILLS (e.g. "Advanced",
-  "Beginner", "Expert", "Grundkenntnisse", "Fortgeschritten"). The skills field stores names only and has no level
-  input — such advice is not actionable in the builder and must not appear. (This does NOT apply to the separate
-  Languages section, which has its own proficiency field; do not give skills-level advice there either.)
-- NEVER give vague advice ("proofread", "make it pop", "be more professional"); always point to a concrete field + edit.
-Make suggestions specific and actionable using the RECRUITER REVIEW PRINCIPLES above — prefer fixes like turning a
-keyword-only bullet into What+How+Why+Where, adding plain-language business impact, adding a missing location,
-adding a relevant skill, or tailoring a summary/role to one job title.
-{overall_fb_rule}
+"overall_feedback": **one string** in the OUTPUT LANGUAGE, 3 to 5 lines separated by newlines, each starting with
+"- " (max ~90 characters): top strength, main risk, top fix. No score numbers.
 
 {_RUBRIC_JSON_SHAPE}
 """.strip()
@@ -411,14 +380,14 @@ adding a relevant skill, or tailoring a summary/role to one job title.
             {
                 "role": "system",
                 "content": (
-                    "You are an expert resume reviewer. Output only valid JSON as instructed. "
+                    "You are an experienced recruiter. Output only valid JSON as instructed. "
                     "Follow OUTPUT LANGUAGE for every prose field."
                 ),
             },
             {"role": "user", "content": user_msg},
         ],
         max_tokens=deepseek_max_tokens(max_out),
-        # Deterministic output: same prompt => same score (no run-to-run jitter).
+        # Run-to-run jitter is handled by the content cache: same resume => same score.
         temperature=0,
     )
     raw_text = (completion.choices[0].message.content or "").strip()
@@ -435,9 +404,7 @@ adding a relevant skill, or tailoring a summary/role to one job title.
         overall = float(parsed.get("overall_score", 0))
     except (TypeError, ValueError):
         overall = 0.0
-    overall = max(0.0, min(10.0, round(overall * 10) / 10))
-    overall = _length_penalty(estimated_pages, overall)
-    overall = max(OVERALL_SCORE_BASE, min(10.0, round(overall * 10) / 10))
+    overall = max(SCORE_MIN, min(SCORE_MAX, round(overall * 10) / 10))
 
     categories = _normalize_categories(parsed.get("categories"), lang)
     suggestions_raw = parsed.get("suggestions") or []

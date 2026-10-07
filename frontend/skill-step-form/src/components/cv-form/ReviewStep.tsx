@@ -8,8 +8,7 @@ import { Mail, Phone, MapPin, Linkedin, Github, Globe, Calendar, Edit } from "lu
 import { SectionOrderManager } from "./SectionOrderManager";
 import { CVRating } from "./CVRating";
 import { ResumeImprovePanel } from "./ResumeImprovePanel";
-import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
-import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
+import type { ResumeScore } from "@/lib/resumeScorer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatProficiency } from "@/lib/languageProficiency";
 import { hasWebLink, normalizeExternalUrl } from "@/lib/contactLinkUtils";
@@ -35,27 +34,12 @@ export const ReviewStep = ({
   onReanalyzeAiScore,
   reanalyzeAiScoreLoading,
 }: ReviewStepProps) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const data = form.watch();
   const displayData = useMemo(() => withResumeSectionsSortedForDisplay(data), [data]);
 
-  // The number is our own deterministic score, so it can follow every edit
-  // (an accepted AI suggestion included) instantly. Only the AI's written
-  // feedback waits for the next server round trip.
-  const liveRating = useMemo(() => {
-    if (!resumeScoreFromNav) return undefined;
-    const local = calculateResumeScore(data, resumeProseLanguage(data, language));
-    return {
-      ...resumeScoreFromNav,
-      overallScore: local.overallScore,
-      categories: resumeScoreFromNav.categories.map((c) => {
-        const live = local.categories.find((l) => l.name === c.name);
-        return live ? { ...c, score: live.score } : c;
-      }),
-    };
-  }, [resumeScoreFromNav, data, language]);
-
-  // Several accepts in a row → one AI refresh, not one per click.
+  // Accepting suggestions re-scores with the AI. Several accepts in a row →
+  // one re-score, 1.5s after the last click, not one per click.
   const rescoreTimer = useRef<number>();
   const scheduleAiRescore = useCallback(() => {
     if (!onReanalyzeAiScore) return;
@@ -105,7 +89,7 @@ export const ReviewStep = ({
       <CVRating
         onAnalyze={onReanalyzeAiScore}
         isAnalyzing={reanalyzeAiScoreLoading}
-        rating={liveRating}
+        rating={resumeScoreFromNav}
         ratingLoading={resumeScoreLoadingFromNav}
       />
 

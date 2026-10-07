@@ -324,7 +324,10 @@ export const aiAPI = {
    */
   scoreResume: async (
     resume: Record<string, unknown>,
-    options?: { outputLanguage?: "en" | "de" },
+    options?: {
+      outputLanguage?: "en" | "de";
+      previous?: { score: number; changes: Array<{ path: string; before: string; after: string }> };
+    },
   ): Promise<{
     overallScore: number;
     estimatedPages?: number;
@@ -340,6 +343,9 @@ export const aiAPI = {
     const payload: Record<string, unknown> = { resume };
     if (options?.outputLanguage === "de" || options?.outputLanguage === "en") {
       payload.outputLanguage = options.outputLanguage;
+    }
+    if (options?.previous && options.previous.changes.length > 0) {
+      payload.previous = options.previous;
     }
     const doFetch = () =>
       fetch(`${API_BASE_URL}/ai/resume-score/`, {
@@ -484,8 +490,11 @@ export const aiAPI = {
 };
 
 export interface ResumeImproveChange {
-  /** react-hook-form field path, e.g. "personalInfo.summary" or "workExperience.0.description". */
+  /** react-hook-form field path, e.g. "personalInfo.summary" or "workExperience.0.description".
+   *  For an addition: the array to append to, e.g. "skills" or "workExperience.0.responsibilities". */
   path: string;
+  /** "add": a new skill/bullet/highlight proposed by the AI; `original` is "". Absent for rewrites. */
+  kind?: "add";
   /** Human-readable label for the field, e.g. "Experience — Engineer at Acme". */
   label: string;
   original: string;

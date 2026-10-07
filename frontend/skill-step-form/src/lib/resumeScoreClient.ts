@@ -6,6 +6,7 @@ import {
   calculateResumeScore,
   type ResumeScore,
 } from "@/lib/resumeScorer";
+import { resumeProseLanguage, type ResumeProseLanguage } from "@/lib/resumeContentLanguage";
 
 /** Never send profile photos to the scoring API — not used by the rubric and they bloat the payload. */
 function cloneResumeForAiScore(data: CVFormData): CVFormData {
@@ -35,6 +36,7 @@ function cloneResumeForAiScore(data: CVFormData): CVFormData {
  */
 function mergeDeterministicScoreWithAiText(
   data: CVFormData,
+  lang: ResumeProseLanguage,
   raw: {
     overallScore: number;
     estimatedPages?: number;
@@ -48,7 +50,7 @@ function mergeDeterministicScoreWithAiText(
     suggestions: string[];
   },
 ): ResumeScore {
-  const local = calculateResumeScore(data);
+  const local = calculateResumeScore(data, lang);
   const aiByName = new Map(
     (raw.categories || []).map((c) => [c.name, c] as const),
   );
@@ -80,7 +82,7 @@ function mergeDeterministicScoreWithAiText(
 export type GetResumeScoreOptions = {
   /** When false and authenticated, API errors throw instead of using local heuristic (default true). */
   fallbackToLocal?: boolean;
-  /** Matches site / résumé section language: AI prose in English or German. */
+  /** Language of the AI prose and canned tips. Defaults to the resume's own language. */
   outputLanguage?: "en" | "de";
 };
 
@@ -94,9 +96,10 @@ export async function getResumeScoreWithOptionalAI(
   options?: GetResumeScoreOptions,
 ): Promise<ResumeScore> {
   const fallbackToLocal = options?.fallbackToLocal !== false;
-  const outputLanguage = options?.outputLanguage ?? "en";
+  // Default to the resume's own language, not English, when the caller doesn't say.
+  const outputLanguage = options?.outputLanguage ?? resumeProseLanguage(data);
   if (!isAuthenticated) {
-    return calculateResumeScore(data);
+    return calculateResumeScore(data, outputLanguage);
   }
   const payloadForApi = cloneResumeForAiScore(data);
   const payloadSummary = summarizeResumePayloadForScore(payloadForApi);
@@ -122,7 +125,7 @@ export async function getResumeScoreWithOptionalAI(
         suggestionCount: raw.suggestions?.length ?? 0,
       });
     }
-    return mergeDeterministicScoreWithAiText(data, raw);
+    return mergeDeterministicScoreWithAiText(data, outputLanguage, raw);
   } catch (err) {
     logResumeScore("client:getResumeScoreWithOptionalAI:api-error", {
       err: err instanceof Error ? err.message : String(err),
@@ -145,6 +148,6 @@ export async function getResumeScoreWithOptionalAI(
     logResumeScore("client:getResumeScoreWithOptionalAI:fallback-local", {
       err: err instanceof Error ? err.message : String(err),
     });
-    return calculateResumeScore(data);
+    return calculateResumeScore(data, outputLanguage);
   }
 }

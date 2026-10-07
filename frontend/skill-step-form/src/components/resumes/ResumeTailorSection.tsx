@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { resumeAPI, type Resume } from "@/lib/api";
+import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
 import {
   applyTailorSuggestion,
   normalizeApplyPayload,
@@ -186,7 +187,7 @@ export function ResumeTailorSection({
           ...handledIds,
           ...suggestions.filter((s) => !handledIds.includes(s.id)).map((s) => s.id),
         ],
-        outputLanguage: language === "de" ? "de" : "en",
+        outputLanguage: resumeProseLanguage(tailorResume, language),
         allowedSections: scope.allowedSections,
         allowedWorkIndexes: scope.allowedWorkIndexes,
         allowedProjectIndexes: scope.allowedProjectIndexes,

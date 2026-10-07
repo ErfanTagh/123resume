@@ -25,6 +25,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
 import { stableSerializeCvPayload } from "@/lib/stableSerializeCvPayload";
 import { calculateResumeScore, type ResumeScore } from "@/lib/resumeScorer";
+import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
 import { logResumeScore } from "@/lib/resumeScoreDebug";
 import { summarizeResumePayloadForScore } from "@/lib/resumeScorePayloadSummary";
 import { feedbackAPI } from "@/lib/api";
@@ -357,7 +358,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       // When the server has no API key (503) or DeepSeek errors (502), still show the local heuristic
       // so logged-in users see a score instead of a blank card + error toast.
       fallbackToLocal: true,
-      outputLanguage: language,
+      outputLanguage: resumeProseLanguage(form.getValues(), language),
     })
       .then((score) => {
         if (requestId !== scoreRequestIdRef.current) {
@@ -780,7 +781,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       ) {
         scoreResult = navResumeScore;
       } else {
-        scoreResult = calculateResumeScore(data);
+        scoreResult = calculateResumeScore(data, resumeProseLanguage(data, language));
       }
 
       // Map frontend score format to backend format

@@ -1,4 +1,7 @@
 import { CVFormData } from "@/components/cv-form/types";
+import enTranslations from "@/i18n/locales/en.json";
+import deTranslations from "@/i18n/locales/de.json";
+import type { ResumeProseLanguage } from "@/lib/resumeContentLanguage";
 
 export interface ScoreCategory {
   name: string;
@@ -13,313 +16,278 @@ export interface ResumeScore {
   suggestions: string[];
   /** Closing narrative from server-side AI (DeepSeek); empty for local heuristic. */
   overallFeedback?: string;
-  /** When true, category feedback and suggestions are model-written — skip canned i18n string maps. */
+  /** True when the feedback text was written by the AI rather than taken from the canned messages below. */
   fromAi?: boolean;
 }
 
+// ============================================
+// MESSAGES
+// ============================================
+
+// Canned feedback lives in the locale files (resume.score.feedback / .categoryFeedback)
+// so it is translated once. Looked up in the resume's language, English as fallback.
+const SCORE_TEXT: Record<ResumeProseLanguage, unknown> = {
+  en: enTranslations.resume.score,
+  de: deTranslations.resume.score,
+};
+
+function lookup(root: unknown, path: string): string | undefined {
+  let node: unknown = root;
+  for (const key of path.split(".")) {
+    if (!node || typeof node !== "object") return undefined;
+    node = (node as Record<string, unknown>)[key];
+  }
+  return typeof node === "string" ? node : undefined;
+}
+
+function message(lang: ResumeProseLanguage, path: string): string {
+  return lookup(SCORE_TEXT[lang], path) ?? lookup(SCORE_TEXT.en, path) ?? path;
+}
+
+// ============================================
+// VOCABULARY
+// ============================================
+
 /**
- * Strong action verbs that indicate impact (English)
+ * Strong action verbs, matched as whole words. Prefix matching used to count
+ * "customers" as a form of "cut" and "ledger" as "led".
  */
 const STRONG_ACTION_VERBS_EN = [
-  'led', 'managed', 'developed', 'implemented', 'optimized', 'designed',
+  'led', 'managed', 'developed', 'implemented', 'optimized', 'optimised', 'designed',
   'created', 'built', 'launched', 'achieved', 'improved', 'increased',
   'reduced', 'established', 'delivered', 'transformed', 'streamlined',
   'executed', 'initiated', 'spearheaded', 'accelerated', 'enhanced',
   'pioneered', 'orchestrated', 'maximized', 'minimized', 'solved',
-  'architected', 'scaled', 'modernized', 'revolutionized'
+  'architected', 'scaled', 'modernized', 'revolutionized', 'trained', 'coached',
+  'mentored', 'negotiated', 'resolved', 'won', 'grew', 'drove', 'owned',
+  'shipped', 'automated', 'migrated', 'coordinated', 'analyzed', 'analysed',
+  'cut', 'saved', 'exceeded',
 ];
 
 /**
- * Strong action verbs (German)
+ * German resumes use both the past participle ("entwickelt") and the simple past
+ * ("entwickelte"), so both are listed. "verantwortlich" and "erfolgreich" are
+ * deliberately absent: "verantwortlich für" is the German "responsible for",
+ * the weak phrasing this check exists to discourage.
  */
 const STRONG_ACTION_VERBS_DE = [
   'geleitet', 'gemanagt', 'entwickelt', 'implementiert', 'optimiert', 'designt',
   'erstellt', 'gebaut', 'gestartet', 'erreicht', 'verbessert', 'erhöht',
-  'reduziert', 'etabliert', 'geliefert', 'transformiert', 'optimiert',
-  'durchgeführt', 'initiiert', 'angeführt', 'beschleunigt', 'verbessert',
-  'vorangetrieben', 'koordiniert', 'maximiert', 'minimiert', 'gelöst',
-  'architekturiert', 'skaliert', 'modernisiert', 'revolutioniert',
+  'reduziert', 'etabliert', 'geliefert', 'transformiert', 'durchgeführt',
+  'initiiert', 'angeführt', 'beschleunigt', 'vorangetrieben', 'koordiniert',
+  'maximiert', 'minimiert', 'gelöst', 'skaliert', 'modernisiert',
   'umgesetzt', 'realisiert', 'gesteuert', 'überwacht', 'organisiert',
-  'verwaltet', 'betreut', 'beraten', 'erfolgreich', 'verantwortlich'
+  'verwaltet', 'betreut', 'beraten', 'eingearbeitet', 'geschult', 'aufgebaut',
+  'eingeführt', 'konzipiert', 'gesteigert', 'gesenkt', 'verkürzt', 'übertroffen',
+  'ausgebaut', 'verhandelt', 'automatisiert', 'analysiert', 'gewonnen', 'eingespart',
+  'leitete', 'entwickelte', 'implementierte', 'optimierte', 'steigerte', 'reduzierte',
+  'senkte', 'verkürzte', 'betreute', 'koordinierte', 'organisierte', 'führte',
+  'baute', 'schulte', 'gewann', 'übertraf', 'erzielte', 'realisierte',
+  'etablierte', 'verantwortete', 'konzipierte', 'plante', 'analysierte',
+  'automatisierte', 'beriet', 'löste', 'verhandelte', 'steuerte', 'verbesserte',
+  'erhöhte',
 ];
 
-/**
- * Weak verbs that should be avoided
- */
-const WEAK_VERBS = [
-  'responsible for', 'worked on', 'assisted with', 'helped with',
-  'was involved in', 'participated in', 'took part in'
+/** Words that state a result. */
+const OUTCOME_WORDS = [
+  'improved', 'increased', 'reduced', 'cut', 'grew', 'boosted', 'saved', 'achieved',
+  'delivered', 'exceeded', 'accelerated', 'lowered', 'raised', 'doubled', 'tripled', 'won',
+  'verbessert', 'erhöht', 'reduziert', 'gesenkt', 'gesteigert', 'verkürzt', 'übertroffen',
+  'erreicht', 'eingespart', 'beschleunigt', 'verdoppelt', 'gewonnen', 'optimiert', 'verstärkt',
+  'verbesserte', 'erhöhte', 'reduzierte', 'senkte', 'steigerte', 'verkürzte', 'übertraf',
+  'erreichte', 'sparte', 'beschleunigte', 'verdoppelte', 'gewann', 'optimierte',
 ];
 
-/**
- * Professional email patterns (to detect unprofessional emails)
- */
-const UNPROFESSIONAL_EMAIL_PATTERNS = [
-  /party/i, /drunk/i, /lazy/i, /cool/i, /sexy/i, /hot/i,
-  /gamer/i, /ninja/i, /rockstar/i, /hacker/i, /\d{4,}/, // 4+ consecutive numbers
-  /(.)\1{3,}/ // repeated characters like aaa@gmail.com
+const GENERIC_SUMMARY_PHRASES = [
+  'hard worker', 'hard-working', 'team player', 'detail oriented', 'detail-oriented',
+  'good communicator', 'teamplayer', 'teamfähig', 'belastbar', 'motiviert', 'zuverlässig',
 ];
 
+// \b is ASCII-only in JS regexes, so it never matched next to umlauts
+// ("überwacht" could not be found). Use Unicode letter boundaries instead.
+const wordListPattern = (words: string[]) =>
+  new RegExp(`(?:^|[^\\p{L}])(?:${words.join("|")})(?=$|[^\\p{L}])`, "iu");
+
+const STRONG_VERB_RE = wordListPattern([...STRONG_ACTION_VERBS_EN, ...STRONG_ACTION_VERBS_DE]);
+const OUTCOME_RE = wordListPattern(OUTCOME_WORDS);
+const YEARS_OF_EXPERIENCE_RE = /\d+\s*\+?\s*(?:years?|yrs?|jahre?n?)(?![\p{L}])/iu;
+const COMPREHENSIVE_METRICS_RE = /\b\d+\s*(%|€|\$|Mio|Mio\.|Million|Millionen|Tausend|K|M|BN|Billion|Milliarden|Jahre|Monate|Personen|Mitarbeiter|Kunden|Menschen|users|people|years|months|customers|clients|team|members?)\b|\$\d+[KM]?|€\d+[KM]?|\d+[%]/gi;
+
+/** Numbers other than bare years ("2021" dates a role; "30 %" measures one). */
+function quantities(text: string): number {
+  return (text.match(/\d+(?:[.,]\d+)*/g) || []).filter((n) => !/^(19|20)\d{2}$/.test(n)).length;
+}
+
+const hasQuantity = (text: string): boolean => /[%€$£]/.test(text) || quantities(text) > 0;
+const isStrong = (text: string): boolean => STRONG_VERB_RE.test(text);
+const showsResult = (text: string): boolean => hasQuantity(text) || OUTCOME_RE.test(text);
+
+type WorkEntry = NonNullable<CVFormData["workExperience"]>[number];
+
+/** Each bullet or role description is one "unit" of evidence a recruiter reads. */
+function roleUnits(exp: WorkEntry): string[] {
+  const units: string[] = [];
+  const desc = (exp.description || '').trim();
+  if (desc.length >= 3) units.push(desc);
+  for (const r of exp.responsibilities || []) {
+    const text = (r.responsibility || '').trim();
+    if (text.length >= 3) units.push(text);
+  }
+  return units;
+}
+
+const avg = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+const round1 = (x: number): number => Math.round(x * 10) / 10;
+
 /**
- * Calculate comprehensive resume score (0-10 scale, converted to 0-100 for display)
+ * Score a resume 0-10.
+ *
+ * Deterministic on purpose: the same resume always gets the same score, which
+ * is why the displayed number comes from here and not from the AI. Every
+ * criterion is proportional rather than pass/fail, so each bullet that gains a
+ * strong verb or a number moves the score, and weakening one lowers it. The old
+ * pass/fail version stopped responding once a resume cleared each threshold.
+ *
+ * `lang` selects the language of the canned feedback and suggestions.
  */
-export const calculateResumeScore = (data: CVFormData): ResumeScore => {
+export const calculateResumeScore = (
+  data: CVFormData,
+  lang: ResumeProseLanguage = "en",
+): ResumeScore => {
   const categories: ScoreCategory[] = [];
   const suggestions: string[] = [];
+  const t = (path: string) => message(lang, path);
   let totalScore = 0;
   let bonuses = 0;
 
-  // Extract data sections early for use throughout
   const workExp = data.workExperience || [];
+  const roles = workExp.filter((e) => (e.position || '').trim() || (e.company || '').trim());
   const education = data.education || [];
-  const summary = data.personalInfo.summary || '';
-  const skills = (data.skills || []).map(s => s.skill?.toLowerCase() || '').filter(Boolean);
-  const validSkills = (data.skills || []).filter(s => s.skill && s.skill.trim()).length;
+  const summary = (data.personalInfo.summary || '').trim();
+  const summaryLower = summary.toLowerCase();
+  const skills = (data.skills || []).map((s) => (s.skill || '').trim().toLowerCase()).filter((s) => s.length >= 2);
+  const validSkills = (data.skills || []).filter((s) => s.skill && s.skill.trim()).length;
 
-  // Language-agnostic metrics patterns (defined once, used throughout)
-  const metricsPattern = /\b(\d+[%]|\$\d+[KM]?|€\d+[KM]?|\d+\s*[%]|\d+\s*(years?|months?|people|users|customers|clients|team members?|Jahre?|Monate?|Personen?|Mitarbeiter?|Kunden?|Menschen?))\b/i;
-  const universalMetricsPattern = /\b\d+\s*(%|€|\$|Mio|Mio\.|Million|Millionen|Tausend|K|M|BN|Billion|Milliarden|Jahre|Monate|Personen|Mitarbeiter|Kunden|Menschen|users|people|years|months|customers|clients|team)\b/i;
-
-  // Calculate text length metrics once - used in multiple sections
-  const workDescriptions = workExp.map(exp => exp.description || '').filter(Boolean);
-  const avgLength = workDescriptions.length > 0 
-    ? workDescriptions.reduce((sum, d) => sum + d.length, 0) / workDescriptions.length
-    : 0;
-  const summaryLength = (data.personalInfo.summary || '').length;
-  const projects = data.projects || [];
-  const projectDescriptions = projects.map(p => (p.description || '').length);
-  const avgProjectLength = projectDescriptions.length > 0
-    ? projectDescriptions.reduce((sum, len) => sum + len, 0) / projectDescriptions.length
-    : 0;
+  const projectUnits = (data.projects || []).flatMap((p) =>
+    (p.highlights || []).map((h) => (h.highlight || '').trim()).filter((h) => h.length >= 3),
+  );
+  const units = [...workExp.flatMap(roleUnits), ...projectUnits];
+  const workText = [...roles.map((e) => e.position || ''), ...units].join(' ').toLowerCase();
+  const matchedSkills = skills.filter((s) => workText.includes(s)).length;
 
   // ============================================
   // 1. CONTENT QUALITY (3 points)
   // ============================================
-  let contentScore = 0;
-  
-  // Strong action verbs (0.5 pts) - language-agnostic detection
-  const allText = getAllTextContent(data);
-  const hasStrongVerbsEN = STRONG_ACTION_VERBS_EN.some(verb => 
-    new RegExp(`\\b${verb}\\w*\\b`, 'i').test(allText)
-  );
-  const hasStrongVerbsDE = STRONG_ACTION_VERBS_DE.some(verb => 
-    new RegExp(`\\b${verb}\\w*\\b`, 'i').test(allText)
-  );
-  const hasStrongVerbs = hasStrongVerbsEN || hasStrongVerbsDE;
-  if (hasStrongVerbs) contentScore += 0.5;
-  else suggestions.push("Use strong action verbs like 'Led', 'Developed', 'Implemented' instead of 'Responsible for' or 'Worked on'");
-  
-  // Quantifiable achievements (1 pt) - language-agnostic (numbers/percentages work in all languages)
-  const hasMetrics = metricsPattern.test(allText) || universalMetricsPattern.test(allText) || /\d+[%]/.test(allText);
-  if (hasMetrics) contentScore += 1;
-  else suggestions.push("Add specific numbers to showcase impact: revenue increased (%), team size managed, cost savings ($), users reached, etc.");
-  
-  // Relevance (0.5 pts) - check if skills match experience
-  const workExpTextForRelevance = workExp.map(exp => 
-    `${exp.position || ''} ${exp.description || ''}`.toLowerCase()
-  ).join(' ');
-  // Check if skills are mentioned in work experience or if there are enough skills
-  const hasRelevance = skills.length > 0 && (
-    skills.some(skill => workExpTextForRelevance.includes(skill)) || 
-    skills.length >= 3
-  );
-  if (hasRelevance) contentScore += 0.5;
-  else suggestions.push("Ensure your skills are relevant and match your work experience");
-  
-  // Impact-focused (1 pt) - descriptions focus on outcomes (language-agnostic)
-  const impactFocusedCount = workExp.filter(exp => {
-    const desc = exp.description || '';
-    // Check for outcome indicators in both languages
-    const outcomeEN = /\b(improved|increased|reduced|achieved|delivered|optimized|enhanced)\b/i.test(desc);
-    const outcomeDE = /\b(verbessert|erhöht|reduziert|erreicht|geliefert|optimiert|gesteigert|verstärkt)\b/i.test(desc);
-    const hasOutcome = outcomeEN || outcomeDE;
-    const hasResult = metricsPattern.test(desc) || universalMetricsPattern.test(desc) || /\d+[%]/.test(desc);
-    const hasActionEN = STRONG_ACTION_VERBS_EN.some(verb => new RegExp(`\\b${verb}\\w*\\b`, 'i').test(desc));
-    const hasActionDE = STRONG_ACTION_VERBS_DE.some(verb => new RegExp(`\\b${verb}\\w*\\b`, 'i').test(desc));
-    const hasAction = hasActionEN || hasActionDE;
-    return (hasOutcome || hasResult) && hasAction;
-  }).length;
-  
-  if (impactFocusedCount >= Math.min(workExp.length, 2)) contentScore += 1;
-  // Removed duplicate suggestion - similar message is in Experience Section
-  
+  // Shares of bullets, not "does at least one exist". Every listed role owes at
+  // least two pieces of evidence and the floor is 3, so emptying a role or
+  // deleting everything but one strong bullet can't raise the shares.
+  const denom = Math.max(units.length, 2 * roles.length, 3);
+  const verbShare = units.filter(isStrong).length / denom;
+  const metricShare = units.filter(hasQuantity).length / denom;
+  const impactShare = units.filter((u) => isStrong(u) && showsResult(u)).length / denom;
+  const relevance = skills.length ? Math.min(1, matchedSkills / Math.min(3, skills.length)) : 0;
+  const contentScore = 0.8 * verbShare + 1.2 * metricShare + 0.6 * impactShare + 0.4 * relevance;
+
+  if (units.length && verbShare < 0.5) suggestions.push(t('feedback.actionVerbs'));
+  if (units.length && metricShare < 0.4) suggestions.push(t('feedback.addSpecificNumbers'));
+  if (skills.length && relevance < 0.5) suggestions.push(t('feedback.skillsRelevant'));
+
   categories.push({
     name: "Content Quality",
-    score: Math.round(contentScore * 10) / 10,
+    score: round1(contentScore),
     maxScore: 3,
-    feedback: contentScore >= 2.5 ? "Excellent use of action verbs and metrics" : 
-              contentScore >= 2 ? "Good content, add more quantifiable achievements" :
-              "Needs stronger action verbs and measurable results"
+    feedback: t(`categoryFeedback.contentQuality.${contentScore >= 2.5 ? 'excellent' : contentScore >= 2 ? 'good' : 'needsImprovement'}`),
   });
   totalScore += contentScore;
-
-  // Estimate length once for global red-flag checks (not tied to formatting criteria)
-  const estimatedLength = estimateResumePages(data);
 
   // ============================================
   // 2. PROFESSIONAL SUMMARY (1 point)
   // ============================================
   let summaryScore = 0;
-  
-  // Compelling (0.5 pts) - not generic, has value proposition
-  const genericPhrases = ['hard worker', 'team player', 'detail oriented', 'good communicator'];
-  const isGeneric = genericPhrases.some(phrase => summary.toLowerCase().includes(phrase));
-  const hasValueProp = summary.length >= 50 && !isGeneric && 
-                      (summary.includes(data.personalInfo.professionalTitle || '') || 
-                       summary.split(' ').length >= 15);
-  if (hasValueProp) summaryScore += 0.5;
-  else if (summary.length > 0) suggestions.push("Make your professional summary more specific and compelling - avoid generic phrases");
-  else suggestions.push("Add a professional summary that highlights your value proposition");
-  
-  // Specific (0.5 pts) - mentions experience, skills, achievements
-  const mentionsExperience = /\d+\s*(years?|months?)\s*(of\s*)?(experience|expertise)/i.test(summary);
-  const mentionsSkills = skills.some(skill => summary.toLowerCase().includes(skill.toLowerCase()));
-  const mentionsAchievement = metricsPattern.test(summary);
-  const isSpecific = (mentionsExperience || mentionsSkills || mentionsAchievement) && summary.length >= 50;
-  
-  if (isSpecific) summaryScore += 0.5;
-  else if (summary.length > 0) suggestions.push("Make your summary more specific - mention years of experience, key technologies, or achievements");
-  
+  if (!summary) {
+    suggestions.push(t('feedback.summaryMissing'));
+  } else {
+    const isGeneric = GENERIC_SUMMARY_PHRASES.some((p) => summaryLower.includes(p));
+    const mentionsYears = YEARS_OF_EXPERIENCE_RE.test(summary);
+    const skillMentions = skills.filter((s) => summaryLower.includes(s)).length;
+    const numbers = quantities(summary);
+    const titleWord = (data.personalInfo.professionalTitle || '').trim().toLowerCase().split(/\s+/)[0] || '';
+    const mentionsRole = titleWord.length >= 3 && summaryLower.includes(titleWord);
+
+    summaryScore =
+      (summary.length > 700 ? 0.2 : Math.min(summary.length / 160, 1) * 0.3) +
+      (isGeneric ? 0 : 0.1) +
+      (mentionsYears ? 0.15 : 0) +
+      Math.min(skillMentions, 2) * 0.075 +
+      Math.min(numbers, 2) * 0.075 +
+      (mentionsRole ? 0.1 : 0) +
+      (isStrong(summary) || OUTCOME_RE.test(summary) ? 0.05 : 0);
+
+    if (isGeneric || summary.length < 80) suggestions.push(t('feedback.summaryGeneric'));
+    if (!mentionsYears && skillMentions === 0 && numbers === 0) suggestions.push(t('feedback.summarySpecific'));
+  }
+
   categories.push({
     name: "Professional Summary",
-    score: Math.round(summaryScore * 10) / 10,
+    score: round1(summaryScore),
     maxScore: 1,
-    feedback: summaryScore >= 0.9 ? "Compelling and specific summary" :
-              summaryScore >= 0.5 ? "Good summary, add more specifics" :
-              "Add or improve your professional summary"
+    feedback: t(`categoryFeedback.summary.${summaryScore >= 0.9 ? 'excellent' : summaryScore >= 0.5 ? 'good' : 'needsImprovement'}`),
   });
   totalScore += summaryScore;
 
   // ============================================
   // 3. EXPERIENCE SECTION (2 points)
   // ============================================
+  // No penalty or suggestion when there is no work experience — it's optional.
   let experienceScore = 0;
-  
-  // Recent and relevant (0.5 pts) - most recent roles are detailed
-  const recentWork = workExp.slice(0, 2);
-  const recentWorkDetailed = recentWork.filter(exp => 
-    exp.position && exp.company && exp.description && exp.description.length >= 50
-  ).length;
-  
-  if (recentWorkDetailed >= Math.min(recentWork.length, 1)) {
-    experienceScore += 0.5;
-  } else if (workExp.length > 0) {
-    // Give base points for having work experience entries, even if minimal
-    const hasBasicWorkInfo = workExp.some(exp => exp.position && exp.company);
-    if (hasBasicWorkInfo) experienceScore += 0.2; // Base points for having work experience structure
-    suggestions.push("Provide detailed descriptions for your most recent roles");
+  if (roles.length) {
+    const textLength = (e: WorkEntry) => roleUnits(e).reduce((n, u) => n + u.length, 0);
+    const scored = roles.slice(0, 4);
+    // Detail of the two most recent roles; ~240 characters saturates.
+    const detailPart = avg(roles.slice(0, 2).map((e) => Math.min(1, textLength(e) / 240))) * 0.6;
+    // Two result-bearing bullets per role saturates.
+    const achievementPart = avg(scored.map((e) => Math.min(roleUnits(e).filter(showsResult).length / 2, 1))) * 1.0;
+    const contextPart = avg(scored.map((e) =>
+      ((e.company || '').trim().length > 2 ? 0.5 : 0) +
+      ((e.location || '').trim() ? 0.2 : 0) +
+      ((e.startDate || '').trim() ? 0.3 : 0),
+    )) * 0.4;
+    experienceScore = detailPart + achievementPart + contextPart;
+
+    if (detailPart < 0.4) suggestions.push(t('feedback.detailedDescriptions'));
+    if (achievementPart < 0.6) suggestions.push(t('feedback.achievements'));
+    if (contextPart < 0.3) suggestions.push(t('feedback.context'));
   }
-  
-  // Achievement-oriented (1 pt) - focuses on accomplishments (language-agnostic)
-  const achievementOrientedCount = workExp.filter(exp => {
-    const desc = exp.description || '';
-    const hasMetrics = metricsPattern.test(desc) || universalMetricsPattern.test(desc) || /\d+[%]/.test(desc);
-    const hasActionEN = STRONG_ACTION_VERBS_EN.some(verb => 
-      new RegExp(`\\b${verb}\\w*\\b`, 'i').test(desc)
-    );
-    const hasActionDE = STRONG_ACTION_VERBS_DE.some(verb => 
-      new RegExp(`\\b${verb}\\w*\\b`, 'i').test(desc)
-    );
-    const hasAchievement = hasMetrics || hasActionEN || hasActionDE;
-    return hasAchievement && desc.length >= 50;
-  }).length;
-  
-  if (achievementOrientedCount >= Math.min(workExp.length, 2)) {
-    experienceScore += 1;
-  } else if (workExp.length > 0) {
-    // Give base points for having work experience with descriptions, even if not achievement-focused yet
-    const hasDescriptions = workExp.some(exp => exp.description && exp.description.length > 0);
-    if (hasDescriptions) experienceScore += 0.3; // Base points for having descriptions
-    suggestions.push("Focus on achievements and outcomes in your work experience, not just responsibilities");
-  }
-  // Don't suggest adding experience if it doesn't exist - that's optional
-  
-  // Context provided (0.5 pts) - company info, industry/role context mentioned
-  const hasContext = workExp.some(exp => {
-    const desc = (exp.description || '').toLowerCase();
-    const hasCompanyInfo = exp.company && exp.company.length > 2;
-    const hasLocation = exp.location && exp.location.length > 2;
-    const hasDetailedDescription = desc.length >= 100;
-    const mentionsIndustry = /\b(industry|sector|field|domain|area)\b/i.test(desc);
-    return hasCompanyInfo && (hasLocation || mentionsIndustry || hasDetailedDescription);
-  });
-  
-  if (hasContext) {
-    experienceScore += 0.5;
-  } else if (workExp.length > 0) {
-    // Give base points for having company info, even if context is minimal
-    const hasCompanyInfo = workExp.some(exp => exp.company && exp.company.length > 2);
-    if (hasCompanyInfo) experienceScore += 0.2; // Base points for having company information
-    suggestions.push("Add context like company size, industry, or technologies used in your experience");
-  }
-  // Don't penalize if no work experience - that's optional
-  
+
   categories.push({
     name: "Experience Section",
-    score: Math.round(experienceScore * 10) / 10,
+    score: round1(experienceScore),
     maxScore: 2,
-    feedback: experienceScore >= 1.8 ? "Excellent achievement-focused experience" :
-              experienceScore >= 1.5 ? "Good experience section, highlight more achievements" :
-              "Add more detailed, achievement-oriented experience"
+    feedback: t(`categoryFeedback.experience.${experienceScore >= 1.8 ? 'excellent' : experienceScore >= 1.5 ? 'good' : 'needsImprovement'}`),
   });
   totalScore += experienceScore;
 
   // ============================================
   // 4. SKILLS & TECHNICAL PROFICIENCY (1 point)
   // ============================================
-  let skillsScore = 0;
-  
-  // Organized (0.3 pts) - skills are present and not excessive
-  if (validSkills >= 3 && validSkills <= 20) {
-    skillsScore += 0.3;
-  } else if (validSkills > 20) {
-    suggestions.push("Consider reducing your skills list - focus on the most relevant ones");
-  } else if (validSkills > 0) {
-    // Give base points for having skills, even if minimal
-    skillsScore += 0.1; // Base points for having at least some skills
-    if (validSkills < 3) {
-      suggestions.push(`Add more skills to showcase your expertise (currently ${validSkills}, aim for at least 3-5 for better scoring)`);
-    } else {
-    suggestions.push("Add more skills to showcase your expertise");
-    }
-  }
-  
-  // Relevant (0.4 pts) - skills match industry standards and experience
-  const workExpTextForSkills = (data.workExperience || []).map(exp => 
-    `${exp.position || ''} ${exp.description || ''}`.toLowerCase()
-  ).join(' ');
-  const skillsMatchExperience = skills.some(skill => workExpTextForSkills.includes(skill));
-  const hasRelevantSkills = validSkills >= 5 && (
-    skillsMatchExperience || 
-    validSkills >= 8
+  const skillsScore = Math.max(
+    0,
+    Math.min(validSkills / 8, 1) * 0.5 +
+      (validSkills ? Math.min(1, matchedSkills / Math.min(3, validSkills)) * 0.3 : 0) +
+      Math.min(validSkills / 5, 1) * 0.2 -
+      (validSkills > 20 ? 0.2 : validSkills > 15 ? 0.1 : 0),
   );
-  if (hasRelevantSkills) {
-    skillsScore += 0.4;
-  } else if (validSkills >= 3) {
-    // Give base points for having 3+ skills, even if not fully relevant
-    skillsScore += 0.2;
-    if (validSkills < 5) {
-      suggestions.push(`Add more relevant skills that match industry standards and your experience (currently ${validSkills}, aim for 5+ for maximum scoring)`);
-    } else {
-    suggestions.push("Add more relevant skills that match industry standards and your experience");
-    }
-  } else if (validSkills > 0) {
-    // Already got 0.1 from organized section, just suggest adding more
-    suggestions.push(`Add more relevant skills that match industry standards and your experience (currently ${validSkills}, aim for 5+ for maximum scoring)`);
-  }
-  // Don't suggest if no skills - that's optional
-  
-  // Not oversaturated (0.3 pts) - focused list
-  if (validSkills >= 5 && validSkills <= 15) skillsScore += 0.3;
-  else if (validSkills > 15) suggestions.push("Your skills list may be too long - focus on the most relevant and important skills");
-  
+
+  if (validSkills > 20) suggestions.push(t('feedback.tooManySkills'));
+  else if (validSkills > 15) suggestions.push(t('feedback.skillsTooLong'));
+  else if (validSkills > 0 && validSkills < 5) suggestions.push(t('feedback.addSkills'));
+  if (validSkills >= 3 && matchedSkills === 0) suggestions.push(t('feedback.relevantSkills'));
+
   categories.push({
     name: "Skills & Proficiency",
-    score: Math.round(skillsScore * 10) / 10,
+    score: round1(skillsScore),
     maxScore: 1,
-    feedback: skillsScore >= 0.9 ? "Well-organized and relevant skills" :
-              skillsScore >= 0.6 ? "Good skills, ensure they're relevant" :
-              "Add more relevant, organized skills"
+    feedback: t(`categoryFeedback.skills.${skillsScore >= 0.9 ? 'excellent' : skillsScore >= 0.6 ? 'good' : 'needsImprovement'}`),
   });
   totalScore += skillsScore;
 
@@ -327,35 +295,24 @@ export const calculateResumeScore = (data: CVFormData): ResumeScore => {
   // 5. EDUCATION & CERTIFICATIONS (0.5 points)
   // ============================================
   let educationScore = 0;
-  
-  // Complete (0.25 pts) - degree, institution, dates included
-  const completeEdu = education.filter(edu => 
-    edu.degree && edu.institution && (edu.startDate || edu.endDate)
-  ).length;
-  
+
+  const completeEdu = education.filter((edu) => edu.degree && edu.institution && (edu.startDate || edu.endDate)).length;
   if (completeEdu >= 1) {
     educationScore += 0.25;
   } else if (education.length > 0) {
-    // Give base points for having education entries, even if incomplete
-    const hasBasicEduInfo = education.some(edu => edu.degree && edu.institution);
-    if (hasBasicEduInfo) educationScore += 0.15; // Base points for having education structure
-    suggestions.push("Complete your education entries with degree, institution, and dates");
+    if (education.some((edu) => edu.degree && edu.institution)) educationScore += 0.15;
+    suggestions.push(t('feedback.educationComplete'));
   }
-  
-  // Relevant certs (0.25 pts) - industry-recognized certifications
-  const certs = data.certificates || [];
-  const validCerts = certs.filter(cert => cert.name && cert.organization).length;
-  
+
+  const validCerts = (data.certificates || []).filter((cert) => cert.name && cert.organization).length;
   if (validCerts >= 1) educationScore += 0.25;
-  else suggestions.push("Consider adding industry-recognized certifications to strengthen your resume");
-  
+  else suggestions.push(t('feedback.certifications'));
+
   categories.push({
     name: "Education & Certifications",
-    score: Math.round(educationScore * 10) / 10,
+    score: round1(educationScore),
     maxScore: 0.5,
-    feedback: educationScore >= 0.45 ? "Complete education and certifications" :
-              educationScore >= 0.25 ? "Add more education or certification details" :
-              "Add education and certification information"
+    feedback: t(`categoryFeedback.education.${educationScore >= 0.45 ? 'excellent' : 'needsImprovement'}`),
   });
   totalScore += educationScore;
 
@@ -363,114 +320,85 @@ export const calculateResumeScore = (data: CVFormData): ResumeScore => {
   // 6. ATS OPTIMIZATION (0.5 points)
   // ============================================
   let atsScore = 0;
-  
-  // Keyword-rich (0.25 pts) - contains relevant industry keywords
-  // Only give points if there's actual content, not just empty fields
-  const hasKeywords = validSkills >= 5 || (summary.length >= 50 && summary.trim().length > 0) || (workExp.length > 0 && workExp.some(exp => exp.position && exp.company));
+
+  const hasKeywords = validSkills >= 5 || summary.length >= 50 || workExp.some((exp) => exp.position && exp.company);
   if (hasKeywords) atsScore += 0.25;
   else if (validSkills > 0 || summary.length > 0 || workExp.length > 0) {
-    suggestions.push("Add more industry keywords and relevant terms to improve ATS compatibility");
+    suggestions.push(t('feedback.keywords'));
   }
-  
-  // Standard formatting (0.25 pts) - template-based (assumes templates are ATS-friendly)
-  // Only give points if there's substantial resume content, not just minimal fields
-  const hasSubstantialContentForATS = (workExp.length > 0 && workExp.some(exp => exp.position || exp.company)) ||
-                                      (education.length > 0 && education.some(edu => edu.degree || edu.institution)) ||
-                                      validSkills >= 3 ||
-                                      (summary && summary.trim().length >= 50);
+
+  // Templates are ATS-friendly; only credit them once there is real content.
+  const hasSubstantialContentForATS =
+    workExp.some((exp) => exp.position || exp.company) ||
+    education.some((edu) => edu.degree || edu.institution) ||
+    validSkills >= 3 ||
+    summary.length >= 50;
   if (data.template && hasSubstantialContentForATS) atsScore += 0.25;
-  else if (!data.template) suggestions.push("Select a template - our templates are ATS-optimized");
-  
+  else if (!data.template) suggestions.push(t('feedback.template'));
+
   categories.push({
     name: "ATS Optimization",
-    score: Math.round(atsScore * 10) / 10,
+    score: round1(atsScore),
     maxScore: 0.5,
-    feedback: atsScore >= 0.45 ? "Well-optimized for ATS systems" :
-              "Add more keywords and ensure ATS-friendly section content"
+    feedback: t(`categoryFeedback.ats.${atsScore >= 0.45 ? 'excellent' : 'needsImprovement'}`),
   });
   totalScore += atsScore;
 
   // ============================================
-  // BONUS POINTS (Max +1)
+  // BONUS POINTS — optional extras, never penalized when absent
   // ============================================
-  
-  // Professional links/portfolio (website, LinkedIn, portfolio) - bonus only, no penalty
-  if (data.personalInfo.website || data.personalInfo.linkedin) {
-    bonuses += 0.3;
-  }
-  // Don't suggest adding these - they're optional
-  
-  // Metrics-rich resume bonus - reward quantified achievements
-  // Count all metric occurrences in the text using comprehensive pattern matching
-  const comprehensiveMetricsPattern = /\b\d+\s*(%|€|\$|Mio|Mio\.|Million|Millionen|Tausend|K|M|BN|Billion|Milliarden|Jahre|Monate|Personen|Mitarbeiter|Kunden|Menschen|users|people|years|months|customers|clients|team|members?)\b|\$\d+[KM]?|€\d+[KM]?|\d+[%]/gi;
-  const allMetricsMatches = allText.match(comprehensiveMetricsPattern) || [];
-  const metricsCount = allMetricsMatches.length;
-  if (metricsCount >= 10) {
-    bonuses += 0.5; // Additional bonus for highly quantified resume (10+ metrics)
-  } else if (metricsCount >= 5) {
-    bonuses += 0.3; // Bonus for metrics-rich resume (5+ quantified results)
-  }
-  
-  // Additional credentials (projects, publications, volunteer work)
-  const userProjects = data.projects || [];
-  const hasProjects = userProjects.filter(p => p.name && p.description).length > 0;
-  const mentionsProjects = /\b(project|portfolio|publication|published|article|blog|volunteer)\b/i.test(allText);
+  const allText = getAllTextContent(data);
+
+  if (data.personalInfo.website || data.personalInfo.linkedin) bonuses += 0.3;
+
+  // Graded: every quantified result counts, up to 10.
+  const metricsCount = (allText.match(COMPREHENSIVE_METRICS_RE) || []).length;
+  bonuses += Math.min(metricsCount / 10, 1) * 0.5;
+
+  const hasProjects = (data.projects || []).some((p) => p.name && p.description);
+  const mentionsProjects = /\b(project|portfolio|publication|published|article|blog|volunteer|projekt|publikation|ehrenamt)/i.test(allText);
   if (hasProjects || mentionsProjects) bonuses += 0.3;
-  
-  // Professional achievements (awards, certifications, speaking engagements)
-  const userCertificates = data.certificates || [];
-  const hasCertificates = userCertificates.length > 0;
-  const mentionsAchievements = /\b(award|certification|certified|speaking|conference|presentation|recognition)\b/i.test(allText);
+
+  const hasCertificates = (data.certificates || []).length > 0;
+  const mentionsAchievements = /\b(award|certification|certified|speaking|conference|presentation|recognition|auszeichnung|zertifi|konferenz|vortrag)/i.test(allText);
   if (hasCertificates || mentionsAchievements) bonuses += 0.2;
-  
-  // Leadership/Mentoring/Management experience (universal for all professions)
-  const mentionsLeadership = /\b(led|lead|managed|mentor|mentoring|team|supervised|directed|coordinated|organized)\b/i.test(allText);
+
+  const mentionsLeadership = /\b(led|lead|managed|mentor|mentoring|team|supervised|directed|coordinated|organized|geleitet|leitete|führte|koordiniert)/i.test(allText);
   if (mentionsLeadership && workExp.length > 0) bonuses += 0.2;
 
   // ============================================
   // FINAL CALCULATION
   // ============================================
-  
-  // Check if resume is essentially empty - only contact info, no actual resume content
-  // Resume is empty if it only has personal contact info but no work experience, education, skills, projects, certificates, languages, or summary
-  const hasActualResumeContent = (
-    (workExp.length > 0 && workExp.some(exp => (exp.position && exp.position.trim()) || (exp.company && exp.company.trim()))) ||
-    (education.length > 0 && education.some(edu => (edu.degree && edu.degree.trim()) || (edu.institution && edu.institution.trim()))) ||
+  // A resume with only contact details scores 0.
+  const hasActualResumeContent =
+    workExp.some((exp) => (exp.position && exp.position.trim()) || (exp.company && exp.company.trim())) ||
+    education.some((edu) => (edu.degree && edu.degree.trim()) || (edu.institution && edu.institution.trim())) ||
     validSkills > 0 ||
-    (data.projects && data.projects.length > 0 && data.projects.some(p => p.name && p.name.trim())) ||
-    (data.certificates && data.certificates.length > 0 && data.certificates.some(c => c.name && c.name.trim())) ||
-    (data.languages && data.languages.length > 0 && data.languages.some(l => l.language && l.language.trim())) ||
-    (summary && summary.trim().length > 0)
-  );
-  
-  // If resume has no actual content (only contact info), score should be 0
+    (data.projects || []).some((p) => p.name && p.name.trim()) ||
+    (data.certificates || []).some((c) => c.name && c.name.trim()) ||
+    (data.languages || []).some((l) => l.language && l.language.trim()) ||
+    summary.length > 0;
+
   if (!hasActualResumeContent) {
     totalScore = 0;
   } else {
-    // Structure/format criterion was removed. Normalize remaining base score (8 max) to 10.
-    // Scoring is additive-only: no deductions are applied.
-    const normalizedBaseScore = (totalScore / 8) * 10;
-    totalScore = Math.max(0, Math.min(10, normalizedBaseScore + bonuses));
+    // Base categories total 8; normalize to 10, then add bonuses. Additive only.
+    totalScore = Math.max(0, Math.min(10, (totalScore / 8) * 10 + bonuses));
   }
-  
-  // Round to 1 decimal place for 0-10 scale
-  const overallScore = Math.round(totalScore * 10) / 10;
-  
-  // Add overall suggestions based on score (0-10 scale)
-  if (overallScore < 5) {
-    suggestions.unshift("Your resume has good foundations. Consider adding more quantifiable achievements and strong action verbs to strengthen it further.");
-  } else if (overallScore < 7) {
-    suggestions.unshift("Your resume is solid! Adding more metrics and impact-focused descriptions would make it even stronger.");
-  } else if (overallScore < 9) {
-    suggestions.unshift("Great resume! A few more quantified achievements would make it exceptional.");
-  } else if (overallScore >= 9) {
-    suggestions.unshift("Excellent resume! You're well-positioned for job applications.");
-  }
+
+  const overallScore = round1(totalScore);
+
+  suggestions.unshift(t(
+    overallScore < 5 ? 'feedback.foundations'
+      : overallScore < 7 ? 'feedback.solid'
+      : overallScore < 9 ? 'feedback.greatQuantify'
+      : 'feedback.excellent',
+  ));
 
   return {
     overallScore,
     categories,
-    suggestions: [...new Set(suggestions)].slice(0, 10), // Remove duplicates and limit to 10
+    suggestions: [...new Set(suggestions)].slice(0, 10),
     fromAi: false,
   };
 };

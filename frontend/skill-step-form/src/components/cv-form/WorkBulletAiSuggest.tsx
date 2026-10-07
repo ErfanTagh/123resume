@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { textProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI } from "@/lib/api";
 
@@ -62,7 +63,7 @@ export const WorkBulletAiSuggest = ({
         description: description.trim(),
         existingBullets: existingBullets.map((b) => b.trim()).filter(Boolean),
         technologies: technologies.map((tech) => tech.trim()).filter(Boolean),
-        outputLanguage: language === "de" ? "de" : "en",
+        outputLanguage: textProseLanguage([position, company, description, ...existingBullets], language),
       });
       const bullet = typeof result?.bullet === "string" ? result.bullet.trim() : "";
       if (!bullet) {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { resumeProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI, type ResumeImproveChange } from "@/lib/api";
 import type { CVFormData } from "./types";
@@ -49,8 +50,11 @@ export const ResumeImprovePanel = ({ form, onApplied }: ResumeImprovePanelProps)
   const fetchImprovements = async () => {
     setLoading(true);
     try {
-      const result = await aiAPI.improveResume(form.getValues() as Record<string, unknown>, {
-        outputLanguage: language === "de" ? "de" : "en",
+      const values = form.getValues();
+      const result = await aiAPI.improveResume(values as Record<string, unknown>, {
+        // The resume's language, not the UI's — otherwise a German resume gets
+        // rewritten into English when the site is set to English.
+        outputLanguage: resumeProseLanguage(values, language),
       });
       const list = Array.isArray(result?.changes) ? result.changes : [];
       if (list.length === 0) {

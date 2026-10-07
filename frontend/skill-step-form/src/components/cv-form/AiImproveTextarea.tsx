@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { AutoGrowTextarea } from "@/components/cv-form/AutoGrowTextarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { textProseLanguage } from "@/lib/resumeContentLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { aiAPI, type AiImproveFieldType } from "@/lib/api";
 
@@ -85,7 +86,7 @@ export const AiImproveTextarea = ({
         company: company.trim(),
         professionalTitle: professionalTitle.trim(),
         projectName: projectName.trim(),
-        outputLanguage: language === "de" ? "de" : "en",
+        outputLanguage: textProseLanguage([value, professionalTitle, position, company, projectName], language),
       });
       const improved =
         typeof result?.description === "string" ? result.description.trim() : "";

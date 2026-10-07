@@ -17,6 +17,7 @@ SECTION_HEADERS = {
     "skills": ["skills", "technical skills", "core competencies", "competencies"],
     "projects": ["projects", "project experience"],
     "certifications": ["certifications", "certificates", "certificate"],
+    "publications": ["publications", "publication", "papers", "research"],
     "summary": ["summary", "profile", "about", "objective"],
     "languages": ["languages", "language"],
     "interests": ["interests", "hobbies"],
@@ -29,6 +30,7 @@ SECTION_HEADER_PATTERNS = {
     "skills": re.compile(r'\bskills?\b', re.IGNORECASE),
     "projects": re.compile(r'\bprojects?\b', re.IGNORECASE),
     "certifications": re.compile(r'\bcertifications?\b', re.IGNORECASE),
+    "publications": re.compile(r'\bpublications?\b|\bpapers\b', re.IGNORECASE),
     "languages": re.compile(r'\blanguages?\b', re.IGNORECASE),
     "interests": re.compile(r'\binterests?\b', re.IGNORECASE),
 }

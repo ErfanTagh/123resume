@@ -45,6 +45,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
     education,
     projects,
     certificates,
+    publications = [],
     languages,
     skills,
     skillGroups,
@@ -58,6 +59,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
     "education",
     "projects",
     "certificates",
+    "publications",
     "skills",
     "languages",
     "interests",
@@ -111,6 +113,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const projectsStyling = getSectionStyling("projects");
   const educationStyling = getSectionStyling("education");
   const certificatesStyling = getSectionStyling("certificates");
+  const publicationsStyling = getSectionStyling("publications");
   const skillsStyling = getSectionStyling("skills");
   const languagesStyling = getSectionStyling("languages");
 
@@ -155,6 +158,7 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
   const fsSk = fontSizeMap[skillsStyling.bodySize];
   const fsLang = fontSizeMap[languagesStyling.bodySize];
   const fsCert = fontSizeMap[certificatesStyling.bodySize];
+  const fsPub = fontSizeMap[publicationsStyling.bodySize];
   const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t("resume.sections.skills"));
 
   const mainSectionHeading = (label: string, color: string) => (
@@ -426,6 +430,55 @@ export const SlateCopperTemplate = ({ data }: SlateCopperTemplateProps) => {
                             .join(" · ")}
                         </p>
                       )}
+                    </div>
+                  ),
+              )}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications.some((p) => p.title) ? (
+          <div key="publications" data-resume-section="true">
+            {mainSectionHeading(t("resume.sections.publications"), publicationsStyling.titleColor)}
+            <div className="space-y-3">
+              {publications.map(
+                (pub, i) =>
+                  pub.title && (
+                    <div key={i}>
+                      <p style={{ fontSize: fsPub.body, color: publicationsStyling.bodyColor, fontWeight: 500 }}>
+                        {hasWebLink(pub.url) ? (
+                          <a
+                            href={normalizeExternalUrl(pub.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sc-entry-link no-underline"
+                            style={{ color: linkColor, textDecoration: "underline" }}
+                          >
+                            {pub.title}
+                          </a>
+                        ) : (
+                          pub.title
+                        )}
+                      </p>
+                      {pub.publisher ? (
+                        <p style={{ fontSize: fsPub.org, color: publicationsStyling.bodyColor, opacity: 0.88 }}>
+                          {pub.publisher}
+                        </p>
+                      ) : null}
+                      {pub.publicationDate ? (
+                        <p style={{ fontSize: fsPub.org, color: publicationsStyling.bodyColor, opacity: 0.75 }}>
+                          {pub.publicationDate}
+                        </p>
+                      ) : null}
+                      {pub.description ? (
+                        <p
+                          className="mt-1 whitespace-pre-wrap leading-snug"
+                          style={{ fontSize: fsPub.org, color: publicationsStyling.bodyColor, opacity: 0.88 }}
+                        >
+                          {pub.description}
+                        </p>
+                      ) : null}
                     </div>
                   ),
               )}

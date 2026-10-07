@@ -19,9 +19,9 @@ const SIDEBAR_KEYS = new Set(["skills", "languages", "interests", "certificates"
 export const PrismTemplate = ({ data }: PrismTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   const sidebarSections = orderedSections.filter(k => SIDEBAR_KEYS.has(k));
@@ -281,6 +281,31 @@ export const PrismTemplate = ({ data }: PrismTemplateProps) => {
                       ))}
                     </div>
                   )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications && publications.length > 0 && publications.some(p => p.title) ? (
+          <div key="publications" data-resume-section="true">
+            <SectionHeading label={t('resume.sections.publications')} color={ss.titleColor} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {publications.map((pub, i) => pub.title && (
+                <div key={i}>
+                  <span style={{ fontSize: bodySizes.base, fontWeight: 700, color: ss.bodyColor }}>
+                    {hasWebLink(pub.url) ? (
+                      <a href={normalizeExternalUrl(pub.url)} target="_blank" rel="noopener noreferrer" style={{ color: linkColor, textDecoration: 'underline' }}>
+                        {pub.title}
+                      </a>
+                    ) : (
+                      pub.title
+                    )}
+                  </span>
+                  {pub.publisher && <p style={{ fontSize: bodySizes.sm, color: ss.bodyColor, opacity: 0.8, margin: '2px 0 0' }}>{pub.publisher}</p>}
+                  {pub.publicationDate && <p style={{ fontSize: bodySizes.xs, color: ss.bodyColor, opacity: 0.55, margin: '1px 0 0', fontStyle: 'italic' }}>{pub.publicationDate}</p>}
+                  {pub.description && <p style={{ fontSize: bodySizes.sm, color: ss.bodyColor, lineHeight: '1.6', margin: '4px 0 0' }}>{pub.description}</p>}
                 </div>
               ))}
             </div>

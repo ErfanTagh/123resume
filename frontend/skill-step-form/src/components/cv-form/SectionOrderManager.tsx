@@ -58,6 +58,7 @@ const SortableItem = ({ id, section, index, totalItems, onMoveUp, onMoveDown }: 
     education: t('resume.sections.education'),
     projects: t('resume.sections.projects'),
     certificates: t('resume.sections.certifications'),
+    publications: t('resume.sections.publications'),
     skills: t('resume.sections.skills'),
     languages: t('resume.sections.languages'),
     interests: t('resume.sections.interests'),

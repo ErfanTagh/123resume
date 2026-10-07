@@ -73,6 +73,7 @@ TRANSLATION_CATEGORIES: List[str] = [
     "education",
     "projects",
     "certificates",
+    "publications",
     "organizations",
     "locations",
     "languages",
@@ -91,6 +92,8 @@ _KIND_TO_CATEGORY: Dict[str, str] = {
     "project_description": "projects",
     "project_highlight": "projects",
     "certificate_name": "certificates",
+    "publication_title": "publications",
+    "publication_description": "publications",
     "organization": "organizations",
     "location": "locations",
     "language_name": "languages",
@@ -253,6 +256,18 @@ def _collect_slots(resume: Dict[str, Any]) -> List[_Slot]:
                 continue
             add_field(cert, "name", "certificate_name")
             add_field(cert, "organization", "organization")
+
+    # Publications
+    publications = resume.get("publications")
+    if isinstance(publications, list):
+        for pub in publications:
+            if full:
+                break
+            if not isinstance(pub, dict):
+                continue
+            add_field(pub, "title", "publication_title")
+            add_field(pub, "publisher", "organization")
+            add_field(pub, "description", "publication_description")
 
     # Languages: translate the language NAME; keep the proficiency key untouched
     languages = resume.get("languages")

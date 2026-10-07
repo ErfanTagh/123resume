@@ -7,6 +7,7 @@ export const PUBLIC_PROFILE_SECTION_KEYS = [
   "about",
   "projects",
   "certificates",
+  "publications",
   "contact",
 ] as const;
 
@@ -20,6 +21,7 @@ const DEFAULT_SECTIONS: PublicProfileSections = {
   about: true,
   projects: true,
   certificates: true,
+  publications: true,
   contact: true,
 };
 

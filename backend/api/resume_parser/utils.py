@@ -54,8 +54,9 @@ def get_empty_structure() -> Dict[str, Any]:
         "skills": [],
         "projects": [],
         "certificates": [],
+        "publications": [],
         "languages": [],
-        "sectionOrder": ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"],
+        "sectionOrder": ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"],
         "template": "modern",
     }
 

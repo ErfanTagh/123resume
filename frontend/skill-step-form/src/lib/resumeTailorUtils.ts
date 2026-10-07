@@ -91,6 +91,7 @@ export function toResumeUpdatePayload(resume: Resume): ResumeData {
     education: resume.education,
     projects: resume.projects,
     certificates: resume.certificates,
+    publications: resume.publications,
     languages: resume.languages,
     skills: resume.skills,
     skillGroups: resume.skillGroups,

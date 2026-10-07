@@ -17,9 +17,9 @@ interface StarRoverTemplateProps {
 export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "education", "workExperience", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "education", "workExperience", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with defaults
@@ -89,6 +89,7 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -102,6 +103,8 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
@@ -477,6 +480,49 @@ export const StarRoverTemplate = ({ data }: StarRoverTemplateProps) => {
                     </div>
                     {(dateRange || cert.issueDate) && (
                       <DateBadge text={dateRange || cert.issueDate || ''} color={certificatesStyling.bodyColor} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications && publications.length > 0 && publications.some(p => p.title) ? (
+          <div key="publications" className="sr-section" data-resume-section="true">
+            <SectionHeading label={t('resume.sections.publications').toUpperCase()} color={sectionHeadingColor} sizePx={publicationsTitleSizes.heading} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {publications.map((pub, index) => {
+                if (!pub.title) return null;
+                return (
+                  <div key={index} className="sr-entry" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: publicationsBodySizes.baseText, color: publicationsStyling.bodyColor, fontWeight: 600 }}>
+                        {hasWebLink(pub.url) ? (
+                          <a
+                            href={normalizeExternalUrl(pub.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                          >
+                            {pub.title}
+                          </a>
+                        ) : (
+                          pub.title
+                        )}
+                      </span>
+                      {pub.publisher && (
+                        <span style={{ fontSize: publicationsBodySizes.xs, color: publicationsStyling.bodyColor, opacity: 0.7 }}>{', '}{pub.publisher}</span>
+                      )}
+                      {pub.description && (
+                        <p style={{ fontSize: publicationsBodySizes.xs, color: publicationsStyling.bodyColor, opacity: 0.65, margin: '2px 0 0' }}>
+                          {pub.description}
+                        </p>
+                      )}
+                    </div>
+                    {pub.publicationDate && (
+                      <DateBadge text={pub.publicationDate} color={publicationsStyling.bodyColor} />
                     )}
                   </div>
                 );

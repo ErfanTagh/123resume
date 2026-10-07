@@ -98,7 +98,7 @@ export const ReviewStep = ({
 
       {/* Section Order Manager */}
       <SectionOrderManager
-        sectionOrder={data.sectionOrder || ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"]}
+        sectionOrder={data.sectionOrder || ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"]}
         onReorder={handleSectionReorder}
       />
 
@@ -355,6 +355,47 @@ export const ReviewStep = ({
                       </div>
                       {cert.credentialId && (
                         <p className="text-xs text-muted-foreground">ID: {cert.credentialId}</p>
+                      )}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
+
+        {/* Publications */}
+        {(displayData.publications || []).some((pub) => pub.title) && (
+          <>
+            <div>
+              <SectionHeader title="Publications" onEdit={() => onEditStep(2)} />
+              <div className="space-y-3">
+                {(displayData.publications || []).map((pub, index) => (
+                  pub.title && (
+                    <div key={index} className="space-y-1">
+                      <p className="font-semibold text-foreground">
+                        {hasWebLink(pub.url) ? (
+                          <a
+                            href={normalizeExternalUrl(pub.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline"
+                          >
+                            {pub.title}
+                          </a>
+                        ) : (
+                          pub.title
+                        )}
+                      </p>
+                      {pub.publisher && (
+                        <p className="text-sm text-muted-foreground">{pub.publisher}</p>
+                      )}
+                      {pub.publicationDate && (
+                        <p className="text-xs text-muted-foreground">{pub.publicationDate}</p>
+                      )}
+                      {pub.description && (
+                        <p className="text-sm text-muted-foreground">{pub.description}</p>
                       )}
                     </div>
                   )

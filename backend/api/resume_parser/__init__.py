@@ -90,6 +90,7 @@ class ResumeParser:
                 "skills": extract_skills_with_fallback(normalized_text, sections),
                 "projects": extract_projects(raw_text, sections),
                 "certificates": extract_certificates(raw_text, sections),
+                "publications": [],
                 "languages": extract_languages_with_fallback(raw_text, sections),
             }
             

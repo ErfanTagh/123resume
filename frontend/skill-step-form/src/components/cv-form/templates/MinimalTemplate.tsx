@@ -31,9 +31,9 @@ const SectionHeading = ({ title, fontSize, color }: { title: string; fontSize: s
 export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with defaults
@@ -103,6 +103,7 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -119,6 +120,8 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
@@ -479,6 +482,75 @@ export const MinimalTemplate = ({ data }: MinimalTemplateProps) => {
                         }}
                       >
                         ID: {cert.credentialId}
+                      </p>
+                    )}
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications.some(pub => pub.title) ? (
+          <div key="publications">
+            <SectionHeading title={t('resume.sections.publications') || 'Publications'} fontSize={publicationsTitleSizes.heading} color={publicationsStyling.titleColor} />
+            <div className="space-y-2">
+              {publications.map((pub, index) => (
+                pub.title && (
+                  <div key={index}>
+                    <h3 
+                      className="font-semibold" 
+                      style={{ 
+                        fontSize: publicationsBodySizes.base, 
+                        color: publicationsStyling.bodyColor,
+                        letterSpacing: '0.01em'
+                      }}
+                    >
+                      {hasWebLink(pub.url) ? (
+                        <a
+                          href={normalizeExternalUrl(pub.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: 'inherit' }}
+                        >
+                          {pub.title}
+                        </a>
+                      ) : (
+                        pub.title
+                      )}
+                    </h3>
+                    <div className="flex justify-between items-baseline gap-4 mt-1">
+                      {pub.publisher ? (
+                        <p style={{ fontSize: sizes.xs, color: publicationsStyling.bodyColor, opacity: 0.8 }}>
+                          {pub.publisher}
+                        </p>
+                      ) : <span />}
+                      {pub.publicationDate && (
+                        <span 
+                          className="whitespace-nowrap" 
+                          style={{ 
+                            fontSize: sizes.xs, 
+                            color: publicationsStyling.bodyColor,
+                            opacity: 0.7,
+                            fontStyle: 'italic'
+                          }}
+                        >
+                          {pub.publicationDate}
+                        </span>
+                      )}
+                    </div>
+                    {pub.description && (
+                      <p 
+                        className="mt-1" 
+                        style={{ 
+                          fontSize: sizes.xs, 
+                          color: publicationsStyling.bodyColor,
+                          opacity: 0.8
+                        }}
+                      >
+                        {pub.description}
                       </p>
                     )}
                   </div>

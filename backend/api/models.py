@@ -140,6 +140,17 @@ class Certificate(models.Model):
         abstract = True
 
 
+class Publication(models.Model):
+    title = models.CharField(max_length=500, blank=True, null=True)
+    publisher = models.CharField(max_length=300, blank=True, null=True)
+    publication_date = models.CharField(max_length=20, blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
 class Language(models.Model):
     language = models.CharField(max_length=100, blank=True, null=True)
     proficiency = models.CharField(max_length=50, blank=True, null=True)
@@ -165,6 +176,7 @@ class Resume(models.Model):
     education = models.ArrayField(model_container=Education, blank=True, null=True)
     projects = models.ArrayField(model_container=Project, blank=True, null=True)
     certificates = models.ArrayField(model_container=Certificate, blank=True, null=True)
+    publications = models.ArrayField(model_container=Publication, blank=True, null=True)
     languages = models.ArrayField(model_container=Language, blank=True, null=True)
     skills = models.ArrayField(model_container=Skill, blank=True, null=True)
     # Presentation settings

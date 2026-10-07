@@ -9,16 +9,7 @@ import { SEO } from "@/components/SEO";
 import { RESUME_ACCENT_DEFAULT, RESUME_BODY_GRAY, RESUME_TITLE_GRAY } from "@/lib/resumeTemplatePalette";
 import { getResumeThemeAccent } from "@/lib/resumeColorThemes";
 
-const DEFAULT_SECTION_ORDER = [
-  "summary",
-  "workExperience",
-  "education",
-  "projects",
-  "certificates",
-  "skills",
-  "languages",
-  "interests",
-];
+import { DEFAULT_SECTION_ORDER } from "@/lib/defaultSectionOrder";
 
 const createEmptyCVFormData = (): CVFormData => ({
   personalInfo: {
@@ -61,10 +52,11 @@ const createEmptyCVFormData = (): CVFormData => ({
   ],
   projects: [],
   certificates: [],
+  publications: [],
   languages: [{ language: "", proficiency: "" }],
   skills: [{ skill: "" }],
   skillGroups: [{ name: "", skills: [{ skill: "" }] }],
-  sectionOrder: DEFAULT_SECTION_ORDER,
+  sectionOrder: [...DEFAULT_SECTION_ORDER],
   template: "modern",
   styling: {
     titleColor: RESUME_TITLE_GRAY,
@@ -101,6 +93,10 @@ const mapResumeToCVFormData = (resume: Resume): CVFormData => {
       mapped.certificates && mapped.certificates.length > 0
         ? mapped.certificates
         : base.certificates,
+    publications:
+      mapped.publications && mapped.publications.length > 0
+        ? mapped.publications
+        : base.publications,
     languages:
       mapped.languages && mapped.languages.length > 0
         ? mapped.languages

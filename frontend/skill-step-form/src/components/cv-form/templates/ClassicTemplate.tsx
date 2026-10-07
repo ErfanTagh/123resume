@@ -17,9 +17,9 @@ interface ClassicTemplateProps {
 export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with defaults
@@ -94,6 +94,7 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -110,6 +111,8 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
@@ -323,6 +326,41 @@ export const ClassicTemplate = ({ data }: ClassicTemplateProps) => {
                     )}
                     {cert.credentialId && (
                       <p className="text-muted-foreground" style={{ fontSize: certificatesBodySizes.xs, color: certificatesStyling.bodyColor }}>ID: {cert.credentialId}</p>
+                    )}
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications.some(pub => pub.title) ? (
+          <div key="publications">
+            <SectionHeading label={t('resume.sections.publications').toUpperCase()} size={publicationsTitleSizes.heading} color={publicationsStyling.titleColor} />
+            <div className="space-y-2">
+              {publications.map((pub, index) => (
+                pub.title && (
+                  <div key={index}>
+                    <h3 className="font-semibold" style={{ color: publicationsStyling.bodyColor }}>
+                      {hasWebLink(pub.url) ? (
+                        <a href={normalizeExternalUrl(pub.url)} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: 'inherit' }}>
+                          {pub.title}
+                        </a>
+                      ) : (
+                        pub.title
+                      )}
+                    </h3>
+                    {pub.publisher && (
+                      <p className="text-muted-foreground" style={{ fontSize: publicationsBodySizes.baseText, color: publicationsStyling.bodyColor }}>{pub.publisher}</p>
+                    )}
+                    {pub.publicationDate && (
+                      <p className="text-muted-foreground mt-1" style={{ fontSize: publicationsBodySizes.xs, color: publicationsStyling.bodyColor }}>
+                        {pub.publicationDate}
+                      </p>
+                    )}
+                    {pub.description && (
+                      <p className="text-muted-foreground mt-1" style={{ fontSize: publicationsBodySizes.baseText, color: publicationsStyling.bodyColor }}>{pub.description}</p>
                     )}
                   </div>
                 )

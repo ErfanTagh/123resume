@@ -16,9 +16,9 @@ interface ModernTemplateProps {
 export const ModernTemplate = ({ data }: ModernTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with defaults
@@ -91,6 +91,7 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -107,6 +108,8 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
@@ -555,6 +558,94 @@ export const ModernTemplate = ({ data }: ModernTemplateProps) => {
                             }}
                           >
                             ID: {cert.credentialId}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications.some(pub => pub.title) ? (
+          <div key="publications" data-resume-section="true">
+            <h2 
+              className={getHeadingClassName()} 
+              style={{ 
+                color: publicationsStyling.titleColor, 
+                fontWeight: headingBold ? 'bold' : 'normal', 
+                borderColor: publicationsStyling.titleColor, 
+                fontSize: publicationsTitleSizes.heading,
+                letterSpacing: '0.05em'
+              }}
+            >
+              {t('resume.sections.publications').toUpperCase()}
+            </h2>
+            <div className="space-y-2">
+              {publications.map((pub, index) => (
+                pub.title && (
+                  <div key={index}>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 
+                          className="font-semibold" 
+                          style={{ 
+                            fontSize: publicationsBodySizes.base, 
+                            color: publicationsStyling.bodyColor,
+                            letterSpacing: '0.01em'
+                          }}
+                        >
+                          {hasWebLink(pub.url) ? (
+                            <a
+                              href={normalizeExternalUrl(pub.url)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                              style={{ color: 'inherit' }}
+                            >
+                              {pub.title}
+                            </a>
+                          ) : (
+                            pub.title
+                          )}
+                        </h3>
+                        {pub.publisher && (
+                          <p 
+                            style={{ 
+                              fontSize: publicationsBodySizes.sm, 
+                              color: publicationsStyling.bodyColor,
+                              opacity: 0.85
+                            }}
+                          >
+                            {pub.publisher}
+                          </p>
+                        )}
+                        {pub.publicationDate && (
+                          <p 
+                            className="mt-0.5" 
+                            style={{ 
+                              fontSize: publicationsBodySizes.xs, 
+                              color: publicationsStyling.bodyColor,
+                              opacity: 0.7,
+                              fontStyle: 'italic'
+                            }}
+                          >
+                            {pub.publicationDate}
+                          </p>
+                        )}
+                        {pub.description && (
+                          <p 
+                            className="mt-0.5" 
+                            style={{ 
+                              fontSize: publicationsBodySizes.sm, 
+                              color: publicationsStyling.bodyColor,
+                              opacity: 0.85
+                            }}
+                          >
+                            {pub.description}
                           </p>
                         )}
                       </div>

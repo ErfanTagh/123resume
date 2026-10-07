@@ -16,9 +16,9 @@ interface LatexTemplateProps {
 export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const { t: uiT } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "skills", "projects", "education", "workExperience", "certificates", "languages", "interests"];
+  const defaultOrder = ["summary", "skills", "projects", "education", "workExperience", "certificates", "publications", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with defaults
@@ -88,6 +88,7 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -101,6 +102,8 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const groupedSkills = getRenderableSkillGroups(skillGroups, skills, t('resume.sections.skills'));
@@ -474,6 +477,47 @@ export const LatexTemplate = ({ data }: LatexTemplateProps) => {
                       {cert.credentialId && (
                         <p style={{ fontSize: certificatesBodySizes.xs, color: certificatesStyling.bodyColor, opacity: 0.65, marginTop: '1px' }}>
                           {t('resume.fields.credentialId')}: {cert.credentialId}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications && publications.length > 0 && publications.some(p => p.title) ? (
+          <div key="publications" data-resume-section="true" style={{ marginBottom: '18px' }}>
+            <SectionHeading label={t('resume.sections.publications').toUpperCase()} color={sectionHeadingColor} sizes={publicationsTitleSizes} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {publications.map((pub, index) => {
+                if (!pub.title) return null;
+                return (
+                  <div key={index} className="lx-entry" style={{ display: 'flex', gap: '10px' }}>
+                    <DateCol text={pub.publicationDate || ''} color={publicationsStyling.bodyColor} sizePx={publicationsBodySizes.small} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: publicationsBodySizes.body, fontWeight: 700, color: publicationsStyling.bodyColor }}>
+                          {hasWebLink(pub.url) ? (
+                            <a
+                              href={normalizeExternalUrl(pub.url)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                            >
+                              {pub.title}
+                            </a>
+                          ) : (
+                            pub.title
+                          )}
+                        </span>
+                        <span style={{ fontSize: publicationsBodySizes.small, fontWeight: 600, color: publicationsStyling.bodyColor, flexShrink: 0 }}>{pub.publisher || ''}</span>
+                      </div>
+                      {pub.description && (
+                        <p style={{ fontSize: publicationsBodySizes.xs, color: publicationsStyling.bodyColor, opacity: 0.65, marginTop: '1px' }}>
+                          {pub.description}
                         </p>
                       )}
                     </div>

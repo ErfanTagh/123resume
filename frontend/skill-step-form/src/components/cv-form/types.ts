@@ -95,6 +95,15 @@ export const cvFormSchema = z.object({
       url: z.string().optional().or(z.literal("")),
     })
   ).optional(),
+  publications: z.array(
+    z.object({
+      title: z.string().optional(),
+      publisher: z.string().optional(),
+      publicationDate: z.string().optional(),
+      url: z.string().optional().or(z.literal("")),
+      description: z.string().optional(),
+    })
+  ).optional(),
   languages: z.array(
     z.object({
       language: z.string().optional(),  // 🔧 Changed to optional

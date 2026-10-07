@@ -137,6 +137,13 @@ def estimate_resume_pages(data: Dict[str, Any]) -> float:
             continue
         wc += len((proj.get("description") or "").split())
 
+    for pub in data.get("publications") or []:
+        if not isinstance(pub, dict):
+            continue
+        wc += len((pub.get("title") or "").split())
+        wc += len((pub.get("description") or "").split())
+        wc += len((pub.get("publisher") or "").split())
+
     skills = data.get("skills") or []
     if isinstance(skills, list):
         wc += len(skills) * 0.5

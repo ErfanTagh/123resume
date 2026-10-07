@@ -566,6 +566,13 @@ export interface ResumeData {
     credentialId?: string;
     url?: string;
   }>;
+  publications?: Array<{
+    title?: string;
+    publisher?: string;
+    publicationDate?: string;
+    url?: string;
+    description?: string;
+  }>;
   languages?: Array<{
     language: string;
     proficiency: string;

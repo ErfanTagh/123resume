@@ -102,20 +102,14 @@ def resume_list(request):
                     'education': resume_doc.get('education', []),
                     'projects': resume_doc.get('projects', []),
                     'certificates': resume_doc.get('certificates', []),
+                    'publications': resume_doc.get('publications', []),
                     'languages': resume_doc.get('languages', []),
                     'skills': resume_doc.get('skills', []),
                     'skill_groups': resume_doc.get('skill_groups', []),
                     'template': resume_doc.get('template', 'modern'),
-                    'section_order': resume_doc.get('section_order', [
-                        'summary',
-                        'workExperience',
-                        'education',
-                        'projects',
-                        'certificates',
-                        'skills',
-                        'languages',
-                        'interests',
-                    ]),
+                    'section_order': _ensure_publications_in_section_order(
+                        resume_doc.get('section_order', list(_DEFAULT_SECTION_ORDER))
+                    ),
                     'completeness_score': resume_doc.get('completeness_score', 0.0),
                     'clarity_score': resume_doc.get('clarity_score', 0.0),
                     'formatting_score': resume_doc.get('formatting_score', 0.0),
@@ -223,6 +217,7 @@ def resume_list(request):
                     'education': data.get('education', []),
                     'projects': data.get('projects', []),
                     'certificates': data.get('certificates', []),
+                    'publications': data.get('publications', []),
                     'languages': data.get('languages', []),
                     'skills': data.get('skills', []),
                     'skill_groups': data.get('skill_groups', []),
@@ -233,6 +228,7 @@ def resume_list(request):
                         'education',
                         'projects',
                         'certificates',
+                        'publications',
                         'skills',
                         'languages',
                         'interests',
@@ -268,6 +264,7 @@ def resume_list(request):
                     'education': created_doc.get('education', []),
                     'projects': created_doc.get('projects', []),
                     'certificates': created_doc.get('certificates', []),
+                    'publications': created_doc.get('publications', []),
                     'languages': created_doc.get('languages', []),
                     'skills': created_doc.get('skills', []),
                     'skill_groups': created_doc.get('skill_groups', []),
@@ -278,6 +275,7 @@ def resume_list(request):
                         'education',
                         'projects',
                         'certificates',
+                        'publications',
                         'skills',
                         'languages',
                         'interests',
@@ -538,6 +536,7 @@ _PUBLIC_PROFILE_SECTION_KEYS = (
     'about',
     'projects',
     'certificates',
+    'publications',
     'contact',
 )
 
@@ -615,6 +614,42 @@ def _doc_certificates(resume_doc):
     return []
 
 
+def _doc_publications(resume_doc):
+    if 'publications' in resume_doc:
+        v = resume_doc['publications']
+        return v if v is not None else []
+    if 'Publications' in resume_doc:
+        v = resume_doc['Publications']
+        return v if v is not None else []
+    return []
+
+
+_DEFAULT_SECTION_ORDER = [
+    'summary',
+    'workExperience',
+    'education',
+    'projects',
+    'certificates',
+    'publications',
+    'skills',
+    'languages',
+    'interests',
+]
+
+
+def _ensure_publications_in_section_order(section_order):
+    """Insert publications after certificates when missing from older resumes."""
+    if not isinstance(section_order, list) or not section_order:
+        return list(_DEFAULT_SECTION_ORDER)
+    order = [s for s in section_order if isinstance(s, str) and s]
+    if 'publications' in order:
+        return order
+    if 'certificates' in order:
+        idx = order.index('certificates') + 1
+        return order[:idx] + ['publications'] + order[idx:]
+    return order + ['publications']
+
+
 def _resume_dict_from_doc(resume_doc):
     """Shape a Mongo resume document for API JSON (snake_case, matches resume_detail GET)."""
     return {
@@ -625,22 +660,13 @@ def _resume_dict_from_doc(resume_doc):
         'education': resume_doc.get('education', []),
         'projects': _doc_projects(resume_doc),
         'certificates': _doc_certificates(resume_doc),
+        'publications': _doc_publications(resume_doc),
         'languages': resume_doc.get('languages', []),
         'skills': resume_doc.get('skills', []),
         'skill_groups': resume_doc.get('skill_groups', []),
         'template': resume_doc.get('template', 'modern'),
-        'section_order': resume_doc.get(
-            'section_order',
-            [
-                'summary',
-                'workExperience',
-                'education',
-                'projects',
-                'certificates',
-                'skills',
-                'languages',
-                'interests',
-            ],
+        'section_order': _ensure_publications_in_section_order(
+            resume_doc.get('section_order', list(_DEFAULT_SECTION_ORDER))
         ),
         'styling': resume_doc.get('styling', {}),
         'completeness_score': resume_doc.get('completeness_score', 0.0),

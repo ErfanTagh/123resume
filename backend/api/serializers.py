@@ -172,6 +172,26 @@ class CertificateSerializer(serializers.Serializer):
     url = serializers.CharField(required=False, allow_blank=True, max_length=500)
 
 
+class PublicationSerializer(serializers.Serializer):
+    title = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True
+    )
+    publisher = serializers.CharField(
+        max_length=300,
+        required=False,
+        allow_blank=True
+    )
+    publication_date = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True
+    )
+    url = serializers.CharField(required=False, allow_blank=True, max_length=500)
+    description = serializers.CharField(required=False, allow_blank=True)
+
+
 class LanguageSerializer(serializers.Serializer):
     language = serializers.CharField(max_length=100, required=False, allow_blank=True)
     proficiency = serializers.CharField(max_length=50, required=False, allow_blank=True)
@@ -194,6 +214,7 @@ class ResumeSerializer(serializers.Serializer):
     education = EducationSerializer(many=True, required=False, allow_empty=True)
     projects = ProjectSerializer(many=True, required=False)
     certificates = CertificateSerializer(many=True, required=False)
+    publications = PublicationSerializer(many=True, required=False)
     languages = LanguageSerializer(many=True, required=False)
     skills = SkillSerializer(many=True, required=False)
     skill_groups = SkillGroupSerializer(many=True, required=False)

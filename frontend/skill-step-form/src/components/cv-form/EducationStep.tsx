@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { DegreeAutocomplete } from "@/components/DegreeAutocomplete";
 import { FieldOfStudyAutocomplete } from "@/components/FieldOfStudyAutocomplete";
+import { PublicationsStep } from "./PublicationsStep";
 
 
 interface EducationStepProps {
@@ -462,6 +463,10 @@ export const EducationStep = ({ form }: EducationStepProps) => {
           </Button>
         )}
       </div>
+
+      <Separator />
+
+      <PublicationsStep form={form} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React from "react";
 import { CVFormData } from "../types";
-import { Mail, Phone, MapPin, Linkedin, Github, Globe, Briefcase, GraduationCap, Code, Award, Languages, Heart, User } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Github, Globe, Briefcase, GraduationCap, Code, Award, BookOpen, Languages, Heart, User } from "lucide-react";
 import { formatDateRange } from "@/lib/dateFormatter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { makeResumeT } from "@/lib/resumeSectionHeadings";
@@ -18,9 +18,9 @@ interface CreativeTemplateProps {
 export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
   const { t: uiT, language } = useLanguage();
   const t = makeResumeT(uiT, data.styling?.resumeLanguage);
-  const { personalInfo, workExperience, education, projects, certificates, languages, skills, skillGroups, sectionOrder, styling } = data;
+  const { personalInfo, workExperience, education, projects, certificates, publications = [], languages, skills, skillGroups, sectionOrder, styling } = data;
 
-  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"];
+  const defaultOrder = ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"];
   const orderedSections = sectionOrder || defaultOrder;
 
   // Extract styling options with vibrant defaults
@@ -99,6 +99,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
   const projectsStyling = getSectionStyling('projects');
   const educationStyling = getSectionStyling('education');
   const certificatesStyling = getSectionStyling('certificates');
+  const publicationsStyling = getSectionStyling('publications');
   const skillsStyling = getSectionStyling('skills');
   const languagesStyling = getSectionStyling('languages');
 
@@ -113,6 +114,8 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
   const educationBodySizes = fontSizeMap[educationStyling.bodySize];
   const certificatesTitleSizes = fontSizeMap[certificatesStyling.titleSize];
   const certificatesBodySizes = fontSizeMap[certificatesStyling.bodySize];
+  const publicationsTitleSizes = fontSizeMap[publicationsStyling.titleSize];
+  const publicationsBodySizes = fontSizeMap[publicationsStyling.bodySize];
   const skillsTitleSizes = fontSizeMap[skillsStyling.titleSize];
   const skillsBodySizes = fontSizeMap[skillsStyling.bodySize];
   const languagesTitleSizes = fontSizeMap[languagesStyling.titleSize];
@@ -126,6 +129,7 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
     education: GraduationCap,
     projects: Code,
     certificates: Award,
+    publications: BookOpen,
     skills: Code,
     languages: Languages,
     interests: Heart,
@@ -606,6 +610,97 @@ export const CreativeTemplate = ({ data }: CreativeTemplateProps) => {
                           }}
                         >
                           ID: {cert.credentialId}
+                        </p>
+                      )}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null;
+
+      case "publications":
+        return publications.some(pub => pub.title) ? (
+          <div key="publications">
+            <div className="relative pl-5 border-l-[3px]" style={{ borderColor: accentColor }}>
+              <div className="flex items-center gap-2 mb-2.5">
+                <BookOpen className="h-4 w-4" style={{ color: publicationsStyling.titleColor }} />
+                <h2 
+                  className="font-black italic uppercase tracking-wide" 
+                  style={{ 
+                    fontSize: publicationsTitleSizes.sectionHeading, 
+                    fontWeight: headingBold ? '900' : 'bold', 
+                    color: publicationsStyling.titleColor 
+                  }}
+                >
+                  {t('resume.sections.publications')}
+                </h2>
+              </div>
+              <div className="space-y-2">
+                {publications.map((pub, index) => (
+                  pub.title && (
+                    <div key={index} className="relative">
+                      <div 
+                        className="absolute -left-[29px] w-2.5 h-2.5 rounded-full border-2 border-background" 
+                        style={{ backgroundColor: accentColor }}
+                      />
+                      <h3 
+                        className="font-bold mb-0.5" 
+                        style={{ 
+                          fontSize: publicationsBodySizes.base, 
+                          color: publicationsStyling.bodyColor,
+                          letterSpacing: '0.01em'
+                        }}
+                      >
+                        {hasWebLink(pub.url) ? (
+                          <a
+                            href={normalizeExternalUrl(pub.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline"
+                            style={{ color: 'inherit' }}
+                          >
+                            {pub.title}
+                          </a>
+                        ) : (
+                          pub.title
+                        )}
+                      </h3>
+                      <div className="flex justify-between items-center gap-4">
+                        {pub.publisher ? (
+                          <p 
+                            style={{ 
+                              fontSize: publicationsBodySizes.sm, 
+                              color: publicationsStyling.bodyColor,
+                              opacity: 0.85
+                            }}
+                          >
+                            {pub.publisher}
+                          </p>
+                        ) : <span />}
+                        {pub.publicationDate && (
+                          <span 
+                            className="whitespace-nowrap italic" 
+                            style={{ 
+                              fontSize: sizes.xs, 
+                              color: publicationsStyling.bodyColor, 
+                              opacity: 0.7 
+                            }}
+                          >
+                            {pub.publicationDate}
+                          </span>
+                        )}
+                      </div>
+                      {pub.description && (
+                        <p 
+                          style={{ 
+                            fontSize: sizes.xs, 
+                            color: publicationsStyling.bodyColor,
+                            opacity: 0.7
+                          }}
+                        >
+                          {pub.description}
                         </p>
                       )}
                     </div>

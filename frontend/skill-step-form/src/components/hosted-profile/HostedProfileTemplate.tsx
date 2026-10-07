@@ -50,7 +50,7 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
   const themeColors = HOSTED_PROFILE_THEME_COLORS[themeId];
   const dark = "#1c1d25";
 
-  const { projects, certs } = useMemo(() => {
+  const { projects, certs, pubs } = useMemo(() => {
     const ordered = withResumeSectionsSortedForDisplay(data);
     return {
       projects: (ordered.projects || []).filter(
@@ -58,6 +58,9 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
       ),
       certs: (ordered.certificates || []).filter(
         (c) => !!(c.name?.trim() || c.organization?.trim() || (c.url && c.url.trim())),
+      ),
+      pubs: (ordered.publications || []).filter(
+        (p) => !!(p.title?.trim() || p.publisher?.trim() || (p.url && p.url.trim())),
       ),
     };
   }, [data]);
@@ -95,6 +98,7 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
   const showAbout = visibility.about && hasSummary;
   const showProjects = visibility.projects && projects.length > 0;
   const showCertificates = visibility.certificates && certs.length > 0;
+  const showPublications = visibility.publications && pubs.length > 0;
   const showContact = visibility.contact && hasEmail;
 
   /** Photo in hero only when About is off, there is an image, and photo block is enabled */
@@ -105,6 +109,7 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
   if (showAbout) navItems.push({ href: "#about", label: t("pages.hostedProfile.navAbout") });
   if (showProjects) navItems.push({ href: "#projects", label: t("pages.hostedProfile.navProjects") });
   if (showCertificates) navItems.push({ href: "#certificates", label: t("pages.hostedProfile.navCertificates") });
+  if (showPublications) navItems.push({ href: "#publications", label: t("pages.hostedProfile.navPublications") });
   if (showContact) navItems.push({ href: "#contact", label: t("pages.hostedProfile.navContact") });
 
   const primaryCta =
@@ -276,6 +281,52 @@ export function HostedProfileTemplate({ data, visibility: visibilityProp, resume
                       >
                         {t("pages.hostedProfile.viewCredential")}
                       </a>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {showPublications && (
+        <section id="publications" className="hp-section bg-gray-50 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="hp-heading">
+              {t("pages.hostedProfile.sectionPublications")}
+            </h2>
+            <ul className="hp-card-grid">
+              {pubs.map((pub, i) => {
+                const pubTitle =
+                  pub.title?.trim() ||
+                  pub.publisher?.trim() ||
+                  t("pages.hostedProfile.untitledPublication");
+                return (
+                  <li key={i} className="cert-card">
+                    <h3 className="text-lg font-bold text-gray-900 mb-0.5">
+                      {hasWebLink(pub.url) && pub.title?.trim() ? (
+                        <a
+                          href={normalizeExternalUrl(pub.url!)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline decoration-2 underline-offset-2 hover:opacity-90"
+                          style={{ color: themeColors.accent }}
+                        >
+                          {pub.title.trim()}
+                        </a>
+                      ) : (
+                        pubTitle
+                      )}
+                    </h3>
+                    {pub.title?.trim() && pub.publisher?.trim() ? (
+                      <p className="text-sm text-gray-600 mb-2">{pub.publisher}</p>
+                    ) : null}
+                    {pub.publicationDate?.trim() ? (
+                      <p className="text-xs text-gray-500 mb-2">{pub.publicationDate.trim()}</p>
+                    ) : null}
+                    {pub.description?.trim() ? (
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{pub.description.trim()}</p>
                     ) : null}
                   </li>
                 );

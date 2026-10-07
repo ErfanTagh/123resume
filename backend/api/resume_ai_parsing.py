@@ -169,6 +169,28 @@ def _norm_certificates(raw: Any) -> List[Dict[str, Any]]:
     return out
 
 
+def _norm_publications(raw: Any) -> List[Dict[str, Any]]:
+    if not isinstance(raw, list):
+        return []
+    out: List[Dict[str, Any]] = []
+    for item in raw[:40]:
+        if not isinstance(item, dict):
+            continue
+        out.append(
+            {
+                "title": _s(item.get("title") or item.get("name"), 500),
+                "publisher": _s(item.get("publisher") or item.get("venue") or item.get("journal"), 400),
+                "publicationDate": _s(
+                    item.get("publicationDate") or item.get("publication_date") or item.get("date"),
+                    40,
+                ),
+                "url": _s(item.get("url") or item.get("link") or item.get("doi"), 800),
+                "description": _s(item.get("description"), 4000),
+            }
+        )
+    return out
+
+
 def _norm_languages(raw: Any) -> List[Dict[str, str]]:
     if not isinstance(raw, list):
         return []
@@ -231,6 +253,7 @@ def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
     base["education"] = _norm_education(raw.get("education"))
     base["projects"] = _norm_projects(raw.get("projects"))
     base["certificates"] = _norm_certificates(raw.get("certificates"))
+    base["publications"] = _norm_publications(raw.get("publications"))
     base["languages"] = _norm_languages(raw.get("languages"))
     skills = _norm_skills(raw.get("skills"))
     base["skills"] = skills if skills else [{"skill": ""}]
@@ -303,9 +326,10 @@ Return JSON with this shape (all keys required at top level):
   }],
   "projects": [{"name","description","highlights":[{"highlight":""}],"technologies":[{"technology":""}],"startDate","endDate","link"}],
   "certificates": [{"name","organization","issueDate","expirationDate","credentialId","url"}],
+  "publications": [{"title","publisher","publicationDate","url","description"}],
   "languages": [{"language","proficiency"}],
   "skills": [{"skill":""}],
-  "sectionOrder": ["summary","workExperience","education","projects","certificates","skills","languages","interests"],
+  "sectionOrder": ["summary","workExperience","education","projects","certificates","publications","skills","languages","interests"],
   "template": "modern"
 }
 Use arrays with one object with empty strings if a section is missing.

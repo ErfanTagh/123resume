@@ -9,6 +9,7 @@ export type TranslationCategory =
   | "education"
   | "projects"
   | "certificates"
+  | "publications"
   | "organizations"
   | "locations"
   | "languages"
@@ -28,6 +29,7 @@ export const TRANSLATION_CATEGORIES: TranslationCategoryDef[] = [
   { code: "education", labelKey: "resume.translate.categories.education" },
   { code: "projects", labelKey: "resume.translate.categories.projects" },
   { code: "certificates", labelKey: "resume.translate.categories.certificates" },
+  { code: "publications", labelKey: "resume.translate.categories.publications" },
   { code: "organizations", labelKey: "resume.translate.categories.organizations" },
   { code: "locations", labelKey: "resume.translate.categories.locations" },
   { code: "languages", labelKey: "resume.translate.categories.languages" },

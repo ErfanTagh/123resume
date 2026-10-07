@@ -1,5 +1,6 @@
 import type { CVFormData } from "@/components/cv-form/types";
 import type { Resume } from "@/lib/api";
+import { ensurePublicationsInSectionOrder } from "@/lib/defaultSectionOrder";
 
 function pickStr(v: unknown): string {
   if (v == null || v === undefined) return "";
@@ -62,6 +63,24 @@ function normalizeCertificatesFromResume(resume: Resume | Record<string, unknown
       expirationDate: pickStr(c.expirationDate ?? c.expiration_date) || undefined,
       credentialId: pickStr(c.credentialId ?? c.credential_id) || undefined,
       url: pickStr(c.url ?? c.link ?? c.credential_url) || undefined,
+    };
+  });
+}
+
+function normalizePublicationsFromResume(
+  resume: Resume | Record<string, unknown>,
+): NonNullable<CVFormData["publications"]> {
+  const r = resume as Record<string, unknown>;
+  const raw = r.publications ?? r.publication;
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map((item) => {
+    const p = item as Record<string, unknown>;
+    return {
+      title: pickStr(p.title ?? p.name) || undefined,
+      publisher: pickStr(p.publisher ?? p.venue ?? p.journal) || undefined,
+      publicationDate: pickStr(p.publicationDate ?? p.publication_date ?? p.date) || undefined,
+      url: pickStr(p.url ?? p.link ?? p.doi) || undefined,
+      description: pickStr(p.description) || undefined,
     };
   });
 }
@@ -197,11 +216,13 @@ export function resumeToCvFormData(resume: Resume): CVFormData {
     education: resume.education || [],
     projects: normalizeProjectsFromResume(resume),
     certificates: normalizeCertificatesFromResume(resume),
+    publications: normalizePublicationsFromResume(resume),
     skills: resume.skills || [],
     skillGroups: normalizeSkillGroupsFromResume(resume),
     languages: resume.languages || [],
-    sectionOrder:
+    sectionOrder: ensurePublicationsInSectionOrder(
       ((resume.sectionOrder as string[] | undefined) ?? (r.section_order as string[] | undefined)) || [],
+    ),
     styling: convertStyling((resume as { styling?: unknown }).styling),
   };
 }

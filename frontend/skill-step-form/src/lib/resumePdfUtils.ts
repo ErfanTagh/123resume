@@ -374,6 +374,32 @@ function generateResumeHTML(resume: Resume): string {
     `;
   };
 
+  const renderPublications = () => {
+    if (!sortedResume.publications?.length) return '';
+    const validPubs = sortedResume.publications.filter((pub: any) => pub.title?.trim());
+    if (!validPubs.length) return '';
+
+    return `
+      <section class="resume-section">
+        <h3 class="section-title">${i18n.t('resume.sections.publications')}</h3>
+        ${validPubs.map((pub: any) => `
+          <div class="certification-item">
+            <div class="certification-header">
+              <h4><strong>${
+                hasWebLink(pub.url)
+                  ? `<a href="${escapeHtml(normalizeExternalUrl(pub.url))}" target="_blank" rel="noopener noreferrer" class="certification-link">${escapeHtml(pub.title)}</a>`
+                  : escapeHtml(pub.title)
+              }</strong></h4>
+              ${pub.publisher ? `<span class="certification-issuer">${escapeHtml(pub.publisher)}</span>` : ''}
+            </div>
+            ${pub.publicationDate ? `<p class="certification-date">${escapeHtml(formatMonthYear(pub.publicationDate, locale) || pub.publicationDate)}</p>` : ''}
+            ${pub.description?.trim() ? `<p class="certification-date">${escapeHtml(pub.description)}</p>` : ''}
+          </div>
+        `).join('')}
+      </section>
+    `;
+  };
+
   const renderSkills = () => {
     if (!resume.skills?.length) return '';
     const validSkills = resume.skills.filter((skillObj: any) => skillObj.skill?.trim());
@@ -461,6 +487,7 @@ function generateResumeHTML(resume: Resume): string {
         ${renderWorkExperience()}
         ${renderProjects()}
         ${renderCertificates()}
+        ${renderPublications()}
         ${renderSkills()}
         ${renderLanguages()}
         ${renderInterests()}
@@ -981,6 +1008,7 @@ function convertResumeToFormData(resume: Resume): CVFormData {
     education: resume.education || [],
     projects: resume.projects || [],
     certificates: resume.certificates || [],
+    publications: resume.publications || [],
     skills: resume.skills || [],
     languages: resume.languages || [],
     sectionOrder: resume.sectionOrder || [],

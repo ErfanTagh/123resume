@@ -40,6 +40,7 @@ export const ResumeCustomizeSidebar = ({
     "education",
     "projects",
     "certificates",
+    "publications",
     "skills",
     "languages",
     "interests",

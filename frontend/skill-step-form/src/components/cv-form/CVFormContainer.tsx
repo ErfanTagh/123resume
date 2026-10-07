@@ -38,6 +38,7 @@ import {
   LANDING_TEMPLATE_CATALOG,
   landingTemplateDescKey,
 } from "@/lib/landingTemplateCatalog";
+import { ensurePublicationsInSectionOrder } from "@/lib/defaultSectionOrder";
 import {
   RESUME_ACCENT_DEFAULT,
   RESUME_BODY_GRAY,
@@ -205,10 +206,11 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       }],
       projects: [],
       certificates: [],
+      publications: [],
       languages: [],
       skills: [],
       skillGroups: [{ name: "", skills: [{ skill: "" }] }],
-      sectionOrder: ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"],
+      sectionOrder: ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"],
       template: "modern" as const,
       // IMPORTANT: do NOT pre-populate sectionStyling for personalInfo.
       // If we set personalInfo.titleSize/bodySize here, it will "lock" the summary
@@ -254,6 +256,12 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         : defaults.skillGroups,
       projects: Array.isArray(initialData.projects) ? initialData.projects : defaults.projects,
       certificates: Array.isArray(initialData.certificates) ? initialData.certificates : defaults.certificates,
+      publications: Array.isArray(initialData.publications) ? initialData.publications : defaults.publications,
+      sectionOrder: ensurePublicationsInSectionOrder(
+        Array.isArray(initialData.sectionOrder) && initialData.sectionOrder.length > 0
+          ? initialData.sectionOrder
+          : defaults.sectionOrder,
+      ),
       styling: {
         ...dataDefaultStyling,
         ...initialData.styling,
@@ -637,6 +645,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
         skills: Array.isArray(profile.skills) ? profile.skills : [],
         projects: Array.isArray(profile.projects) ? profile.projects : [],
         certificates: Array.isArray(profile.certificates) ? profile.certificates : [],
+        publications: Array.isArray(profile.publications) ? profile.publications : [],
       };
       form.reset(normalizedProfile);
       setCurrentStep(0);

@@ -95,5 +95,10 @@ export function withResumeSectionsSortedForDisplay(data: CVFormData): CVFormData
     education: [...(data.education ?? [])].sort(compareTimelineNewestFirst),
     projects: [...(data.projects ?? [])].sort(compareTimelineNewestFirst),
     certificates: [...(data.certificates ?? [])].sort(compareCertificatesNewestFirst),
+    publications: [...(data.publications ?? [])].sort((a, b) => {
+      const da = parseResumeDateForSort(a.publicationDate) ?? Number.NEGATIVE_INFINITY;
+      const db = parseResumeDateForSort(b.publicationDate) ?? Number.NEGATIVE_INFINITY;
+      return db - da;
+    }),
   };
 }

@@ -26,6 +26,7 @@ class ResumeParser:
         "skills": ["skills", "technical skills", "core competencies", "competencies"],
         "projects": ["projects", "project experience"],
         "certifications": ["certifications", "certificates", "certificate"],
+        "publications": ["publications", "publication", "papers", "research"],
         "summary": ["summary", "profile", "about", "objective"],
         "languages": ["languages", "language"],
         "interests": ["interests", "hobbies"],
@@ -38,6 +39,7 @@ class ResumeParser:
         "skills": re.compile(r'\bskills?\b', re.IGNORECASE),
         "projects": re.compile(r'\bprojects?\b', re.IGNORECASE),
         "certifications": re.compile(r'\bcertifications?\b', re.IGNORECASE),
+        "publications": re.compile(r'\bpublications?\b|\bpapers\b', re.IGNORECASE),
         "languages": re.compile(r'\blanguages?\b', re.IGNORECASE),
         "interests": re.compile(r'\binterests?\b', re.IGNORECASE),
     }
@@ -333,6 +335,7 @@ class ResumeParser:
                 "skills": self._extract_skills_with_fallback(normalized_text, sections),
                 "projects": self._extract_projects(raw_text, sections),
                 "certificates": self._extract_certificates(raw_text, sections),
+                "publications": [],
                 "languages": self._extract_languages_with_fallback(raw_text, sections),
             }
             
@@ -1801,8 +1804,9 @@ class ResumeParser:
             "skills": [],
             "projects": [],
             "certificates": [],
+            "publications": [],
             "languages": [],
-            "sectionOrder": ["summary", "workExperience", "education", "projects", "certificates", "skills", "languages", "interests"],
+            "sectionOrder": ["summary", "workExperience", "education", "projects", "certificates", "publications", "skills", "languages", "interests"],
             "template": "modern",
         }
 

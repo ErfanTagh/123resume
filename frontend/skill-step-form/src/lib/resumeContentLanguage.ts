@@ -77,6 +77,9 @@ export function collectResumeText(data: unknown): string {
     for (const h of arr(p?.highlights)) parts.push(str(h?.highlight));
   }
   for (const e of arr(d.education)) parts.push(str(e?.degree), str(e?.field));
+  for (const pub of arr(d.publications)) {
+    parts.push(str(pub?.title), str(pub?.description), str(pub?.publisher));
+  }
   return parts.filter(Boolean).join(" ");
 }
 

@@ -36,9 +36,10 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     env_file:
+      # MONGODB_CONNECTION_STRING lives in .env, built with URL-encoded credentials.
+      # Building it here pasted the raw password into the URL, and a "+" in it
+      # reached MongoDB as a space, so every login with this string failed.
       - ./.env # Load env from root
-    environment:
-      - MONGODB_CONNECTION_STRING=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_NAME}?authSource=admin
     depends_on:
       mongodb:
         condition: service_healthy

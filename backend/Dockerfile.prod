@@ -77,6 +77,9 @@ RUN playwright install-deps chromium
 # Claude SDK (AI features). Its own layer so the heavy layers above stay cached.
 RUN pip install --no-cache-dir "anthropic>=1.11.0,<2"
 
+# Metrics for the Grafana admin dashboards (api/metrics.py).
+RUN pip install --no-cache-dir "prometheus-client>=0.26,<1"
+
 # Copy project
 COPY . .
 

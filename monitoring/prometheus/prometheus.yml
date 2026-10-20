@@ -1,0 +1,19 @@
+# Prometheus for the 123Resume admin dashboards (Grafana at /grafana/).
+# Low traffic, so once a minute is plenty; dashboards sum over 6 hours / days.
+global:
+  scrape_interval: 60s
+  scrape_timeout: 10s
+  evaluation_interval: 60s
+
+scrape_configs:
+  # Django: requests, AI calls, users/resumes (backend/api/metrics.py).
+  - job_name: backend
+    metrics_path: /internal/metrics
+    static_configs:
+      # Service names, not container names: Django rejects hosts with "_".
+      - targets: ["backend:8000"]
+
+  # The server itself: CPU, memory, disk.
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]

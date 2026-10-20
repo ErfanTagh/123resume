@@ -40,7 +40,7 @@ services:
       mongodb:
         condition: service_healthy
     # Ensure openai SDK exists (avoids ModuleNotFoundError if image predates Dockerfile openai line)
-    command: sh -c "pip install -q 'openai>=1.54.0' 'anthropic>=1.11.0,<2' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "pip install -q 'openai>=1.54.0' 'anthropic>=1.11.0,<2' 'prometheus-client>=0.26,<1' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
     networks:
       - resume-network
 
@@ -82,7 +82,69 @@ services:
     networks:
       - resume-network
 
+  # --- Admin dashboards: Prometheus collects, Grafana shows (at /grafana/) ---
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    container_name: resume_prometheus
+    restart: always
+    profiles: ["monitoring"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+      - --storage.tsdb.retention.size=2GB
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - resume-network
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: resume_grafana
+    restart: always
+    profiles: ["monitoring"]
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3030/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_COOKIE_SECURE=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/123resume-overview.json
+    ports:
+      - "127.0.0.1:3030:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - resume-network
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    container_name: resume_node_exporter
+    restart: always
+    profiles: ["monitoring"]
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      # No rslave: Docker Desktop (macOS) can't propagate mounts; the server's file keeps it.
+      - /:/host:ro
+    networks:
+      - resume-network
+
 volumes:
+  prometheus_data:
+  grafana_data:
   mongodb_data:
 
 networks:

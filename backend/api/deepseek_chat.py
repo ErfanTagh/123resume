@@ -7,12 +7,15 @@ takes and returns the same chat-completion shape, so the feature modules
 (scoring, parsing, improve, ...) don't care which provider answers.
 """
 import logging
+import sys
+import time
 from types import SimpleNamespace
 
 import anthropic
 from django.conf import settings
 from openai import OpenAI
 
+from . import metrics
 from .ai_response_log import log_deepseek_exchange
 
 logger = logging.getLogger(__name__)
@@ -114,20 +117,55 @@ def _claude_client() -> _ClaudeChatClient:
     )
 
 
+class _MeteredCompletions:
+    """Times every completion and records it for the admin dashboards.
+
+    The feature label is the calling module (api.resume_ai_scoring -> "scoring"),
+    so the ten call sites need no changes.
+    """
+
+    def __init__(self, inner):
+        self._inner = inner
+
+    def create(self, **kwargs):
+        caller = sys._getframe(1).f_globals.get("__name__", "")
+        feature = caller.rsplit(".", 1)[-1].replace("resume_ai_", "")
+        if feature == "deepseek_chat":
+            feature = "assistant"
+        model = str(kwargs.get("model") or "")
+        started = time.monotonic()
+        try:
+            completion = self._inner.create(**kwargs)
+        except Exception as e:
+            metrics.observe_ai_call(feature, model, time.monotonic() - started, type(e).__name__)
+            raise
+        finish = getattr(completion.choices[0], "finish_reason", "") if completion.choices else ""
+        outcome = {"refusal": "refusal", "length": "truncated"}.get(finish, "ok")
+        metrics.observe_ai_call(
+            feature, model, time.monotonic() - started, outcome, getattr(completion, "usage", None)
+        )
+        return completion
+
+
+class _MeteredChatClient:
+    def __init__(self, inner):
+        self.chat = SimpleNamespace(completions=_MeteredCompletions(inner.chat.completions))
+
+
 def get_deepseek_client():
     """Client for the configured AI provider (OpenAI-style chat interface)."""
     if settings.USE_CLAUDE:
-        return _claude_client()
+        return _MeteredChatClient(_claude_client())
     if not settings.DEEPSEEK_API_KEY:
         raise RuntimeError("DEEPSEEK_API_KEY is not configured")
-    return OpenAI(
+    return _MeteredChatClient(OpenAI(
         api_key=settings.DEEPSEEK_API_KEY,
         base_url=settings.DEEPSEEK_BASE_URL,
         # The SDK default (600s, 2 retries) outlives the web worker; a request
         # that runs past gunicorn's timeout is killed with no error to the user.
         timeout=settings.DEEPSEEK_TIMEOUT_SECONDS,
         max_retries=1,
-    )
+    ))
 
 
 def deepseek_request_options() -> dict:

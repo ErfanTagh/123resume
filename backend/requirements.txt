@@ -40,4 +40,6 @@ requests>=2.31.0
 openai>=1.54.0
 # Claude, when AI_PROVIDER=anthropic
 anthropic>=1.11.0,<2
+# Metrics for the Grafana admin dashboards (api/metrics.py)
+prometheus-client>=0.26,<1
 

@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 123resume
+    folder: 123Resume
+    type: file
+    # Dashboards live in git (monitoring/grafana/dashboards); edits made in the
+    # Grafana UI are not saved back, so change the JSON files instead.
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

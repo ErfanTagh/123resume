@@ -40,10 +40,14 @@ services:
       # Building it here pasted the raw password into the URL, and a "+" in it
       # reached MongoDB as a space, so every login with this string failed.
       - ./.env # Load env from root
+    environment:
+      # gunicorn workers write metrics here and /internal/metrics merges them.
+      # Emptied on every start (stale files from old workers would double count).
+      - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
     depends_on:
       mongodb:
         condition: service_healthy
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60"
+    command: sh -c "rm -rf /tmp/prometheus_multiproc && mkdir -p /tmp/prometheus_multiproc && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60"
     networks:
       - resume-network
 
@@ -94,7 +98,61 @@ services:
     networks:
       - resume-network
 
+  # --- Admin dashboards: Prometheus collects, Grafana shows (at /grafana/) ---
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    container_name: resume_prometheus
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+      - --storage.tsdb.retention.size=2GB
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - resume-network
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: resume_grafana
+    restart: always
+    environment:
+      - GF_SERVER_ROOT_URL=https://${DOMAIN}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/123resume-overview.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - resume-network
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    container_name: resume_node_exporter
+    restart: always
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - resume-network
+
 volumes:
+  prometheus_data:
+  grafana_data:
   mongodb_data:
   static_volume:
   media_volume:

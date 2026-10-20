@@ -40,8 +40,9 @@ else:
     # Development fallback: allow localhost only
     ALLOWED_HOSTS = [host.strip() for host in default_dev_hosts.split(',')]
 
-# Always allow localhost/127.0.0.1 for internal health checks (CI, docker exec, etc.)
-for internal_host in ('localhost', '127.0.0.1'):
+# Always allow localhost/127.0.0.1 for internal health checks (CI, docker exec, etc.),
+# and the service name Prometheus scrapes on the Docker network (not reachable publicly).
+for internal_host in ('localhost', '127.0.0.1', 'backend'):
     if internal_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(internal_host)
 
@@ -68,6 +69,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First, so the request timing covers every other middleware too.
+    'api.metrics.MetricsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

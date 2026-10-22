@@ -845,10 +845,10 @@
       "subtitle": "View and manage your created CVs",
       "tabs": {
         "resumes": "My Resumes",
-        "jobMatching": "Job matching & cover letter",
+        "jobMatching": "Job matching",
         "jobTracker": "Job tracker",
-        "portfolio": "Portfolio Website",
-        "businessCard": "Business card"
+        "portfolio": "Portfolio",
+        "businessCard": "Card"
       },
       "businessCard": {
         "title": "Business card",

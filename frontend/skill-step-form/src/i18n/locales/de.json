@@ -845,10 +845,10 @@
       "subtitle": "Anzeigen und Verwalten Ihrer erstellten Lebensläufe",
       "tabs": {
         "resumes": "Meine Lebensläufe",
-        "jobMatching": "Stellenabgleich & Anschreiben",
+        "jobMatching": "Stellenabgleich",
         "jobTracker": "Bewerbungsübersicht",
-        "portfolio": "Portfolio-Website",
-        "businessCard": "Visitenkarte"
+        "portfolio": "Portfolio",
+        "businessCard": "Karte"
       },
       "businessCard": {
         "title": "Visitenkarte",

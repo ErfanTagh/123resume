@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      maxWidth: {
+        content: "72rem",
+      },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         modern: ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif'],

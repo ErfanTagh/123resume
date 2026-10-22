@@ -42,4 +42,5 @@ openai>=1.54.0
 anthropic>=1.11.0,<2
 # Metrics for the Grafana admin dashboards (api/metrics.py)
 prometheus-client>=0.26,<1
-
+# Claude connector (connector/server.py)
+mcp>=2.3,<3

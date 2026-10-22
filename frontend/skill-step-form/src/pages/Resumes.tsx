@@ -12,6 +12,8 @@ import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
 import { BusinessCardPanel } from '@/components/resumes/BusinessCardPanel';
 import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
+import { isResumesTabId } from '@/components/resumes/resumesTabs';
+import type { ResumesTabId } from '@/components/resumes/resumesTabStyles';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -82,8 +84,7 @@ const generateDefaultResumeName = (resume: Resume): string => {
   return parts.length > 0 ? parts.join('-') : 'Untitled Resume';
 };
 
-const RESUMES_TABS = ['resumes', 'job-matching', 'job-tracker', 'portfolio', 'business-card'] as const;
-type ResumesTab = (typeof RESUMES_TABS)[number];
+type ResumesTab = ResumesTabId;
 
 /** Framed tints per action — full literal class strings so Tailwind keeps them. */
 const ROW_ACTION_TONES = {
@@ -133,9 +134,7 @@ export default function Resumes() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab: ResumesTab = RESUMES_TABS.includes(tabParam as ResumesTab)
-    ? (tabParam as ResumesTab)
-    : 'resumes';
+  const activeTab: ResumesTab = isResumesTabId(tabParam) ? tabParam : 'resumes';
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -449,49 +448,32 @@ export default function Resumes() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">{t('pages.resumes.title') || 'My Resumes'}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground/80">{t('pages.resumes.subtitle') || 'View and manage your created CVs'}</p>
-        </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
+    <div className="min-h-screen bg-muted/40">
+      {error && (
+        <div className="px-4 pt-6 sm:px-6">
+          <Alert variant="destructive" className="mb-0">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        )}
+        </div>
+      )}
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setSearchParams({ tab: v })}
-          className="space-y-6"
-        >
-          <ResumesTabBar
-            tabs={[
-              {
-                id: 'resumes',
-                label: t('pages.resumes.tabs.resumes') || 'My Resumes',
-              },
-              {
-                id: 'job-matching',
-                label: t('pages.resumes.tabs.jobMatching') || 'Job matching & cover letter',
-              },
-              {
-                id: 'job-tracker',
-                label: t('pages.resumes.tabs.jobTracker') || 'Job tracker',
-              },
-              {
-                id: 'portfolio',
-                label: t('pages.resumes.tabs.portfolio') || 'Portfolio Website',
-              },
-              {
-                id: 'business-card',
-                label: t('pages.resumes.tabs.businessCard') || 'Business card',
-              },
-            ]}
-          />
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setSearchParams({ tab: v })}
+        className="flex flex-row items-start"
+      >
+        <ResumesTabBar
+          getLabel={(tab) => t(tab.labelKey) || tab.fallback}
+        />
+
+        <div className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
+          {activeTab === 'resumes' && (
+            <div className="mb-6 sm:mb-8">
+              <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl lg:text-4xl">{t('pages.resumes.title') || 'My Resumes'}</h1>
+              <p className="text-sm text-muted-foreground/80 sm:text-base">{t('pages.resumes.subtitle') || 'View and manage your created CVs'}</p>
+            </div>
+          )}
 
           <TabsContent
             value="resumes"
@@ -759,7 +741,8 @@ export default function Resumes() {
           >
             <BusinessCardPanel resumes={resumes} isLoadingResumes={isLoading} />
           </TabsContent>
-        </Tabs>
+        </div>
+      </Tabs>
 
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>
@@ -821,7 +804,6 @@ export default function Resumes() {
             ) : null}
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   );
 }

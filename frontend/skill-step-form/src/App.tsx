@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { ResumesSidebarProvider } from "./contexts/ResumesSidebarContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -45,6 +46,7 @@ import DataProtection from "./pages/DataProtection";
 import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 import HostedProfilePage from "./pages/HostedProfilePage";
+import { SiteNavLayout } from "./components/dashboard/SiteNavLayout";
 
 const queryClient = new QueryClient();
 
@@ -80,14 +82,6 @@ const AppRoutes = () => {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/p/:id" element={<HostedProfilePage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            }
-          />
           <Route path="/create/start" element={<CreateResumeGuide />} />
           <Route path="/create" element={<CreateResume />} />
           <Route
@@ -122,8 +116,23 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:id" element={<BlogPost />} />
+          {/* Site rail persists across Dashboard + marketing pages */}
+          <Route element={<SiteNavLayout />}>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogPost />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+          </Route>
           {/* Blog editing routes - only available in development */}
           {import.meta.env.DEV && BlogEditor && (
             <Route
@@ -149,11 +158,7 @@ const AppRoutes = () => {
               }
             />
           )}
-          <Route path="/about" element={<About />} />
           <Route path="/careers" element={<Careers />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/templates" element={<Templates />} />
-          <Route path="/pricing" element={<Pricing />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/data-protection" element={<DataProtection />} />
@@ -180,8 +185,10 @@ const App = () => (
               v7_relativeSplatPath: true,
             }}
           >
-            <ScrollToTop />
-            <AppRoutes />
+            <ResumesSidebarProvider>
+              <ScrollToTop />
+              <AppRoutes />
+            </ResumesSidebarProvider>
           </BrowserRouter>
         </AuthProvider>
       </LanguageProvider>

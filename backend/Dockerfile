@@ -78,6 +78,9 @@ RUN pip install --no-cache-dir "anthropic>=1.11.0,<2"
 # Metrics for the Grafana admin dashboards (api/metrics.py).
 RUN pip install --no-cache-dir "prometheus-client>=0.26,<1"
 
+# Claude connector (connector/server.py).
+RUN pip install --no-cache-dir "mcp>=2.3,<3"
+
 # Copy project files
 COPY . .
 

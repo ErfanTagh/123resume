@@ -98,6 +98,25 @@ services:
     networks:
       - resume-network
 
+  # Claude connector (MCP server, connector/server.py): users edit their resumes
+  # from Claude. Same image and code as the backend; served at /mcp by the gateway.
+  connector:
+    image: my-simple-resume-backend
+    container_name: resume_connector
+    restart: always
+    expose:
+      - "8100"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./.env
+    environment:
+      - CONNECTOR_PUBLIC_URL=https://${DOMAIN}
+      - CONNECTOR_ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN}
+    command: python -m connector.server
+    networks:
+      - resume-network
+
   # --- Admin dashboards: Prometheus collects, Grafana shows (at /grafana/) ---
   prometheus:
     image: prom/prometheus:v3.15.0

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import os
 import secrets
 from datetime import datetime
 from typing import Any
@@ -23,7 +24,8 @@ from bson.errors import InvalidId
 from api.serializers import ResumeSerializer
 from api.views.match_views import _get_mongo_db
 
-SITE_URL = "https://123resume.de"
+# Where the links Claude shares point (the local builder when run locally).
+SITE_URL = os.getenv("CONNECTOR_SITE_URL", "https://123resume.de").rstrip("/")
 TOKEN_PREFIX = "123r_"
 MAX_VERSIONS_PER_RESUME = 50
 

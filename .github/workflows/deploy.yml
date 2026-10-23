@@ -107,6 +107,12 @@ jobs:
             fi
             echo "✅ Backend is healthy"
 
+            # Claude connector: same image and code as the backend. Not fatal, so a
+            # connector problem can't block a website deploy.
+            echo "🔄 Updating connector container..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps connector \
+              || echo "⚠️  Connector update failed (website unaffected)"
+
             # ── STEP 5: Swap in the new frontend ─────────────────────────────────
             echo "🔄 Updating frontend container..."
             docker compose -f docker-compose.prod.yml up -d --no-deps frontend

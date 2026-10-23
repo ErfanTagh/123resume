@@ -100,6 +100,7 @@ services:
       - MONGODB_CONNECTION_STRING=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_NAME}?authSource=admin
       - PYTHONUNBUFFERED=1
       - CONNECTOR_PUBLIC_URL=http://localhost:8100
+      - CONNECTOR_SITE_URL=http://localhost:5173
       - CONNECTOR_ALLOWED_HOSTS=localhost:8100,127.0.0.1:8100
     command: sh -c "pip install -q 'mcp>=2.3,<3' 'anthropic>=1.11.0,<2' 'prometheus-client>=0.26,<1' && python -m connector.server"
     depends_on:

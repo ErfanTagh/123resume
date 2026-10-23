@@ -339,14 +339,17 @@ def social_login_callback(request, provider):
             # Default to /oauth/callback if no redirect_uri provided
             redirect_uri = f"{request.build_absolute_uri('/').rstrip('/')}/oauth/callback"
         
-        # Append tokens to redirect URI
-        from urllib.parse import urlencode
-        token_params = urlencode({
+        # Append tokens to redirect URI. Connector finish only needs access_token
+        # (refresh in the query string is unnecessary leak surface).
+        from urllib.parse import urlencode, urlparse
+        params = {
             'access_token': tokens['access'],
-            'refresh_token': tokens['refresh'],
-            'state': state,  # Include state for verification
-        })
-        redirect_url = f"{redirect_uri}?{token_params}"
+            'state': state,
+        }
+        path = (urlparse(redirect_uri).path or "").rstrip("/")
+        if path != "/connector/oauth/done":
+            params["refresh_token"] = tokens["refresh"]
+        redirect_url = f"{redirect_uri}?{urlencode(params)}"
         logger.info(f"Redirecting to frontend: {redirect_uri[:50]}...")
         
         # Redirect to frontend

@@ -4,9 +4,9 @@ signed-in user read and edit their own resumes from Claude.
 
     python -m connector.server                      # listens on :8100, path /mcp
 
-Auth (demo): a personal access token per user, sent as "Authorization: Bearer
-123r_...", minted with `python manage.py create_connector_token <user>`.
-claude.ai needs OAuth instead; that is the next step.
+Auth:
+  - OAuth 2.1 (DCR): Claude redirects to /login (password or Google/LinkedIn/GitHub).
+  - Personal access tokens: Authorization Bearer 123r_... (demo / Claude Code).
 
 Tools run Django/pymongo code, which is synchronous, so each one runs in a
 worker thread (connector/store.py has the logic).
@@ -27,25 +27,50 @@ django.setup()
 import anyio  # noqa: E402
 from mcp.server import MCPServer  # noqa: E402
 from mcp.server.auth.middleware.auth_context import get_access_token  # noqa: E402
-from mcp.server.auth.provider import AccessToken, TokenVerifier  # noqa: E402
-from mcp.server.auth.settings import AuthSettings  # noqa: E402
+from mcp.server.auth.provider import AccessToken  # noqa: E402
+from mcp.server.auth.settings import (  # noqa: E402
+    AuthSettings,
+    ClientRegistrationOptions,
+    RevocationOptions,
+)
 from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
 from mcp.server.transport_security import TransportSecuritySettings  # noqa: E402
 from mcp.types import ToolAnnotations  # noqa: E402
-from pydantic import BaseModel, Field  # noqa: E402
+from pydantic import AnyHttpUrl, BaseModel, Field  # noqa: E402
 
+from connector import login_pages  # noqa: E402
 from connector import store  # noqa: E402
+from connector.oauth_provider import ResumeOAuthProvider  # noqa: E402
 
 PUBLIC_URL = os.getenv("CONNECTOR_PUBLIC_URL", "http://localhost:8100").rstrip("/")
+SITE_URL = os.getenv("CONNECTOR_SITE_URL", PUBLIC_URL).rstrip("/")
 SCOPE = "resumes"
+RESOURCE = f"{PUBLIC_URL}/mcp"
 
 
-class PersonalTokenVerifier(TokenVerifier):
-    async def verify_token(self, token: str) -> AccessToken | None:
+class ResumeOAuthProviderWithPat(ResumeOAuthProvider):
+    """OAuth tokens plus personal access tokens (123r_...). SDK allows only auth_server_provider."""
+
+    async def load_access_token(self, token: str) -> AccessToken | None:
+        access = await super().load_access_token(token)
+        if access is not None:
+            return access
+        if not token or not token.startswith(store.TOKEN_PREFIX):
+            return None
         user_id = await anyio.to_thread.run_sync(store.user_for_token, token)
         if user_id is None:
             return None
-        return AccessToken(token=token, client_id="personal-token", scopes=[SCOPE], subject=str(user_id))
+        return AccessToken(
+            token=token,
+            client_id="personal-token",
+            scopes=[SCOPE],
+            subject=str(user_id),
+            resource=self.resource,
+        )
+
+
+oauth_provider = ResumeOAuthProviderWithPat(PUBLIC_URL, SCOPE)
+login_pages.configure(public_url=PUBLIC_URL, site_url=SITE_URL, oauth_provider=oauth_provider)
 
 
 INSTRUCTIONS = """
@@ -69,11 +94,19 @@ mcp = MCPServer(
     title="123Resume",
     instructions=INSTRUCTIONS,
     website_url="https://123resume.de",
-    token_verifier=PersonalTokenVerifier(),
+    auth_server_provider=oauth_provider,
     auth=AuthSettings(
-        issuer_url=PUBLIC_URL,
-        resource_server_url=f"{PUBLIC_URL}/mcp",
+        issuer_url=AnyHttpUrl(PUBLIC_URL),
+        resource_server_url=AnyHttpUrl(RESOURCE),
         required_scopes=[SCOPE],
+        validate_token_resource=True,
+        client_registration_options=ClientRegistrationOptions(
+            enabled=True,
+            valid_scopes=[SCOPE],
+            default_scopes=[SCOPE],
+        ),
+        revocation_options=RevocationOptions(enabled=True),
+        service_documentation_url=AnyHttpUrl(f"{SITE_URL}/"),
     ),
 )
 
@@ -168,8 +201,32 @@ async def score_resume(resume_id: str) -> dict:
     return await anyio.to_thread.run_sync(lambda: score_resume_with_deepseek(payload, "en"))
 
 
+@mcp.custom_route("/connector/login", methods=["GET"])
+async def route_login(request):
+    return await login_pages.login_page(request)
+
+
+@mcp.custom_route("/connector/login/callback", methods=["POST"])
+async def route_login_callback(request):
+    return await login_pages.login_callback(request)
+
+
+@mcp.custom_route("/connector/login/social/{provider}", methods=["GET"])
+async def route_login_social(request):
+    return await login_pages.login_social_start(request)
+
+
+@mcp.custom_route("/connector/oauth/done", methods=["GET"])
+async def route_oauth_done(request):
+    return await login_pages.oauth_done(request)
+
+
 def app():
-    allowed = [h.strip() for h in os.getenv("CONNECTOR_ALLOWED_HOSTS", "localhost:8100,127.0.0.1:8100").split(",") if h.strip()]
+    allowed = [
+        h.strip()
+        for h in os.getenv("CONNECTOR_ALLOWED_HOSTS", "localhost:8100,127.0.0.1:8100").split(",")
+        if h.strip()
+    ]
     return mcp.streamable_http_app(
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=True,

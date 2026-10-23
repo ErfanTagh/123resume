@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.conf import settings
+import os
 import requests
 import secrets
 import logging
@@ -18,6 +19,59 @@ from .admin_notifications import notify_new_user
 logger = logging.getLogger(__name__)
 
 # OAuth state is stored in Django sessions (works across multiple workers)
+
+# Post-login browser return URLs (website callback + Claude connector finish).
+_ALLOWED_SOCIAL_REDIRECT_PATHS = (
+    "/oauth/callback",
+    "/connector/oauth/done",
+)
+
+
+def _social_redirect_allowed_hosts(base_url: str) -> set[str]:
+    hosts: set[str] = set()
+    for raw in (
+        base_url,
+        getattr(settings, "DOMAIN", "") or "",
+        os.getenv("CONNECTOR_PUBLIC_URL", ""),
+        os.getenv("CONNECTOR_SITE_URL", ""),
+    ):
+        raw = (raw or "").strip()
+        if not raw:
+            continue
+        parsed = urlparse(raw if "://" in raw else f"https://{raw}")
+        if parsed.netloc:
+            hosts.add(parsed.netloc.lower())
+    return hosts
+
+
+def _allowed_social_redirect_uri(redirect_uri: str, base_url: str) -> str | None:
+    """Return redirect_uri if host is ours and path is allowlisted; else None."""
+    redirect_uri = (redirect_uri or "").strip()
+    if not redirect_uri:
+        return f"{base_url.rstrip('/')}/oauth/callback"
+    try:
+        parsed = urlparse(redirect_uri)
+    except Exception:
+        return None
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return None
+    path = parsed.path.rstrip("/") or "/"
+    allowed = {p.rstrip("/") or "/" for p in _ALLOWED_SOCIAL_REDIRECT_PATHS}
+    if path not in allowed:
+        return None
+    host = parsed.netloc.lower()
+    allowed_hosts = _social_redirect_allowed_hosts(base_url)
+    if host not in allowed_hosts:
+        # Local connector often runs on another port than the website (e.g. :8100).
+        hostname = host.split(":")[0]
+        if not (
+            path == "/connector/oauth/done"
+            and hostname in ("localhost", "127.0.0.1")
+            and any(h.split(":")[0] in ("localhost", "127.0.0.1") for h in allowed_hosts)
+        ):
+            return None
+    # Drop query/fragment from untrusted input; callers may only use the path.
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
 
 def get_jwt_tokens_for_user(user):
@@ -84,16 +138,7 @@ def social_login_url(request, provider):
             {'error': f'Unsupported provider: {provider}'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
-    # Generate state for CSRF protection
-    state = secrets.token_urlsafe(32)
-    # Store state in session (works across multiple workers)
-    request.session[f'oauth_state_{state}'] = {
-        'provider': provider,
-        'redirect_uri': request.GET.get('redirect_uri', ''),
-    }
-    request.session.save()  # Ensure session is saved
-    
+
     # Build callback URL - use DOMAIN from settings if available, otherwise use request
     # This ensures consistency in production when behind a reverse proxy
     domain = getattr(settings, 'DOMAIN', '')
@@ -106,7 +151,23 @@ def social_login_url(request, provider):
     else:
         # Development: use request host
         base_url = request.build_absolute_uri('/').rstrip('/')
-    
+
+    redirect_uri = _allowed_social_redirect_uri(request.GET.get('redirect_uri', ''), base_url)
+    if redirect_uri is None:
+        return Response(
+            {'error': 'Invalid redirect_uri'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Generate state for CSRF protection
+    state = secrets.token_urlsafe(32)
+    # Store state in session (works across multiple workers)
+    request.session[f'oauth_state_{state}'] = {
+        'provider': provider,
+        'redirect_uri': redirect_uri,
+    }
+    request.session.save()  # Ensure session is saved
+
     callback_url = f"{base_url}/api/auth/social/{provider}/callback/"
     
     if provider == 'google':

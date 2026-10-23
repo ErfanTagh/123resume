@@ -99,7 +99,7 @@ services:
       - resume-network
 
   # Claude connector (MCP server, connector/server.py): users edit their resumes
-  # from Claude. Same image and code as the backend; served at /mcp by the gateway.
+  # from Claude. OAuth + /mcp are served by the gateway (see nginx/conf.d/app.conf).
   connector:
     image: my-simple-resume-backend
     container_name: resume_connector
@@ -112,6 +112,7 @@ services:
       - ./.env
     environment:
       - CONNECTOR_PUBLIC_URL=https://${DOMAIN}
+      - CONNECTOR_SITE_URL=https://${DOMAIN}
       - CONNECTOR_ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN}
     command: python -m connector.server
     networks:

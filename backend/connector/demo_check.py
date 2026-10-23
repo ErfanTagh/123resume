@@ -3,6 +3,10 @@ End-to-end check of the connector over real MCP (Streamable HTTP), as Claude wou
 
     docker exec resume_connector python -m connector.demo_check <username>
 
+Uses a personal access token (123r_...), not the browser OAuth flow. For OAuth,
+add the custom connector URL …/mcp in Claude and sign in at /connector/login
+(password or Google/LinkedIn/GitHub).
+
 Mints a token for the user, then reads, edits and undoes an edit on their newest
 resume, and checks the refusals. The resume ends up exactly as it started.
 """

@@ -55,7 +55,7 @@ def _db():
 
 
 # --------------------------------------------------------------------------
-# Personal access tokens (demo auth; OAuth comes next)
+# Personal access tokens (demo / Claude Code fallback; OAuth is primary)
 # --------------------------------------------------------------------------
 
 def _hash(token: str) -> str:

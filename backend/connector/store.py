@@ -112,10 +112,29 @@ def _links(resume_id: str) -> dict:
     }
 
 
+def _display_name(doc: dict) -> str:
+    """Mirror frontend generateDefaultResumeName (resumePdfUtils.ts). Display only; does not write to MongoDB."""
+    personal = doc.get("personal_info") or {}
+    parts: list[str] = []
+    for key in ("first_name", "last_name", "professional_title"):
+        value = personal.get(key)
+        if isinstance(value, str) and value.strip():
+            parts.append(value.strip())
+    return "-".join(parts) if parts else "Untitled Resume"
+
+
 def list_resumes(user_id: int) -> list[dict]:
     docs = _db().resumes.find(
         {"user_id": user_id},
-        {"name": 1, "template": 1, "updated_at": 1, "overall_score": 1, "personal_info.professional_title": 1},
+        {
+            "name": 1,
+            "template": 1,
+            "updated_at": 1,
+            "overall_score": 1,
+            "personal_info.first_name": 1,
+            "personal_info.last_name": 1,
+            "personal_info.professional_title": 1,
+        },
     ).sort("updated_at", -1)
     out = []
     for d in docs:
@@ -123,7 +142,7 @@ def list_resumes(user_id: int) -> list[dict]:
         out.append(
             {
                 "id": rid,
-                "name": d.get("name") or "(untitled)",
+                "name": d.get("name") or _display_name(d),
                 "professional_title": (d.get("personal_info") or {}).get("professional_title") or "",
                 "template": d.get("template", "modern"),
                 "updated_at": d["updated_at"].isoformat() if isinstance(d.get("updated_at"), datetime) else None,
@@ -140,6 +159,7 @@ def get_resume(user_id: int, resume_id: str) -> dict:
     personal = dict(content.get("personal_info") or {})
     personal.pop("profile_image", None)  # base64 photo: large and not editable here
     content["personal_info"] = personal
+    content["name"] = doc.get("name") or _display_name(doc)
     return {"id": resume_id, "template": doc.get("template", "modern"), **content, **_links(resume_id)}
 
 

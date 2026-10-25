@@ -137,13 +137,17 @@ export function ClaudeConnectorDemo() {
     <section ref={sectionRef} className="bg-[#f7f3ee] px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-14">
       <div className="container mx-auto max-w-6xl px-0 sm:px-8">
         <div className="mx-auto mb-6 max-w-2xl text-center sm:mb-14">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D97757]/25 bg-white/80 py-1 pl-1 pr-3 text-sm font-medium text-foreground">
+          <Link
+            to="/blog/edit-resume-with-claude"
+            className="group mb-4 inline-flex items-center gap-2 rounded-full border border-[#D97757]/25 bg-white/80 py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-[#D97757]/60 hover:bg-[#D97757]/10 hover:text-[#b8573a] hover:shadow-md hover:shadow-[#D97757]/15"
+          >
             <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
               {c.badge}
             </span>
-            <ClaudeMark className="h-4 w-4 fill-[#D97757]" />
+            <ClaudeMark className="h-4 w-4 fill-[#D97757] transition-transform duration-300 group-hover:rotate-45" />
             {c.eyebrow}
-          </div>
+            <ArrowRight className="-ml-0.5 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{c.title}</h2>
           <p className="mt-3 text-[15px] text-muted-foreground sm:mt-4 sm:text-lg">{c.subtitle}</p>
         </div>

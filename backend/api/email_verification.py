@@ -864,3 +864,172 @@ def send_ai_model_announcement_email(to_email: str, name: str = "") -> bool:
             "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
     )
+
+
+def send_claude_connector_announcement_email(to_email: str, name: str = "") -> bool:
+    """Announce the Claude MCP connector (edit resume from Claude)."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="New: edit your resume by chatting with Claude",
+        plain_message=_claude_connector_announcement_plain(greet),
+        html_message=_claude_connector_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            "o:tag": "product-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+def _claude_connector_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+You can now connect 123Resume to Claude and edit your resume just by asking.
+
+Connect once (Claude.ai or Claude Desktop / Cowork):
+1. Open Customize → Connectors (or Settings → Connectors)
+2. Add custom connector
+3. Paste this URL exactly:
+   https://123resume.de/mcp
+4. Sign in with your 123Resume account (email/password or Google / LinkedIn / GitHub)
+5. Approve access
+
+Claude Code:
+  claude mcp add --transport http --scope user 123resume https://123resume.de/mcp
+Then authenticate when prompted.
+
+How to use it:
+After connecting, ask Claude in plain language, for example:
+- "Update my summary for a product manager role"
+- "Add a bullet under my latest job about leading the MCP launch"
+- "List my resumes and open the one named …"
+
+Claude reads and edits your resume on 123resume.de. Every edit is validated like a normal save, and you can undo via saved versions.
+
+Open your account: https://123resume.de/login
+
+Best regards,
+Erfan
+
+---
+123Resume — https://123resume.de
+"""
+
+
+def _claude_connector_announcement_html(greet: str) -> str:
+    pink = "#e83a6a"
+    img = "https://123resume.de/media/announcements/claude-connector.png"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Edit your resume by chatting with Claude</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ee;border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #ebe4df;box-shadow:0 8px 24px -4px rgba(120,40,70,0.10);">
+          <tr>
+            <td style="padding:28px 28px 12px;text-align:center;">
+              <a href="https://123resume.de" style="text-decoration:none;">
+                <img src="https://123resume.de/logoo.png" alt="123Resume" width="132" height="34" style="display:inline-block;border:0;height:34px;width:auto;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 8px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
+              <h1 style="margin:0 0 10px;font-size:24px;line-height:1.25;font-weight:700;color:#1c1917;letter-spacing:-0.02em;">
+                Edit your resume by just asking Claude
+              </h1>
+              <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#5c5660;">
+                Connect 123Resume to Claude once. Describe the change, and your resume on 123resume.de updates in seconds.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 16px 8px;">
+              <a href="https://123resume.de/mcp" style="text-decoration:none;">
+                <img src="{img}" alt="Claude connected to 123Resume: ask for a change and your resume updates" width="568" style="display:block;width:100%;max-width:568px;height:auto;border:0;border-radius:10px;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 8px;">
+              <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;color:#1c1917;">How to connect</h2>
+              <p style="margin:0 0 12px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                <strong>In Claude.ai / Desktop / Cowork</strong>
+              </p>
+              <ol style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                <li style="margin-bottom:6px;">Open <strong>Customize → Connectors</strong> (or Settings → Connectors)</li>
+                <li style="margin-bottom:6px;">Choose <strong>Add custom connector</strong></li>
+                <li style="margin-bottom:6px;">Paste this URL exactly:<br/>
+                  <a href="https://123resume.de/mcp" style="color:{pink};font-weight:600;word-break:break-all;">https://123resume.de/mcp</a>
+                </li>
+                <li style="margin-bottom:6px;">Sign in with your <strong>123Resume</strong> account (email/password or Google / LinkedIn / GitHub)</li>
+                <li>Approve access — Claude can then read and edit <em>your</em> resumes only</li>
+              </ol>
+              <p style="margin:0 0 8px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                <strong>In Claude Code</strong>
+              </p>
+              <p style="margin:0 0 18px;font-size:13px;line-height:1.5;color:#3f3a42;background:#faf6f8;border:1px solid #f0e4ea;border-radius:8px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+                claude mcp add --transport http --scope user 123resume https://123resume.de/mcp
+              </p>
+              <p style="margin:0 0 18px;font-size:13px;line-height:1.5;color:#5c5660;">
+                Then authenticate when Claude Code asks (browser sign-in to 123Resume).
+              </p>
+
+              <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;color:#1c1917;">How to use it</h2>
+              <p style="margin:0 0 10px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                After connecting, talk to Claude like you would a colleague:
+              </p>
+              <ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                <li style="margin-bottom:6px;">“Update my summary for a product manager role”</li>
+                <li style="margin-bottom:6px;">“Add a bullet under my latest job about shipping the MCP connector”</li>
+                <li style="margin-bottom:6px;">“List my resumes and open the one named …”</li>
+              </ul>
+              <p style="margin:0 0 22px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                Changes land on your live resume at 123resume.de. Edits are validated like a normal save, and you can undo with saved versions.
+              </p>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 8px;">
+                <tr>
+                  <td align="center" style="border-radius:8px;background:{pink};">
+                    <a href="https://123resume.de/login" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+                      Open 123Resume
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#8a8490;text-align:center;">
+                Connector URL: <a href="https://123resume.de/mcp" style="color:{pink};">https://123resume.de/mcp</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 28px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#3f3a42;">Best regards,</p>
+              <p style="margin:0;font-size:14px;color:#3f3a42;">Erfan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#faf6f8;border-top:1px solid #f0e4ea;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8a8490;">
+                <a href="https://123resume.de" style="color:{pink};text-decoration:none;">123resume.de</a>
+                · You’re receiving this because you have a 123Resume account
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""

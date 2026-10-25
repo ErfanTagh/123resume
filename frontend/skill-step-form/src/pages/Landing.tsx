@@ -8,6 +8,7 @@ import { HiredAtSection } from "@/components/landing/HiredAtSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeatureTabs } from "@/components/landing/FeatureTabs";
 import { PoweredByClaude } from "@/components/landing/PoweredByClaude";
+import { ClaudeConnectorDemo } from "@/components/landing/ClaudeConnectorDemo";
 
 const Landing = () => {
   const { t } = useLanguage();
@@ -20,8 +21,11 @@ const Landing = () => {
         keywords="CV builder, resume builder, create CV, professional resume, ATS resume, CV templates, resume templates, online CV maker"
       />
       <div className="min-h-screen bg-background">
+      {/* The Claude connector demo comes first: it is the newest, most important feature. */}
+      <ClaudeConnectorDemo />
+
       {/* Hero Section */}
-      <section className="relative pt-28 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6">
+      <section className="relative pt-16 sm:pt-24 pb-16 sm:pb-24 px-4 sm:px-6">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-10 left-1/4 w-72 sm:w-[500px] h-72 sm:h-[500px] bg-[hsl(var(--sunset-violet)/0.18)] rounded-full blur-[100px] animate-pulse" />
@@ -72,6 +76,7 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
 
       <FeatureTabs />
 

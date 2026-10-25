@@ -20,6 +20,130 @@ type BlogPostsByLanguage = {
 export const blogPostsByLanguage: BlogPostsByLanguage = {
   en: [
     {
+      id: "edit-resume-with-claude",
+      title: "How to Edit Your Resume Just by Asking Claude (Step-by-Step Guide)",
+      excerpt: "123Resume now works inside Claude. Learn what that means, how to connect it in two minutes and what to ask. No technical knowledge needed.",
+      category: "AI Tools",
+      readTime: "6 min read",
+      date: "Oct 25, 2026",
+      gradient: "from-orange-500/20 via-rose-500/10 to-amber-500/5",
+      iconColor: "text-orange-500",
+      image: "/blog-claude-connector.png",
+      tags: ["AI", "Claude", "Resume Tips", "How-To"],
+      content: `
+Updating a resume usually means clicking through forms, finding the right field and rewriting text until it sounds right. Now there is a faster way: you tell Claude what changed, and your resume on 123Resume updates itself. This guide shows you how it works, step by step, even if you have never used an AI tool before.
+
+## What is new?
+
+123Resume now connects to **Claude**, an AI assistant. Once connected, you can chat with Claude about your resume the way you would talk to a friend who is good at writing. For example: "Add my new job at Siemens to my resume" or "Make my summary sound more professional". Claude makes the change, and you see it on 123resume.de right away.
+
+## First: what is Claude?
+
+Claude is an AI assistant made by the company Anthropic. You can use it on the website claude.ai, in the Claude desktop app or in the mobile app. You type a message, and Claude answers, writes or helps you think things through.
+
+## What is a "connector"?
+
+On its own, Claude can only talk. It cannot open your accounts or change anything for you.
+
+A **connector** is like giving Claude a key to exactly one room: your 123Resume account. With that key, Claude can read your resumes and update them, but only when you ask, and only after you have said yes.
+
+> Think of it like a personal assistant who may edit your resume folder, but nothing else in your house.
+
+The technical name is MCP (Model Context Protocol), the standard Claude uses to connect to apps. You do not need to know anything more about it to use it.
+
+## What you need
+
+- A 123Resume account with at least one resume
+- A Claude account (claude.ai). Whether you can add connectors can depend on your Claude plan, so check your Claude settings if you do not see the option.
+- About two minutes
+
+## Step 1: Add 123Resume to Claude
+
+Open Claude and go to **Customize → Connectors** (in some versions it is called **Settings → Connectors**). Click **Add custom connector**. Give it the name 123Resume and paste this address:
+
+\`\`\`
+https://123resume.de/mcp
+\`\`\`
+
+Then save.
+
+## Step 2: Log in and allow access
+
+Click **Connect**. A 123Resume login window opens. Log in the way you always do: with your email and password, or with Google, LinkedIn or GitHub. Then click **Allow**.
+
+That is it. You are back in Claude, and the connector shows as connected.
+
+## Step 3: Just ask
+
+Start a new chat in Claude and describe what you want. Here are some ideas:
+
+- "Show me my resumes on 123Resume"
+- "Add my new job as Marketing Manager at Bosch, since March 2026, to my resume on 123Resume"
+- "Make the summary of my newest resume stronger, without inventing anything"
+- "Add the skills Excel and SAP to my resume"
+- "Make a copy of my resume and tailor it to this job ad: (paste the job ad)"
+- "Undo the last change"
+
+**Tip:** mention "123Resume" in your message. Then Claude knows you mean your resume on 123Resume.
+
+## What happens behind the scenes?
+
+When you ask for a change, this is what happens, in plain words:
+
+- Claude reads your resume from 123Resume
+- Claude prepares the change you asked for
+- 123Resume checks the change, exactly like when you edit on the website
+- 123Resume saves a copy of your resume as it was before, just in case
+- The change is saved, and you can see it on 123resume.de
+
+## Is it safe?
+
+We built it so you stay in control:
+
+- **Only your resumes.** Claude can only see and change the resumes in your own account, and only after you click Allow.
+- **Your password stays private.** You log in on 123Resume itself. Claude never sees your password.
+- **Every change can be undone.** Before each change, 123Resume saves the previous version. Just ask Claude: "Undo the last change on 123Resume".
+- **Nothing gets deleted.** The connector cannot delete a resume.
+- **You can disconnect anytime.** Remove the connector in your Claude settings, and Claude has no more access.
+
+One thing to know: to make a change, the parts of your resume you work on are sent to Claude (by Anthropic), just like anything else you type into Claude.
+
+## Tips for the best results
+
+- **Give real facts.** Claude is told never to invent employers, dates or numbers. If you want a strong bullet point, tell Claude the real result, for example "I reduced costs by 15%".
+- **Check the result.** Open your resume on 123resume.de and read the change. If you do not like it, ask Claude to change it again or to undo it.
+- **One copy per job.** Ask Claude to duplicate your resume for each application and tailor the copy. Your original stays untouched.
+
+## For Claude Code users (optional)
+
+If you use Claude Code, the coding tool from Anthropic, you can add the connector with one command:
+
+\`\`\`
+claude mcp add --transport http --scope user 123resume https://123resume.de/mcp
+\`\`\`
+
+Then type \`/mcp\` in Claude Code, choose 123resume and log in.
+
+## Frequently asked questions
+
+### Does this cost extra on 123Resume?
+
+No. There is nothing extra to pay on 123Resume for the connector. Your Claude plan decides how much you can use Claude itself.
+
+### Can Claude delete my resume?
+
+No. The connector has no delete function. Claude can only read, edit and copy your resumes, and every edit can be undone.
+
+### What if I do not like a change?
+
+Ask Claude: "Undo the last change on 123Resume". Claude restores the previous version, which 123Resume saved automatically.
+
+## Try it now
+
+Connect 123Resume to Claude, open a new chat and ask: "Show me my resumes on 123Resume". Your next resume update might take ten seconds instead of ten minutes.
+`,
+    },
+    {
       id: "resume-mistakes",
       title: "10 Resume Mistakes That Cost You Job Interviews",
       excerpt: "Avoid these common pitfalls that hiring managers see every day. Learn what makes recruiters pass on otherwise qualified candidates.",
@@ -404,6 +528,130 @@ Both documents serve different purposes. The resume provides facts and figures; 
     }
   ],
   de: [
+    {
+      id: "edit-resume-with-claude",
+      title: "Lebenslauf bearbeiten, indem Sie einfach Claude fragen (Schritt-für-Schritt-Anleitung)",
+      excerpt: "123Resume funktioniert jetzt direkt in Claude. Erfahren Sie, was das bedeutet, wie Sie es in zwei Minuten verbinden und was Sie fragen können. Ganz ohne Technikwissen.",
+      category: "KI-Tools",
+      readTime: "6 Min. Lesezeit",
+      date: "25. Okt. 2026",
+      gradient: "from-orange-500/20 via-rose-500/10 to-amber-500/5",
+      iconColor: "text-orange-500",
+      image: "/blog-claude-connector.png",
+      tags: ["KI", "Claude", "Lebenslauf-Tipps", "Anleitung"],
+      content: `
+Einen Lebenslauf zu aktualisieren bedeutet meistens: Formulare durchklicken, das richtige Feld finden und Texte umschreiben, bis sie gut klingen. Jetzt geht es schneller: Sie sagen Claude, was sich geändert hat, und Ihr Lebenslauf bei 123Resume aktualisiert sich von selbst. Diese Anleitung zeigt Ihnen Schritt für Schritt, wie das funktioniert, auch wenn Sie noch nie ein KI-Tool benutzt haben.
+
+## Was ist neu?
+
+123Resume lässt sich jetzt mit **Claude** verbinden, einem KI-Assistenten. Danach können Sie mit Claude über Ihren Lebenslauf schreiben, so wie mit einem Freund, der gut formulieren kann. Zum Beispiel: "Füge meinen neuen Job bei Siemens zu meinem Lebenslauf hinzu" oder "Formuliere meine Zusammenfassung professioneller". Claude nimmt die Änderung vor, und Sie sehen sie sofort auf 123resume.de.
+
+## Zuerst: Was ist Claude?
+
+Claude ist ein KI-Assistent der Firma Anthropic. Sie können ihn auf der Website claude.ai, in der Claude-Desktop-App oder in der Handy-App nutzen. Sie schreiben eine Nachricht, und Claude antwortet, formuliert Texte oder hilft Ihnen beim Nachdenken.
+
+## Was ist ein "Connector"?
+
+Von sich aus kann Claude nur antworten. Es kann keine Konten öffnen und nichts für Sie verändern.
+
+Ein **Connector** ist so, als würden Sie Claude den Schlüssel für genau einen Raum geben: Ihr 123Resume-Konto. Mit diesem Schlüssel kann Claude Ihre Lebensläufe lesen und aktualisieren, aber nur, wenn Sie darum bitten, und nur, nachdem Sie zugestimmt haben.
+
+> Stellen Sie sich einen persönlichen Assistenten vor, der Ihren Lebenslauf-Ordner bearbeiten darf, aber sonst nichts in Ihrem Haus.
+
+Der technische Name ist MCP (Model Context Protocol), der Standard, mit dem sich Claude mit Apps verbindet. Mehr müssen Sie darüber nicht wissen.
+
+## Was Sie brauchen
+
+- Ein 123Resume-Konto mit mindestens einem Lebenslauf
+- Ein Claude-Konto (claude.ai). Ob Sie Connectors hinzufügen können, kann von Ihrem Claude-Tarif abhängen. Schauen Sie in Ihren Claude-Einstellungen nach, falls Sie die Option nicht sehen.
+- Etwa zwei Minuten
+
+## Schritt 1: 123Resume zu Claude hinzufügen
+
+Öffnen Sie Claude und gehen Sie zu **Customize → Connectors** (je nach Version heißt es **Einstellungen → Connectors**). Klicken Sie auf **Add custom connector**. Geben Sie als Namen 123Resume ein und fügen Sie diese Adresse ein:
+
+\`\`\`
+https://123resume.de/mcp
+\`\`\`
+
+Speichern Sie anschließend.
+
+## Schritt 2: Anmelden und Zugriff erlauben
+
+Klicken Sie auf **Connect**. Es öffnet sich ein Anmeldefenster von 123Resume. Melden Sie sich wie gewohnt an: mit E-Mail und Passwort oder mit Google, LinkedIn oder GitHub. Klicken Sie dann auf **Allow**.
+
+Das war's. Sie sind zurück in Claude, und der Connector ist verbunden.
+
+## Schritt 3: Einfach fragen
+
+Starten Sie einen neuen Chat in Claude und beschreiben Sie, was Sie möchten. Ein paar Ideen:
+
+- "Zeige mir meine Lebensläufe bei 123Resume"
+- "Füge meinen neuen Job als Marketing Manager bei Bosch seit März 2026 zu meinem Lebenslauf bei 123Resume hinzu"
+- "Formuliere die Zusammenfassung meines neuesten Lebenslaufs stärker, ohne etwas zu erfinden"
+- "Füge die Kenntnisse Excel und SAP zu meinem Lebenslauf hinzu"
+- "Erstelle eine Kopie meines Lebenslaufs und passe sie an diese Stellenanzeige an: (Stellenanzeige einfügen)"
+- "Mach die letzte Änderung rückgängig"
+
+**Tipp:** Erwähnen Sie "123Resume" in Ihrer Nachricht. Dann weiß Claude, dass Sie Ihren Lebenslauf bei 123Resume meinen.
+
+## Was passiert im Hintergrund?
+
+Wenn Sie eine Änderung anfragen, passiert Folgendes, ganz einfach erklärt:
+
+- Claude liest Ihren Lebenslauf bei 123Resume
+- Claude bereitet die gewünschte Änderung vor
+- 123Resume prüft die Änderung, genau wie beim Bearbeiten auf der Website
+- 123Resume speichert vorher eine Kopie Ihres Lebenslaufs, sicher ist sicher
+- Die Änderung wird gespeichert, und Sie sehen sie auf 123resume.de
+
+## Ist das sicher?
+
+Wir haben es so gebaut, dass Sie die Kontrolle behalten:
+
+- **Nur Ihre Lebensläufe.** Claude sieht und ändert nur die Lebensläufe in Ihrem eigenen Konto, und erst nachdem Sie auf Allow geklickt haben.
+- **Ihr Passwort bleibt privat.** Sie melden sich direkt bei 123Resume an. Claude sieht Ihr Passwort nie.
+- **Jede Änderung lässt sich rückgängig machen.** Vor jeder Änderung speichert 123Resume die vorherige Version. Sagen Sie Claude einfach: "Mach die letzte Änderung bei 123Resume rückgängig".
+- **Nichts wird gelöscht.** Der Connector kann keinen Lebenslauf löschen.
+- **Sie können die Verbindung jederzeit trennen.** Entfernen Sie den Connector in Ihren Claude-Einstellungen, dann hat Claude keinen Zugriff mehr.
+
+Gut zu wissen: Für eine Änderung werden die Teile Ihres Lebenslaufs, an denen Sie arbeiten, an Claude (von Anthropic) gesendet, genau wie alles andere, was Sie in Claude eingeben.
+
+## Tipps für die besten Ergebnisse
+
+- **Nennen Sie echte Fakten.** Claude ist angewiesen, nie Arbeitgeber, Daten oder Zahlen zu erfinden. Für einen starken Stichpunkt nennen Sie das echte Ergebnis, zum Beispiel "Ich habe die Kosten um 15 % gesenkt".
+- **Prüfen Sie das Ergebnis.** Öffnen Sie Ihren Lebenslauf auf 123resume.de und lesen Sie die Änderung. Gefällt sie Ihnen nicht, bitten Sie Claude, sie anzupassen oder rückgängig zu machen.
+- **Eine Kopie pro Bewerbung.** Lassen Sie Claude Ihren Lebenslauf für jede Bewerbung duplizieren und die Kopie anpassen. Ihr Original bleibt unverändert.
+
+## Für Nutzer von Claude Code (optional)
+
+Wenn Sie Claude Code nutzen, das Programmier-Tool von Anthropic, fügen Sie den Connector mit einem Befehl hinzu:
+
+\`\`\`
+claude mcp add --transport http --scope user 123resume https://123resume.de/mcp
+\`\`\`
+
+Geben Sie dann \`/mcp\` in Claude Code ein, wählen Sie 123resume und melden Sie sich an.
+
+## Häufige Fragen
+
+### Kostet das bei 123Resume extra?
+
+Nein. Für den Connector zahlen Sie bei 123Resume nichts extra. Wie viel Sie Claude selbst nutzen können, hängt von Ihrem Claude-Tarif ab.
+
+### Kann Claude meinen Lebenslauf löschen?
+
+Nein. Der Connector hat keine Löschfunktion. Claude kann Ihre Lebensläufe nur lesen, bearbeiten und kopieren, und jede Bearbeitung lässt sich rückgängig machen.
+
+### Was, wenn mir eine Änderung nicht gefällt?
+
+Sagen Sie Claude: "Mach die letzte Änderung bei 123Resume rückgängig". Claude stellt die vorherige Version wieder her, die 123Resume automatisch gespeichert hat.
+
+## Jetzt ausprobieren
+
+Verbinden Sie 123Resume mit Claude, öffnen Sie einen neuen Chat und fragen Sie: "Zeige mir meine Lebensläufe bei 123Resume". Ihr nächstes Lebenslauf-Update dauert vielleicht zehn Sekunden statt zehn Minuten.
+`,
+    },
     {
       id: "resume-mistakes",
       title: "10 Lebenslauf-Fehler, die Sie Jobinterviews kosten",

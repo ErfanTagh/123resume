@@ -102,11 +102,18 @@ const BlogPost = () => {
     .filter(p => p.id !== id && p.category === post.category)
     .slice(0, 3);
 
-  // Render inline bold (**text**) within a string
+  // Render inline bold (**text**) and code (`text`) within a string
   const renderInline = (text: string) =>
-    text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
       part.startsWith('**') && part.endsWith('**') ? (
         <strong key={i} className="font-bold text-[#242424]">{part.replace(/\*\*/g, '')}</strong>
+      ) : part.length > 1 && part.startsWith('`') && part.endsWith('`') ? (
+        <code
+          key={i}
+          className="rounded-md bg-[#f2f2f0] px-1.5 py-0.5 font-mono text-[0.85em] text-[#242424] break-all"
+        >
+          {part.slice(1, -1)}
+        </code>
       ) : (
         <span key={i}>{part}</span>
       )
@@ -117,6 +124,7 @@ const BlogPost = () => {
     const lines = content.trim().split('\n');
     const elements: JSX.Element[] = [];
     let listItems: string[] = [];
+    let codeLines: string[] | null = null; // inside a ``` fenced block
     let firstParagraphRendered = false;
 
     const flushList = () => {
@@ -140,6 +148,29 @@ const BlogPost = () => {
 
     lines.forEach((line, index) => {
       const trimmed = line.trim();
+
+      // Fenced code blocks (```), e.g. a command readers copy.
+      if (trimmed.startsWith('```')) {
+        if (codeLines === null) {
+          flushList();
+          codeLines = [];
+        } else {
+          elements.push(
+            <pre
+              key={index}
+              className="my-6 overflow-x-auto rounded-xl bg-[#f2f2f0] px-5 py-4 font-mono text-[15px] sm:text-[16px] leading-relaxed text-[#242424]"
+            >
+              <code>{codeLines.join('\n')}</code>
+            </pre>
+          );
+          codeLines = null;
+        }
+        return;
+      }
+      if (codeLines !== null) {
+        codeLines.push(line.replace(/^\s{0,8}/, ''));
+        return;
+      }
 
       if (trimmed.startsWith('## ')) {
         flushList();

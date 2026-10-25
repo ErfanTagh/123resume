@@ -69,40 +69,6 @@ const Landing = () => {
                 </Button>
               </Link>
             </div>
-
-            <nav
-              className="animate-fade-in border-t border-border/60 pt-8 sm:pt-10"
-              style={{ animationDelay: '0.35s' }}
-              aria-label={t('landing.seoNavAria')}
-            >
-              <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-medium text-muted-foreground sm:gap-x-8 sm:text-base">
-                <li>
-                  <Link to="/templates" className="text-primary underline-offset-4 hover:text-primary/90 hover:underline">
-                    {t('footer.templates')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/pricing" className="text-primary underline-offset-4 hover:text-primary/90 hover:underline">
-                    {t('footer.pricing')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/blog" className="text-primary underline-offset-4 hover:text-primary/90 hover:underline">
-                    {t('footer.blog')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/about" className="text-primary underline-offset-4 hover:text-primary/90 hover:underline">
-                    {t('footer.aboutUs')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="text-primary underline-offset-4 hover:text-primary/90 hover:underline">
-                    {t('footer.contact')}
-                  </Link>
-                </li>
-              </ul>
-            </nav>
           </div>
         </div>
       </section>

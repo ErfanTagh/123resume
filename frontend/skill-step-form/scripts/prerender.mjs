@@ -30,12 +30,7 @@ const ROUTES = [
   "/data-protection",
   "/cookies",
   "/blog",
-  "/blog/resume-mistakes",
-  "/blog/ats-friendly-resume",
-  "/blog/quantifying-achievements",
-  "/blog/remote-job-applications",
-  "/blog/career-change-resume",
-  "/blog/cover-letter-vs-resume",
+  "/blog/edit-resume-with-claude",
 ];
 
 const MIME = {

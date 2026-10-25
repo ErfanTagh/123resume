@@ -7,7 +7,6 @@ import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
 import { HiredAtSection } from "@/components/landing/HiredAtSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeatureTabs } from "@/components/landing/FeatureTabs";
-import { PoweredByClaude } from "@/components/landing/PoweredByClaude";
 import { ClaudeConnectorDemo } from "@/components/landing/ClaudeConnectorDemo";
 
 const Landing = () => {
@@ -38,10 +37,6 @@ const Landing = () => {
 
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center space-y-8 sm:space-y-10">
-            {/* Badge */}
-            <div className="animate-fade-in">
-              <PoweredByClaude />
-            </div>
 
             {/* Single H1 for SEO — both lines are one heading (avoid duplicate h1). */}
             <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>

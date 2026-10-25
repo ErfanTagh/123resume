@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CLAUDE_MARK } from "@/components/landing/PoweredByClaude";
+import { CLAUDE_MARK } from "@/components/landing/claudeMark";
 
 /**
  * Homepage demo of the Claude connector: a prompt types itself in a Claude

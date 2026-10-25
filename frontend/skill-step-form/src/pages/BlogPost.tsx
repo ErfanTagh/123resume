@@ -587,24 +587,6 @@ const BlogPost = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-gray-200 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Link to="/" className="flex items-center gap-2">
-              <img
-                src="/logoo.png"
-                alt="123Resume Logo"
-                className="h-10 w-auto flex-shrink-0 object-contain"
-              />
-            </Link>
-            <p className="text-xs sm:text-sm text-gray-500 text-center">
-              © 2025 123Resume. Build your dream career.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
     </>
   );

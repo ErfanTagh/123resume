@@ -370,34 +370,14 @@ const BlogPost = () => {
         ]}
       />
       <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img
-              src="/logoo.png"
-              alt="123Resume Logo"
-              className="h-8 w-auto sm:h-10 flex-shrink-0 object-contain"
-            />
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/blog">
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900 hover:bg-gray-100">
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">All Articles</span>
-              </Button>
-            </Link>
-            <Link to="/create/start">
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm">
-                <span className="hidden sm:inline">Start Building Free</span>
-                <span className="sm:hidden">Start Free</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-        {/* Reading progress */}
-        <div className="absolute bottom-0 left-0 h-0.5 bg-primary transition-[width] duration-150 ease-out" style={{ width: `${readingProgress}%` }} />
-      </nav>
+      {/* Reading progress, on the bottom edge of the site header. (The post used
+          to have its own fixed top bar; it covered the site header and left a
+          strip of it showing below.) */}
+      <div
+        className="fixed left-0 z-[60] h-0.5 bg-primary transition-[width] duration-150 ease-out"
+        style={{ top: "calc(var(--app-header-height, 57px) - 2px)", width: `${readingProgress}%` }}
+      />
+
 
       {/* Article Header */}
       {/* The site header already clears the top; this is only breathing room. */}

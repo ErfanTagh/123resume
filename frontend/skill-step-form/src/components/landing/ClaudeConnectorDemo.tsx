@@ -134,9 +134,9 @@ export function ClaudeConnectorDemo() {
   const updated = at("updated");
 
   return (
-    <section ref={sectionRef} className="bg-[#f7f3ee] px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14">
-      <div className="container mx-auto max-w-6xl">
-        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
+    <section ref={sectionRef} className="bg-[#f7f3ee] px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-14">
+      <div className="container mx-auto max-w-6xl px-0 sm:px-8">
+        <div className="mx-auto mb-6 max-w-2xl text-center sm:mb-14">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D97757]/25 bg-white/80 py-1 pl-1 pr-3 text-sm font-medium text-foreground">
             <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
               {c.badge}
@@ -145,12 +145,12 @@ export function ClaudeConnectorDemo() {
             {c.eyebrow}
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">{c.title}</h2>
-          <p className="mt-4 text-base text-muted-foreground sm:text-lg">{c.subtitle}</p>
+          <p className="mt-3 text-[15px] text-muted-foreground sm:mt-4 sm:text-lg">{c.subtitle}</p>
         </div>
 
         <div className="grid items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
           {/* Claude chat */}
-          <div className="flex min-h-[430px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_20px_60px_-20px_rgba(60,40,20,0.25)]">
+          <div className="flex h-[540px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_20px_60px_-20px_rgba(60,40,20,0.25)] lg:h-auto lg:min-h-[430px]">
             <div className="flex items-center justify-between border-b border-black/5 px-5 py-3.5">
               <div className="flex items-center gap-2 font-semibold text-foreground">
                 <ClaudeMark className="h-5 w-5 fill-[#D97757]" />
@@ -162,7 +162,8 @@ export function ClaudeConnectorDemo() {
               </div>
             </div>
 
-            <div className="flex flex-1 flex-col gap-3 px-5 py-5">
+            {/* Phones: messages stick to the input and older ones slide off the top, like a real chat. */}
+            <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-hidden px-5 py-5 lg:justify-start">
               {at("sent") && (
                 <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[#f0eee9] px-4 py-2.5 text-[15px] text-foreground animate-in fade-in slide-in-from-bottom-2 duration-300">
                   {c.prompt}
@@ -170,6 +171,28 @@ export function ClaudeConnectorDemo() {
               )}
               {at("tool1") && <ToolRow name="get_resume" done={at("tool1done")} />}
               {at("tool2") && <ToolRow name="edit_resume" done={updated} />}
+              {/* Phones: the resume window sits below the screen, so the result shows here. */}
+              {updated && (
+                <div className="rounded-xl border border-black/5 bg-[#fbfaf8] p-3.5 animate-in fade-in slide-in-from-bottom-2 duration-500 lg:hidden">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-xs text-muted-foreground">123resume.de/resume</span>
+                    <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                      {c.updated}
+                    </span>
+                  </div>
+                  <p className="text-[14px] leading-relaxed">
+                    <span className="rounded bg-emerald-50 px-1 text-emerald-900 [box-decoration-break:clone]">{c.after}</span>
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-[#f3f1ec] px-2.5 py-0.5 text-[13px]">Canva</span>
+                    <span className="rounded-full bg-[#f3f1ec] px-2.5 py-0.5 text-[13px]">SEO</span>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[13px] font-medium text-emerald-800 ring-1 ring-emerald-300 animate-in zoom-in-75 duration-500">
+                      Google Analytics
+                    </span>
+                  </div>
+                </div>
+              )}
               {at("reply") && (
                 <div className="flex gap-2.5 text-[15px] leading-relaxed text-foreground animate-in fade-in slide-in-from-bottom-2 duration-500">
                   <ClaudeMark className="mt-1 h-4 w-4 shrink-0 fill-[#D97757]" />
@@ -192,8 +215,8 @@ export function ClaudeConnectorDemo() {
             </div>
           </div>
 
-          {/* The resume on 123resume.de */}
-          <div className="flex min-h-[430px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_20px_60px_-20px_rgba(60,40,20,0.25)]">
+          {/* The resume on 123resume.de (larger screens; phones see the result in the chat) */}
+          <div className="hidden min-h-[430px] flex-col overflow-hidden lg:flex rounded-2xl border border-black/5 bg-white shadow-[0_20px_60px_-20px_rgba(60,40,20,0.25)]">
             <div className="flex items-center gap-2 border-b border-black/5 bg-[#fbfaf8] px-5 py-3.5">
               <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
               <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />

@@ -400,7 +400,8 @@ const BlogPost = () => {
       </nav>
 
       {/* Article Header */}
-      <header className="pt-24 sm:pt-32 pb-6 sm:pb-8 px-4 sm:px-6 bg-white">
+      {/* The site header already clears the top; this is only breathing room. */}
+      <header className="pt-8 sm:pt-10 pb-6 sm:pb-8 px-4 sm:px-6 bg-white">
         <div className="container mx-auto max-w-[680px]">
           <Link
             to="/blog"

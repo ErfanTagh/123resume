@@ -26,7 +26,6 @@ const COPY = {
     before: "I did marketing and social media for different companies.",
     after: "Marketing manager experienced in social media and campaign planning across several companies.",
     title2: "Marketing Manager",
-    cta: "See how to connect it in 1 minute",
   },
   de: {
     badge: "Neu",
@@ -43,7 +42,6 @@ const COPY = {
     before: "Ich habe Marketing und Social Media für verschiedene Firmen gemacht.",
     after: "Marketing Managerin mit Erfahrung in Social Media und Kampagnenplanung für mehrere Unternehmen.",
     title2: "Marketing Managerin",
-    cta: "In 1 Minute verbinden: so geht's",
   },
 };
 
@@ -279,16 +277,6 @@ export function ClaudeConnectorDemo() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-10 text-center">
-          <Link
-            to="/blog/edit-resume-with-claude"
-            className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/40"
-          >
-            {c.cta}
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-          </Link>
         </div>
       </div>
     </section>

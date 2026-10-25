@@ -39,12 +39,9 @@ COPY --from=builder /app/dist /app/build
 
 # Create entrypoint script to copy files to volume on startup
 # This allows the volume to be mounted and files copied at runtime
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'echo "Copying frontend files to shared volume..."' >> /docker-entrypoint.sh && \
-    echo 'cp -r /app/build/* /usr/share/nginx/html/ 2>/dev/null || true' >> /docker-entrypoint.sh && \
-    echo 'echo "Frontend files copied. Keeping container alive..."' >> /docker-entrypoint.sh && \
-    echo 'exec tail -f /dev/null' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
+# Copies the build into the shared volume and removes files no longer in it.
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 

@@ -128,7 +128,21 @@
     "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off.",
     "featureTabs": {
       "title": "Alles, was du für deine Bewerbung brauchst",
-      "subtitle": "Erstelle einen überzeugenden Lebenslauf, veröffentliche eine persönliche Website und verwalte jede Version — alles an einem Ort.",
+      "subtitle": "Bearbeite deinen Lebenslauf, indem du Claude fragst, erstelle einen überzeugenden Lebenslauf, veröffentliche eine persönliche Website und verwalte jede Version, alles an einem Ort.",
+      "claude": {
+        "tab": "Mit Claude bearbeiten",
+        "new": "Neu",
+        "eyebrow": "Claude-Connector",
+        "heading": "Sag Claude einfach, was sich ändern soll",
+        "desc": "Verbinde 123Resume einmal mit Claude. Dann beschreibst du die Änderung in eigenen Worten, und Claude aktualisiert deinen Lebenslauf für dich.",
+        "point1": "Neuen Job hinzufügen, Zusammenfassung überarbeiten oder eine Kopie an eine Stellenanzeige anpassen",
+        "point2": "Jede Änderung wird als Version gespeichert und lässt sich jederzeit rückgängig machen",
+        "point3": "In 1 Minute eingerichtet, kein Technikwissen nötig",
+        "prompt": "Füge meinen neuen Job als Marketing Manager bei Bosch hinzu",
+        "result": "Marketing Manager · Bosch",
+        "updated": "Über Claude aktualisiert",
+        "cta": "So verbindest du es"
+      },
       "builder": {
         "tab": "Lebenslauf-Editor",
         "eyebrow": "Lebenslauf-Editor",

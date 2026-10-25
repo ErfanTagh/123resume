@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ComponentType, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, FilePenLine, Globe, LayoutGrid, Star, Clock, Edit, Download, Eye, CheckCircle2, FileText, Copy } from "lucide-react";
+import { ArrowRight, FilePenLine, Globe, LayoutGrid, Star, Clock, Edit, Download, Eye, CheckCircle2, FileText, Copy, Check } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,10 +9,18 @@ import { LandingTemplatePreview } from "@/pages/LandingTemplatePreview";
 import { HostedProfileTemplate } from "@/components/hosted-profile/HostedProfileTemplate";
 import type { PublicProfileSections } from "@/lib/publicProfileSections";
 import type { CVFormData } from "@/components/cv-form/types";
+import { CLAUDE_MARK } from "@/components/landing/claudeMark";
 
-type TabKey = "builder" | "portfolio" | "manage";
+type TabKey = "claude" | "builder" | "portfolio" | "manage";
 
-const TABS: { key: TabKey; icon: typeof FilePenLine; cta: string }[] = [
+const ClaudeIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d={CLAUDE_MARK} />
+  </svg>
+);
+
+const TABS: { key: TabKey; icon: ComponentType<{ className?: string }>; cta: string }[] = [
+  { key: "claude", icon: ClaudeIcon, cta: "/blog/edit-resume-with-claude" },
   { key: "builder", icon: FilePenLine, cta: "/create/start" },
   { key: "portfolio", icon: Globe, cta: "/create/start" },
   { key: "manage", icon: LayoutGrid, cta: "/login" },
@@ -186,10 +194,55 @@ const ManageResumeCard = ({
 
 export const FeatureTabs = () => {
   const { t } = useLanguage();
-  const [active, setActive] = useState<TabKey>("builder");
+  const [active, setActive] = useState<TabKey>("claude");
 
   const renderPreview = (key: TabKey) => {
     switch (key) {
+      case "claude":
+        return (
+          <BrowserFrame>
+            <div className="bg-[#f7f3ee] p-4 sm:p-6">
+              <div className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm">
+                <div className="flex items-center gap-2 border-b border-black/5 px-4 py-3 text-sm font-semibold text-foreground">
+                  <ClaudeIcon className="h-4 w-4 text-[#D97757]" />
+                  Claude
+                </div>
+                <div className="space-y-3 p-4">
+                  <div className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-[#f0eee9] px-3.5 py-2 text-sm text-foreground">
+                    {t("landing.featureTabs.claude.prompt")}
+                  </div>
+                  <div className="flex w-fit items-center gap-2 rounded-lg border border-black/5 bg-[#fbfaf8] px-2.5 py-1.5 text-xs">
+                    <span className="flex h-5 w-5 items-center justify-center rounded bg-[#D97757] text-[9px] font-bold text-white">123</span>
+                    <span className="font-semibold text-foreground">123resume</span>
+                    <span className="font-mono text-muted-foreground">edit_resume</span>
+                    <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-black/5 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="whitespace-nowrap text-base font-bold text-foreground">Sarah Klein</div>
+                  <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                    {t("landing.featureTabs.claude.updated")}
+                  </span>
+                </div>
+                <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+                  {t("resume.sections.experience") || "Experience"}
+                </div>
+                <div className="mt-1 h-px bg-black/5" />
+                <div className="mt-2.5 rounded-md bg-emerald-50 px-2 py-1.5 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200">
+                  {t("landing.featureTabs.claude.result")}
+                </div>
+                <div className="mt-3 space-y-2 opacity-60">
+                  <div className="h-2 w-11/12 rounded-full bg-[#efece6]" />
+                  <div className="h-2 w-3/4 rounded-full bg-[#efece6]" />
+                </div>
+              </div>
+            </div>
+          </BrowserFrame>
+        );
       case "builder":
         return (
           <BrowserFrame>
@@ -252,15 +305,20 @@ export const FeatureTabs = () => {
         <Tabs value={active} onValueChange={(v) => setActive(v as TabKey)}>
           {/* Pill tab switcher */}
           <div className="mb-8 flex justify-center sm:mb-12">
-            <TabsList className="h-auto flex-wrap gap-1 rounded-full bg-muted p-1.5">
+            <TabsList className="h-auto flex-wrap gap-1 rounded-3xl bg-muted p-1.5 sm:rounded-full">
               {TABS.map(({ key, icon: Icon }) => (
                 <TabsTrigger
                   key={key}
                   value={key}
-                  className="gap-2 rounded-full px-4 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
+                  className="group gap-2 rounded-full px-4 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
                 >
                   <Icon className="h-4 w-4" />
                   {t(`landing.featureTabs.${key}.tab`)}
+                  {key === "claude" && (
+                    <span className="rounded-full bg-[#D97757] px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-white group-data-[state=active]:bg-white group-data-[state=active]:text-primary">
+                      {t("landing.featureTabs.claude.new")}
+                    </span>
+                  )}
                 </TabsTrigger>
               ))}
             </TabsList>

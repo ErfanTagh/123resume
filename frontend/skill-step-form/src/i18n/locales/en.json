@@ -128,7 +128,21 @@
     "testimonial6Quote": "Maybe 20 minutes. PDF looked fine, sent it off.",
     "featureTabs": {
       "title": "Everything you need to get hired",
-      "subtitle": "Build a polished resume, publish a personal website, and manage every version — all in one place.",
+      "subtitle": "Edit your resume by asking Claude, build a polished resume, publish a personal website, and manage every version, all in one place.",
+      "claude": {
+        "tab": "Edit with Claude",
+        "new": "New",
+        "eyebrow": "Claude connector",
+        "heading": "Just ask Claude to update your resume",
+        "desc": "Connect 123Resume to Claude once. Then describe the change in plain words, and Claude updates your resume for you.",
+        "point1": "Add a new job, rewrite your summary or tailor a copy to a job ad",
+        "point2": "Every change is saved as a version, so you can undo anytime",
+        "point3": "Set up in 1 minute, no technical knowledge needed",
+        "prompt": "Add my new job as Marketing Manager at Bosch",
+        "result": "Marketing Manager · Bosch",
+        "updated": "Updated via Claude",
+        "cta": "See how to connect it"
+      },
       "builder": {
         "tab": "Resume Builder",
         "eyebrow": "Resume Builder",

@@ -5,7 +5,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SEO } from "@/components/SEO";
 import { TemplateShowcase } from "@/components/landing/TemplateShowcase";
 import { HiredAtSection } from "@/components/landing/HiredAtSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeatureTabs } from "@/components/landing/FeatureTabs";
 import { ClaudeConnectorDemo } from "@/components/landing/ClaudeConnectorDemo";
 
@@ -78,8 +77,6 @@ const Landing = () => {
       <TemplateShowcase />
 
       <HiredAtSection />
-
-      <HowItWorksSection />
     </div>
     </>
   );

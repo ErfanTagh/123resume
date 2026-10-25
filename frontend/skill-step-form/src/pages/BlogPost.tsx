@@ -402,8 +402,11 @@ const BlogPost = () => {
       {/* Article Header */}
       <header className="pt-24 sm:pt-32 pb-6 sm:pb-8 px-4 sm:px-6 bg-white">
         <div className="container mx-auto max-w-[680px]">
-          <Link to="/blog" className="flex w-fit items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-6">
-            <ArrowLeft className="w-4 h-4" />
+          <Link
+            to="/blog"
+            className="group -ml-3 mb-6 flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-gray-500 transition-colors duration-200 hover:bg-primary/10 hover:text-primary"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
             {t('common.back')}
           </Link>
 

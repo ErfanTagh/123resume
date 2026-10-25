@@ -805,7 +805,7 @@
     "termsOfService": "Nutzungsbedingungen",
     "dataProtection": "Datenschutz",
     "cookiePolicy": "Cookie-Richtlinie",
-    "allRightsReserved": "© 2025 123Resume. Alle Rechte vorbehalten."
+    "allRightsReserved": "© {year} 123Resume. Alle Rechte vorbehalten."
   },
   "pages": {
     "dashboard": {

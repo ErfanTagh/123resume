@@ -71,7 +71,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            {t('footer.allRightsReserved')}
+            {t('footer.allRightsReserved').replace('{year}', String(new Date().getFullYear()))}
           </p>
           <div className="flex items-center gap-6">
             <a href="mailto:contact@123resume.de" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">

@@ -2,6 +2,7 @@ import { Link, useParams, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Check,
   Clock,
   ArrowLeft,
   ArrowRight,
@@ -110,7 +111,7 @@ const BlogPost = () => {
       ) : part.length > 1 && part.startsWith('`') && part.endsWith('`') ? (
         <code
           key={i}
-          className="rounded-md bg-[#f2f2f0] px-1.5 py-0.5 font-mono text-[0.85em] text-[#242424] break-all"
+          className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[0.85em] text-slate-800 whitespace-nowrap"
         >
           {part.slice(1, -1)}
         </code>
@@ -124,10 +125,77 @@ const BlogPost = () => {
     const lines = content.trim().split('\n');
     const elements: JSX.Element[] = [];
     let listItems: string[] = [];
+    // Optional richer blocks (posts opt in by syntax; none of the older posts use them):
+    //   "1. Title | description"  numbered step cards
+    //   ">> text"                 example request, shown as a chat bubble
+    //   "+ text"                  item with a check mark
+    //   "!> text"                 tip box
+    let stepItems: string[] = [];
+    let promptItems: string[] = [];
+    let checkItems: string[] = [];
     let codeLines: string[] | null = null; // inside a ``` fenced block
     let firstParagraphRendered = false;
 
+    const flushBlocks = () => {
+      if (stepItems.length > 0) {
+        elements.push(
+          <ol key={`steps-${elements.length}`} className="my-8 space-y-3">
+            {stepItems.map((item, i) => {
+              const [title, ...rest] = item.split(' | ');
+              return (
+                <li key={i} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-white">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 pt-0.5">
+                    <div className="text-[17px] sm:text-[18px] font-semibold text-slate-900">{renderInline(title)}</div>
+                    {rest.length > 0 && (
+                      <div className="mt-1 text-[16px] sm:text-[17px] leading-relaxed text-slate-600">
+                        {renderInline(rest.join(' | '))}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        );
+        stepItems = [];
+      }
+      if (promptItems.length > 0) {
+        elements.push(
+          <div key={`prompts-${elements.length}`} className="my-6 flex flex-col items-start gap-2.5">
+            {promptItems.map((item, i) => (
+              <div
+                key={i}
+                className="max-w-[92%] rounded-2xl rounded-bl-md bg-slate-100 px-4 py-2.5 text-[16px] sm:text-[17px] text-slate-800"
+              >
+                {renderInline(item)}
+              </div>
+            ))}
+          </div>
+        );
+        promptItems = [];
+      }
+      if (checkItems.length > 0) {
+        elements.push(
+          <ul key={`checks-${elements.length}`} className="my-6 space-y-3">
+            {checkItems.map((item, i) => (
+              <li key={i} className="flex gap-3 text-[17px] sm:text-[18px] leading-relaxed text-slate-700">
+                <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                  <Check className="h-3.5 w-3.5 text-emerald-700" strokeWidth={3} />
+                </span>
+                <span>{renderInline(item)}</span>
+              </li>
+            ))}
+          </ul>
+        );
+        checkItems = [];
+      }
+    };
+
     const flushList = () => {
+      flushBlocks();
       if (listItems.length > 0) {
         elements.push(
           <ul key={`list-${elements.length}`} className="my-6 space-y-2.5 pl-6 list-disc marker:text-[#242424]">
@@ -158,7 +226,7 @@ const BlogPost = () => {
           elements.push(
             <pre
               key={index}
-              className="my-6 overflow-x-auto rounded-xl bg-[#f2f2f0] px-5 py-4 font-mono text-[15px] sm:text-[16px] leading-relaxed text-[#242424]"
+              className="my-6 whitespace-pre-wrap break-all rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 font-mono text-[15px] sm:text-[16px] leading-relaxed text-slate-800"
             >
               <code>{codeLines.join('\n')}</code>
             </pre>
@@ -197,7 +265,25 @@ const BlogPost = () => {
             {renderInline(trimmed.replace('> ', ''))}
           </blockquote>
         );
+      } else if (/^\d+\.\s/.test(trimmed)) {
+        if (promptItems.length || checkItems.length || listItems.length) flushList();
+        stepItems.push(trimmed.replace(/^\d+\.\s/, ''));
+      } else if (trimmed.startsWith('>> ')) {
+        if (stepItems.length || checkItems.length || listItems.length) flushList();
+        promptItems.push(trimmed.slice(3));
+      } else if (trimmed.startsWith('+ ')) {
+        if (stepItems.length || promptItems.length || listItems.length) flushList();
+        checkItems.push(trimmed.slice(2));
+      } else if (trimmed.startsWith('!> ')) {
+        flushList();
+        elements.push(
+          <div key={index} className="my-8 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
+            <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-primary">Tip</div>
+            <div className="text-[16px] sm:text-[17px] leading-relaxed text-slate-700">{renderInline(trimmed.slice(3))}</div>
+          </div>
+        );
       } else if (trimmed.startsWith('- ')) {
+        if (stepItems.length || promptItems.length || checkItems.length) flushBlocks();
         listItems.push(trimmed.replace('- ', ''));
       } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         flushList();

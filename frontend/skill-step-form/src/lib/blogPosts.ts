@@ -22,7 +22,7 @@ export const blogPostsByLanguage: BlogPostsByLanguage = {
     {
       id: "edit-resume-with-claude",
       title: "How to Edit Your Resume Just by Asking Claude (Step-by-Step Guide)",
-      excerpt: "123Resume now works inside Claude. Learn what that means, how to connect it in two minutes and what to ask. No technical knowledge needed.",
+      excerpt: "123Resume now works inside Claude. Learn what that means, how to connect it in one minute and what to ask. No technical knowledge needed.",
       category: "AI Tools",
       readTime: "3 min read",
       date: "Oct 25, 2026",
@@ -33,7 +33,7 @@ export const blogPostsByLanguage: BlogPostsByLanguage = {
       content: `
 Tell Claude what changed in your career, and your resume on 123Resume updates in seconds. No forms to click through and no technical knowledge needed.
 
-## Set it up in 2 minutes
+## Set it up in 1 minute
 
 1. Open connectors in Claude | Go to **Customize → Connectors** (in some versions **Settings → Connectors**) and click **Add custom connector**.
 2. Add 123Resume | Name it 123Resume and paste the address \`https://123resume.de/mcp\`.
@@ -465,7 +465,7 @@ Both documents serve different purposes. The resume provides facts and figures; 
     {
       id: "edit-resume-with-claude",
       title: "Lebenslauf bearbeiten, indem Sie einfach Claude fragen (Schritt-für-Schritt-Anleitung)",
-      excerpt: "123Resume funktioniert jetzt direkt in Claude. Erfahren Sie, was das bedeutet, wie Sie es in zwei Minuten verbinden und was Sie fragen können. Ganz ohne Technikwissen.",
+      excerpt: "123Resume funktioniert jetzt direkt in Claude. Erfahren Sie, was das bedeutet, wie Sie es in einer Minute verbinden und was Sie fragen können. Ganz ohne Technikwissen.",
       category: "KI-Tools",
       readTime: "3 Min. Lesezeit",
       date: "25. Okt. 2026",
@@ -476,7 +476,7 @@ Both documents serve different purposes. The resume provides facts and figures; 
       content: `
 Sagen Sie Claude, was sich in Ihrer Karriere geändert hat, und Ihr Lebenslauf bei 123Resume aktualisiert sich in Sekunden. Keine Formulare und kein Technikwissen nötig.
 
-## In 2 Minuten eingerichtet
+## In 1 Minute eingerichtet
 
 1. Connectors in Claude öffnen | Gehen Sie zu **Customize → Connectors** (je nach Version **Einstellungen → Connectors**) und klicken Sie auf **Add custom connector**.
 2. 123Resume hinzufügen | Geben Sie als Namen 123Resume ein und fügen Sie die Adresse \`https://123resume.de/mcp\` ein.

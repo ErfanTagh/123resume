@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Loader2, FileText, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { resumeAPI } from '@/lib/api';
 import { CVFormData } from './types';
 import { toast } from '@/hooks/use-toast';
@@ -14,11 +14,9 @@ const DONE_HOLD_MS = 700;
 interface ResumeUploadProps {
   onDataParsed: (data: Partial<CVFormData>) => void;
   onClose?: () => void;
-  /** Notifies the parent while the uploaded file is being parsed (for a preview overlay). */
-  onParsingChange?: (parsing: boolean) => void;
 }
 
-export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeUploadProps) => {
+export const ResumeUpload = ({ onDataParsed, onClose }: ResumeUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [parseDone, setParseDone] = useState(false);
   const [error, setError] = useState('');
@@ -66,7 +64,6 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
     setIsUploading(true);
     setParseDone(false);
     setError('');
-    onParsingChange?.(true);
 
     try {
       const parsedData = await resumeAPI.parseResume(selectedFile);
@@ -104,7 +101,6 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
     } finally {
       setIsUploading(false);
       setParseDone(false);
-      onParsingChange?.(false);
     }
   };
 
@@ -233,17 +229,8 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
               className="w-full"
               size="lg"
             >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing Resume...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Scan & Parse Resume
-                </>
-              )}
+              <FileText className="mr-2 h-4 w-4" />
+              Scan & Parse Resume
             </Button>
           </div>
         )}

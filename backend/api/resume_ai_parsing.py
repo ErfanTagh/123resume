@@ -26,13 +26,59 @@ def _extract_json_object(text: str) -> Dict[str, Any]:
     m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
     if m:
         text = m.group(1)
+    elif text.startswith("```"):
+        # A cut-off answer has no closing fence
+        text = re.sub(r"^```(?:json)?\s*", "", text)
     return json.loads(text)
+
+
+def _close_truncated_json(text: str) -> str:
+    """
+    Turn JSON that stops mid-way (the answer hit max_tokens) into valid JSON by
+    cutting back to the last complete value and closing the open brackets.
+    Whatever came before the cut is kept; the half-written last item is dropped.
+    """
+    stack: List[str] = []
+    in_string = escaped = False
+    cut_at, cut_stack = None, []
+    for i, ch in enumerate(text):
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "{[":
+            stack.append("}" if ch == "{" else "]")
+        elif ch in "}]":
+            if stack:
+                stack.pop()
+            cut_at, cut_stack = i + 1, list(stack)
+        elif ch == ",":
+            # Everything before a comma at this level is complete
+            cut_at, cut_stack = i, list(stack)
+    if cut_at is None:
+        raise ValueError("no complete JSON value to keep")
+    return text[:cut_at] + "".join(reversed(cut_stack))
 
 
 def _s(v: Any, limit: int = 8000) -> str:
     if v is None:
         return ""
     return str(v)[:limit]
+
+
+# An ongoing role has an empty end date in the form (the month picker reads YYYY-MM only)
+_ONGOING = {"present", "current", "now", "ongoing", "today", "heute", "aktuell", "bis heute", "laufend"}
+
+
+def _end_date(v: Any) -> str:
+    s = _s(v, 40).strip()
+    return "" if s.lower() in _ONGOING else s
 
 
 def _norm_interests(raw: Any) -> List[Dict[str, str]]:
@@ -47,15 +93,16 @@ def _norm_interests(raw: Any) -> List[Dict[str, str]]:
     return out
 
 
-def _norm_tech_list(raw: Any, key: str) -> List[Dict[str, str]]:
+def _norm_tech_list(raw: Any, key: str, limit: int = 200) -> List[Dict[str, str]]:
+    """List of {key: text}; the model may send plain strings to save tokens."""
     out: List[Dict[str, str]] = []
     if not isinstance(raw, list):
         return out
     for x in raw[:40]:
         if isinstance(x, dict) and x.get(key):
-            out.append({key: _s(x.get(key), 200)})
+            out.append({key: _s(x.get(key), limit)})
         elif isinstance(x, str) and x.strip():
-            out.append({key: x.strip()[:200]})
+            out.append({key: x.strip()[:limit]})
     return out
 
 
@@ -72,13 +119,11 @@ def _norm_work(raw: Any) -> List[Dict[str, Any]]:
                 "company": _s(item.get("company"), 400),
                 "location": _s(item.get("location"), 300),
                 "startDate": _s(item.get("startDate"), 40),
-                "endDate": _s(item.get("endDate"), 40),
+                "endDate": _end_date(item.get("endDate")),
                 "description": _s(item.get("description"), 12000),
-                "responsibilities": [
-                    {"responsibility": _s(r.get("responsibility"), 2000)}
-                    for r in (item.get("responsibilities") or [])
-                    if isinstance(r, dict) and r.get("responsibility")
-                ][:30],
+                "responsibilities": _norm_tech_list(
+                    item.get("responsibilities"), "responsibility", limit=2000
+                )[:30],
                 "technologies": _norm_tech_list(item.get("technologies"), "technology"),
                 "competencies": _norm_tech_list(item.get("competencies"), "competency"),
                 "link": _s(item.get("link"), 500),
@@ -112,7 +157,7 @@ def _norm_education(raw: Any) -> List[Dict[str, Any]]:
                 "institution": _s(item.get("institution"), 400),
                 "location": _s(item.get("location"), 300),
                 "startDate": _s(item.get("startDate"), 40),
-                "endDate": _s(item.get("endDate"), 40),
+                "endDate": _end_date(item.get("endDate")),
                 "field": _s(item.get("field"), 400),
                 "keyCourses": key_courses[:40],
                 "descriptions": descriptions[:20],
@@ -142,7 +187,7 @@ def _norm_projects(raw: Any) -> List[Dict[str, Any]]:
                 "highlights": highlights[:25],
                 "technologies": _norm_tech_list(item.get("technologies"), "technology"),
                 "startDate": _s(item.get("startDate"), 40),
-                "endDate": _s(item.get("endDate"), 40),
+                "endDate": _end_date(item.get("endDate")),
                 "link": _s(item.get("link"), 500),
             }
         )
@@ -286,9 +331,12 @@ def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
 
 
 PARSE_SYSTEM = """You extract structured resume/CV data from plain text for the 123Resume web app.
-Output a single JSON object only (no markdown fences, no commentary). Use camelCase keys exactly as specified.
-Use empty strings for unknown text fields and sensible empty arrays where appropriate.
-Dates: prefer YYYY-MM when you can infer month+year; otherwise empty string.
+Output a single minified JSON object only (no markdown fences, no commentary, no indentation).
+Use camelCase keys exactly as specified.
+Leave out any key or section the resume has no data for; the app fills in the blanks.
+Copy the resume's wording; don't summarize, translate or rewrite it.
+The text comes from a PDF, so two-column layouts may have their columns mixed on the same lines: put each piece back where it belongs.
+Dates: YYYY-MM when month and year are known, YYYY when only the year is; leave endDate out for an ongoing role.
 Do not invent employers, degrees, or dates not supported by the text."""
 
 
@@ -306,33 +354,33 @@ def parse_resume_text_with_deepseek(text: str) -> Dict[str, Any]:
     if len(t) > MAX_INPUT_CHARS:
         t = t[:MAX_INPUT_CHARS] + "\n\n[TRUNCATED]"
 
+    # Lists of plain strings and left-out empty keys keep the answer short:
+    # a full 2-page resume in the old verbose shape didn't fit the token limit.
     schema_hint = """
-Return JSON with this shape (all keys required at top level):
+Return JSON with this shape. Every key is optional; omit what is empty.
 {
   "personalInfo": {
-    "firstName","lastName","email","phone","location","professionalTitle","profileImage",
-    "linkedin","github","website","summary","interests":[{"interest":""}]
+    "firstName","lastName","email","phone","location","professionalTitle",
+    "linkedin","github","website","summary","interests":["..."]
   },
   "workExperience": [{
     "position","company","location","startDate","endDate","description",
-    "responsibilities":[{"responsibility":""}],
-    "technologies":[{"technology":""}],
-    "competencies":[{"competency":""}],
-    "link"
+    "responsibilities":["one bullet per string"],
+    "technologies":["..."],"competencies":["..."],"link"
   }],
   "education": [{
     "degree","institution","location","startDate","endDate","field",
-    "keyCourses":[{"course":""}],"descriptions":[{"description":""}],"link"
+    "keyCourses":["..."],"descriptions":["..."],"link"
   }],
-  "projects": [{"name","description","highlights":[{"highlight":""}],"technologies":[{"technology":""}],"startDate","endDate","link"}],
+  "projects": [{"name","description","highlights":["..."],"technologies":["..."],"startDate","endDate","link"}],
   "certificates": [{"name","organization","issueDate","expirationDate","credentialId","url"}],
   "publications": [{"title","publisher","publicationDate","url","description"}],
   "languages": [{"language","proficiency"}],
-  "skills": [{"skill":""}],
-  "sectionOrder": ["summary","workExperience","education","projects","certificates","publications","skills","languages","interests"],
-  "template": "modern"
+  "skills": ["..."],
+  "sectionOrder": ["summary","workExperience","education","projects","certificates","publications","skills","languages","interests"]
 }
-Use arrays with one object with empty strings if a section is missing.
+Put a job's bullet points in "responsibilities", and use "description" only for a paragraph that isn't a bullet list.
+sectionOrder: the sections in the order they appear in the resume.
 """.strip()
 
     user_msg = f"{schema_hint}\n\n--- RESUME TEXT ---\n{t}"
@@ -346,16 +394,24 @@ Use arrays with one object with empty strings if a section is missing.
         ],
         max_tokens=deepseek_max_tokens(settings.DEEPSEEK_RESUME_PARSE_MAX_TOKENS),
         temperature=0.05,
+        timeout=settings.RESUME_PARSE_TIMEOUT_SECONDS,
     )
     raw_text = (completion.choices[0].message.content or "").strip()
     if not raw_text:
         raise ValueError("empty model response")
+    finish = getattr(completion.choices[0], "finish_reason", "")
 
     try:
         parsed = _extract_json_object(raw_text)
     except json.JSONDecodeError as e:
-        logger.warning("AI parse JSON error: %s snippet=%s", e, raw_text[:500])
-        raise
+        if finish != "length":
+            # Log the error position only: the text is the user's resume
+            logger.warning("AI parse JSON error: %s (finish=%s)", e, finish)
+            raise
+        # Cut off at max_tokens: keep the complete part rather than dropping
+        # everything for the much weaker rules parser.
+        logger.warning("AI parse hit max_tokens (%s chars); keeping the complete part", len(raw_text))
+        parsed = _extract_json_object(_close_truncated_json(raw_text))
 
     normalized = normalize_ai_parse(parsed)
     log_deepseek_exchange("resume_parse", completion, raw_text, normalized)

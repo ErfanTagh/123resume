@@ -35,7 +35,7 @@ class _ClaudeCompletions:
     def __init__(self, client: anthropic.Anthropic):
         self._client = client
 
-    def create(self, *, model, messages, max_tokens, **_openai_only):
+    def create(self, *, model, messages, max_tokens, timeout=None, **_openai_only):
         # temperature: Sonnet 5.5 rejects anything but the default.
         # response_format / extra_body: DeepSeek switches with no Claude
         # equivalent needed; every prompt already asks for bare JSON and every
@@ -58,14 +58,20 @@ class _ClaudeCompletions:
         if system:
             params["system"] = system
 
+        client = self._client
+        if timeout is not None:
+            # A caller with its own time budget (long answers) gets one attempt
+            # of that length instead of the default two shorter ones.
+            client = client.with_options(timeout=timeout, max_retries=0)
+
         if settings.ANTHROPIC_FALLBACKS:
-            response = self._client.beta.messages.create(
+            response = client.beta.messages.create(
                 **params,
                 betas=["server-side-fallback-2026-07-01"],
                 fallbacks="default",
             )
         else:
-            response = self._client.messages.create(**params)
+            response = client.messages.create(**params)
 
         if response.stop_reason == "refusal":
             # Partial output from a declined request is not a usable answer.

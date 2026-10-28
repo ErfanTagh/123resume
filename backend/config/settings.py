@@ -125,8 +125,12 @@ DEEPSEEK_TIMEOUT_SECONDS = float(os.getenv('DEEPSEEK_TIMEOUT_SECONDS', '28'))
 DEEPSEEK_MAX_OUTPUT_TOKENS = int(os.getenv('DEEPSEEK_MAX_OUTPUT_TOKENS', '1024'))
 # Larger budget for structured resume scoring JSON
 DEEPSEEK_RESUME_SCORE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_SCORE_MAX_TOKENS', '2048'))
-# Resume upload → structured JSON (large completion)
-DEEPSEEK_RESUME_PARSE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_PARSE_MAX_TOKENS', '4096'))
+# Resume upload → structured JSON (large completion). A 2-page resume came back
+# cut off at 4096; Claude writes ~200 tokens/s, so 9000 fits the time budget below.
+DEEPSEEK_RESUME_PARSE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_PARSE_MAX_TOKENS', '9000'))
+# One attempt for the parse call (no retry): it must finish under the 60s
+# gunicorn/nginx limits, and a long answer can't fit twice.
+RESUME_PARSE_TIMEOUT_SECONDS = float(os.getenv('RESUME_PARSE_TIMEOUT_SECONDS', '50'))
 # Resume ↔ job match (JSON score + short rationale)
 DEEPSEEK_JOB_MATCH_MAX_TOKENS = int(os.getenv('DEEPSEEK_JOB_MATCH_MAX_TOKENS', '1024'))
 # Whole-resume translation EN<->DE (batch of prose fields → JSON)

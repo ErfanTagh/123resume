@@ -56,12 +56,6 @@ class ResumeParser:
         raw_text = text
         print(f"📏 Text: {len(text)} chars, {text.count(chr(10))} lines")
         
-        # Show extracted text (first 500 chars)
-        print(f"\n📝 EXTRACTED TEXT (first 500 chars):")
-        print("-" * 80)
-        print(text[:500])
-        print("-" * 80)
-        
         # Create flat text version ONLY for email/phone regex (light cleanup)
         flat_text = create_flat_text(text)
         
@@ -98,7 +92,8 @@ class ResumeParser:
             print("\n" + "=" * 80)
             print("📊 PARSING SUMMARY")
             print("=" * 80)
-            print(f"✅ Personal Info: {parsed_data['personalInfo'].get('firstName', '')} {parsed_data['personalInfo'].get('lastName', '')} | {parsed_data['personalInfo'].get('email', '')} | {parsed_data['personalInfo'].get('phone', '')}")
+            pi = parsed_data['personalInfo']
+            print(f"✅ Personal Info: found {', '.join(k for k in ('firstName', 'lastName', 'email', 'phone') if pi.get(k)) or 'nothing'}")
             print(f"✅ Work Experience: {len(parsed_data.get('workExperience', []))} entries")
             print(f"✅ Education: {len(parsed_data.get('education', []))} entries")
             print(f"✅ Skills: {len(parsed_data.get('skills', []))} entries")

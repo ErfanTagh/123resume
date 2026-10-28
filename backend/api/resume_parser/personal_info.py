@@ -240,12 +240,9 @@ def extract_personal_info(raw_text: str = "", flat_text: str = "", sections: Dic
                     personal_info["github"] = github_url
                 break
     
-    # Print extracted personal info
-    print(f"  Name: {personal_info['firstName']} {personal_info['lastName']}")
-    print(f"  Email: {personal_info['email']}")
-    print(f"  Phone: {personal_info['phone']}")
-    print(f"  LinkedIn: {personal_info['linkedin']}")
-    print(f"  GitHub: {personal_info['github']}")
-    
+    # Which fields were found, never their values: logs must not hold user data
+    found = [k for k in ('firstName', 'lastName', 'email', 'phone', 'linkedin', 'github') if personal_info.get(k)]
+    print(f"  Personal info found: {', '.join(found) or 'nothing'}")
+
     return personal_info
 

@@ -43,7 +43,7 @@ def parse_resume(request):
         # Check if file is uploaded (backend will extract text using pdfplumber)
         if 'file' in request.FILES:
             file = request.FILES['file']
-            print(f"\n📄 File: {file.name} ({file.content_type}, {file.size} bytes)")
+            print(f"\n📄 Resume upload ({file.content_type}, {file.size} bytes)")
             
             # Check file type
             if file.content_type == 'application/pdf':
@@ -116,7 +116,6 @@ def parse_resume(request):
             parsed_data = parser.parse_text(text)
             print(f"✅ Parsed data keys: {list(parsed_data.keys())}")
 
-        print(f"✅ Personal info: {parsed_data.get('personalInfo', {})}")
         print(f"✅ Work experience count: {len(parsed_data.get('workExperience', []))}")
         print(f"✅ Education count: {len(parsed_data.get('education', []))}")
         print(f"✅ Skills count: {len(parsed_data.get('skills', []))}")

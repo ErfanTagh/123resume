@@ -32,13 +32,7 @@ def extract_text_from_pdf(pdf_file) -> Optional[str]:
             print(f"  ✓ Extracted {len(result)} chars, {line_count} lines from {len(pdf.pages)} pages (pdfplumber)")
             if line_count < 10:
                 print(f"  ⚠️ Warning: Only {line_count} lines detected - text may be flattened")
-            print()
-            print("=" * 80)
-            print("📄 PDF EXTRACTION OUTPUT (Full Text):")
-            print("=" * 80)
-            print(result)
-            print("=" * 80)
-            print()
+            # The text itself is never logged: it's the user's resume.
             return result
     except Exception as e:
         print(f"  ⚠️ pdfplumber failed: {e}, trying PyPDF2...")

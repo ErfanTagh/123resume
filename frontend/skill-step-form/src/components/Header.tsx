@@ -52,7 +52,7 @@ export const Header = () => {
       ref={headerRef}
       className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg no-print"
     >
-      <div className="flex w-full items-center justify-between gap-2 px-2 py-2.5 sm:gap-4 sm:px-3 sm:py-3 md:py-4">
+      <div className="flex w-full items-center justify-between gap-2 px-3 pb-2.5 pt-3 sm:gap-4 sm:px-6 sm:pb-3 sm:pt-4 md:px-8 md:pb-4 md:pt-5">
         {/* Brand stays put — outside the collapsing sidebar (R5). */}
         <div className="flex shrink-0 items-center gap-1.5">
           {showSidebarToggle && (
@@ -72,13 +72,14 @@ export const Header = () => {
             <img
               src="/logoo.png"
               alt="123Resume Logo"
-              className="h-9 w-auto shrink-0 object-contain sm:h-10 md:h-12"
+              className="h-10 w-auto shrink-0 object-contain sm:h-12 md:h-14"
             />
           </Link>
         </div>
 
         <nav className="flex flex-shrink-0 items-center gap-1 sm:gap-2 md:gap-4">
-          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground sm:h-9 sm:px-3 sm:text-sm" asChild>
+          {/* Phones: the logo is the home link, and without this the bar is wider than the screen */}
+          <Button variant="ghost" size="sm" className="hidden h-8 px-2 text-xs text-muted-foreground hover:text-foreground sm:inline-flex sm:h-9 sm:px-3 sm:text-sm" asChild>
             <Link to="/">{t('navigation.home')}</Link>
           </Button>
           <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground sm:h-9 sm:px-3 sm:text-sm" asChild>

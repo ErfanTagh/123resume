@@ -6,6 +6,10 @@ import { resumeAPI } from '@/lib/api';
 import { CVFormData } from './types';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { ResumeParsingDialog } from './ResumeParsingDialog';
+
+// How long the dialog shows 100% before the form fills in
+const DONE_HOLD_MS = 700;
 
 interface ResumeUploadProps {
   onDataParsed: (data: Partial<CVFormData>) => void;
@@ -16,6 +20,7 @@ interface ResumeUploadProps {
 
 export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [parseDone, setParseDone] = useState(false);
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -59,12 +64,17 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
     if (!selectedFile) return;
 
     setIsUploading(true);
+    setParseDone(false);
     setError('');
     onParsingChange?.(true);
 
     try {
       const parsedData = await resumeAPI.parseResume(selectedFile);
-      
+
+      // Let the dialog reach 100% before the form changes under it
+      setParseDone(true);
+      await new Promise((resolve) => setTimeout(resolve, DONE_HOLD_MS));
+
       // Merge parsed data with existing form structure
       onDataParsed(parsedData as Partial<CVFormData>);
       
@@ -93,6 +103,7 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
       });
     } finally {
       setIsUploading(false);
+      setParseDone(false);
       onParsingChange?.(false);
     }
   };
@@ -141,6 +152,7 @@ export const ResumeUpload = ({ onDataParsed, onClose, onParsingChange }: ResumeU
 
   return (
     <div className="space-y-4">
+      <ResumeParsingDialog open={isUploading} done={parseDone} />
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${
           isDragging

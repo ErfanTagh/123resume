@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LogIn, AlertCircle, Mail } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import { safeRedirect } from '@/lib/safeRedirect';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -72,6 +73,10 @@ export default function Login() {
         sessionStorage.setItem('oauth_state', data.state);
         sessionStorage.setItem('oauth_provider', provider);
       }
+      // Where to land after the provider sends the user back
+      const redirect = safeRedirect(searchParams.get('redirect'));
+      if (redirect) sessionStorage.setItem('post_login_redirect', redirect);
+      else sessionStorage.removeItem('post_login_redirect');
 
       // Redirect to OAuth provider
       window.location.href = data.auth_url;
@@ -93,7 +98,7 @@ export default function Login() {
       await login(username, password);
 
       // Check for redirect or resume saving
-      const redirect = searchParams.get('redirect');
+      const redirect = safeRedirect(searchParams.get('redirect'));
       const saveResume = searchParams.get('saveResume');
 
       // Check for pending resume ID (resume already saved, just need to view it)

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import { safeRedirect } from '@/lib/safeRedirect';
 
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
@@ -68,13 +69,15 @@ export default function OAuthCallback() {
             // Clear OAuth state if it exists
             sessionStorage.removeItem('oauth_state');
             sessionStorage.removeItem('oauth_provider');
+            // The page the user wanted before signing in (set by the login page)
+            const back = safeRedirect(sessionStorage.getItem('post_login_redirect'));
+            sessionStorage.removeItem('post_login_redirect');
 
             setStatus('success');
             setMessage('Login successful! Redirecting...');
 
-            // Redirect to resumes page after successful login
             setTimeout(() => {
-              navigate('/resumes');
+              navigate(back || '/resumes');
             }, 1500);
           } catch (err: any) {
             setStatus('error');

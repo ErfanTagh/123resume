@@ -1002,7 +1002,7 @@
           "thisWeek": "Diese Woche",
           "total": "Gesamt",
           "chartTitle": "Ihre Bewerbungen",
-          "chartDesc": "Letzte 16 Wochen",
+          "chartDesc": "Letzter Monat",
           "less": "Weniger",
           "more": "Mehr",
           "cellNone": "Keine Bewerbung am {date}",

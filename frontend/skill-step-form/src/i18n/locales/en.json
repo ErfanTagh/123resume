@@ -1002,7 +1002,7 @@
           "thisWeek": "This week",
           "total": "Total",
           "chartTitle": "Your applications",
-          "chartDesc": "Last 16 weeks",
+          "chartDesc": "Last month",
           "less": "Less",
           "more": "More",
           "cellNone": "No applications on {date}",

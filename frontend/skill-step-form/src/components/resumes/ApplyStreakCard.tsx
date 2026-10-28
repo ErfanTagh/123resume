@@ -5,7 +5,8 @@ import { computeApplyStreak, keyToDate, type HeatmapCell } from "@/lib/applyStre
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
-const WEEKS = 16;
+// The current week and the four before it: about the last month
+const WEEKS = 5;
 
 /** Sunset ramp for the activity grid: more applications, deeper color. */
 function cellColor(count: number): string {
@@ -38,13 +39,9 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
     return tpl.replace("{n}", String(c.count)).replace("{date}", date);
   };
 
-  // A month label above the first week that starts in that month
-  const monthLabels = s.heatmap.map((week, i) => {
-    const month = keyToDate(week[0].date).getMonth();
-    const prev = i > 0 ? keyToDate(s.heatmap[i - 1][0].date).getMonth() : -1;
-    return month !== prev ? keyToDate(week[0].date).toLocaleDateString(locale, { month: "short" }) : "";
-  });
   const todayKey = s.today;
+  const fmtDay = (key: string) => keyToDate(key).toLocaleDateString(locale, { day: "numeric", month: "short" });
+  const range = `${fmtDay(s.heatmap[0][0].date)} – ${fmtDay(todayKey)}`;
 
   return (
     <section className="grid overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
@@ -130,47 +127,35 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
       <div className="border-t border-border p-5 sm:p-6 lg:border-l lg:border-t-0">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="text-base font-bold text-foreground">{k("chartTitle")}</h3>
-          <span className="text-xs text-muted-foreground">{k("chartDesc")}</span>
+          <span className="text-xs text-muted-foreground">
+            {k("chartDesc")} · {range}
+          </span>
         </div>
 
-        <div className="mt-4 flex gap-2">
-          {/* Weekday labels (Mon, Wed, Fri) */}
-          <div className="grid shrink-0 grid-rows-[auto_repeat(7,minmax(0,1fr))] gap-[3px] pt-px text-[10px] text-muted-foreground">
-            <span className="h-4" />
-            {s.week.map((c, i) => (
-              <span key={c.date} className="flex items-center leading-none">
-                {i % 2 === 0 && i < 5 ? keyToDate(c.date).toLocaleDateString(locale, { weekday: "short" }) : ""}
+        {/* Month calendar: a row per week (Mon..Sun), the day number in each square */}
+        <div className="mx-auto mt-4 max-w-[380px]" role="img" aria-label={`${k("chartTitle")}: ${range}`}>
+          <div className="grid grid-cols-7 gap-1.5 pb-1.5">
+            {s.week.map((c) => (
+              <span key={c.date} className="text-center text-[11px] font-semibold uppercase text-muted-foreground">
+                {keyToDate(c.date).toLocaleDateString(locale, { weekday: "narrow" })}
               </span>
             ))}
           </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))` }}>
-              {monthLabels.map((label, i) => (
-                <span key={i} className="h-4 overflow-visible whitespace-nowrap text-[10px] leading-4 text-muted-foreground">
-                  {label}
-                </span>
-              ))}
-            </div>
-            <div
-              className="grid grid-flow-col gap-[3px]"
-              style={{ gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`, gridTemplateRows: "repeat(7, auto)" }}
-              role="img"
-              aria-label={`${k("chartTitle")}: ${s.total}`}
-            >
-              {s.heatmap.flat().map((c) => (
-                <span
-                  key={c.date}
-                  title={c.future ? undefined : cellLabel(c)}
-                  className={cn(
-                    "aspect-square w-full max-w-[22px] rounded-[4px]",
-                    c.future && "invisible",
-                    c.date === todayKey && "ring-2 ring-foreground/25 ring-offset-1 ring-offset-card",
-                  )}
-                  style={{ backgroundColor: cellColor(c.count) }}
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-7 gap-1.5">
+            {s.heatmap.flat().map((c) => (
+              <span
+                key={c.date}
+                title={c.future ? undefined : cellLabel(c)}
+                className={cn(
+                  "flex aspect-square items-center justify-center rounded-lg text-xs font-semibold tabular-nums",
+                  c.future ? "border border-dashed border-border text-muted-foreground/40" : c.count >= 2 ? "text-white" : "text-foreground/60",
+                  c.date === todayKey && "ring-2 ring-foreground/30 ring-offset-2 ring-offset-card",
+                )}
+                style={c.future ? undefined : { backgroundColor: cellColor(c.count) }}
+              >
+                {keyToDate(c.date).getDate()}
+              </span>
+            ))}
           </div>
         </div>
 

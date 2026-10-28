@@ -300,11 +300,6 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
                     {/* Status stripe: color-codes the list at a glance */}
                     <span className={`absolute inset-y-0 left-0 w-1 ${STATUS_STYLE[status].stripe}`} aria-hidden />
 
-                    {/* Company monogram */}
-                    <div className="hidden h-11 w-11 flex-none items-center justify-center rounded-lg bg-primary/10 text-base font-bold text-primary sm:flex">
-                      {(app.company || "?").trim().charAt(0).toUpperCase()}
-                    </div>
-
                     {/* Identity */}
                     <div className="min-w-0 flex-1">
                       <button

@@ -1033,3 +1033,195 @@ def _claude_connector_announcement_html(greet: str) -> str:
   </table>
 </body>
 </html>"""
+
+
+def send_apply_streak_announcement_email(to_email: str, name: str = "") -> bool:
+    """Announce the daily apply streak in the job tracker, and encourage a daily habit."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="One application a day: start your streak 🔥",
+        plain_message=_apply_streak_announcement_plain(greet),
+        html_message=_apply_streak_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            "o:tag": "product-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+APPLY_STREAK_URL = "https://123resume.de/resumes?tab=job-tracker"
+
+
+def _apply_streak_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+Landing an interview rarely comes down to one perfect application. It comes from showing up again and again. Every application you send is one more chance for a recruiter to say yes, and a small daily habit keeps your search moving, even in the weeks when nobody answers.
+
+That's why your job tracker on 123Resume now has an apply streak:
+
+- Your streak: every day you apply, your flame grows by one.
+- Your month at a glance: a calendar shows the days you applied and the gaps.
+- A nudge when it counts: if you haven't applied yet today, the flame in the top bar reminds you before midnight.
+
+Log an application in a few seconds, or let Claude do it for you through the 123Resume connector.
+
+Your challenge for today: send one application. Just one. Do it again tomorrow, and see where you are in a week.
+
+Start your streak: {APPLY_STREAK_URL}
+
+You've got this,
+Erfan
+
+---
+123Resume, https://123resume.de
+You're receiving this because you have a 123Resume account.
+"""
+
+
+def _apply_streak_announcement_html(greet: str) -> str:
+    pink = "#e83a6a"
+    # A sample week: three days done, today waiting
+    days = [("M", True), ("T", True), ("W", True), ("T", False), ("F", None), ("S", None), ("S", None)]
+    cells = []
+    for label, done in days:
+        if done:
+            circle = (
+                'background-color:#ec4899;background-image:linear-gradient(135deg,#f97316,#ec4899 55%,#8b5cf6);color:#ffffff;'
+            )
+            inner = "&#128293;"
+        elif done is False:
+            circle = f"background:#ffffff;border:2px dashed {pink};color:{pink};"
+            inner = "&nbsp;"
+        else:
+            circle = "background:#ffffff;border:1px dashed #e7dfe3;"
+            inner = "&nbsp;"
+        cells.append(
+            f'<td align="center" style="padding:0 3px;">'
+            f'<div style="font-size:11px;font-weight:700;color:#8a8490;margin-bottom:6px;">{label}</div>'
+            f'<div style="width:34px;height:34px;line-height:34px;border-radius:17px;font-size:16px;text-align:center;{circle}">{inner}</div>'
+            f"</td>"
+        )
+    week = "".join(cells)
+
+    def feature(emoji: str, title: str, text: str) -> str:
+        return f"""
+              <tr>
+                <td width="40" valign="top" style="padding:0 0 14px;font-size:22px;line-height:1.2;">{emoji}</td>
+                <td valign="top" style="padding:0 0 14px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                  <strong style="color:#1c1917;">{title}</strong><br/>{text}
+                </td>
+              </tr>"""
+
+    features = (
+        feature("&#128293;", "Your streak", "Every day you apply, your flame grows by one.")
+        + feature("&#128197;", "Your month at a glance", "A calendar shows the days you applied, and the gaps.")
+        + feature("&#9200;", "A nudge when it counts", "Haven't applied yet today? The flame in the top bar reminds you before midnight.")
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>One application a day: start your streak</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Small steps, every day. That's how interviews happen.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ee;border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #ebe4df;box-shadow:0 8px 24px -4px rgba(120,40,70,0.10);">
+          <tr>
+            <td style="padding:28px 28px 8px;text-align:center;">
+              <a href="https://123resume.de" style="text-decoration:none;">
+                <img src="https://123resume.de/logoo.png" alt="123Resume" width="132" height="34" style="display:inline-block;border:0;height:34px;width:auto;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Small steps, every day.<br/>That's how interviews happen.
+              </h1>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                Landing an interview rarely comes down to one perfect application. It comes from showing up again and again.
+                Every application you send is one more chance for a recruiter to say yes, and a small daily habit keeps your search moving, even in the weeks when nobody answers.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 6px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:linear-gradient(135deg,#fff4ec,#fdeef4 55%,#f4efff);background-color:#fdf2f5;border:1px solid #f3e3ea;border-radius:14px;">
+                <tr>
+                  <td style="padding:20px 18px 18px;text-align:center;">
+                    <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#8a8490;">Apply streak</div>
+                    <div style="margin:4px 0 2px;font-size:40px;font-weight:800;line-height:1.1;color:#1c1917;">&#128293; 3</div>
+                    <div style="font-size:13px;font-weight:600;color:{pink};margin-bottom:14px;">Apply today to make it 4</div>
+                    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;"><tr>{week}</tr></table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 4px;">
+              <h2 style="margin:0 0 14px;font-size:17px;font-weight:700;color:#1c1917;">New in your job tracker</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">{features}
+              </table>
+              <p style="margin:2px 0 0;font-size:14px;line-height:1.55;color:#5c5660;">
+                Log an application in a few seconds, or let Claude do it for you through the 123Resume connector.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 8px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-left:4px solid {pink};background:#faf6f8;border-radius:0 10px 10px 0;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:15px;line-height:1.55;color:#1c1917;">
+                    <strong>Your challenge for today:</strong> send one application. Just one.
+                    Do it again tomorrow, and see where you are in a week.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 6px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{APPLY_STREAK_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Start my streak &#128293;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 28px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#3f3a42;">You've got this,</p>
+              <p style="margin:0;font-size:14px;color:#3f3a42;">Erfan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#faf6f8;border-top:1px solid #f0e4ea;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8a8490;">
+                <a href="https://123resume.de" style="color:{pink};text-decoration:none;">123resume.de</a>
+                · You're receiving this because you have a 123Resume account
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""

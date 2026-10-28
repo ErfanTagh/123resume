@@ -7,6 +7,9 @@ import {
   type Resume,
 } from "@/lib/api";
 import { JobApplicationFormDialog } from "@/components/resumes/JobApplicationFormDialog";
+import { ApplyStreakCard } from "@/components/resumes/ApplyStreakCard";
+import { computeApplyStreak } from "@/lib/applyStreak";
+import { useRefreshJobApplications } from "@/hooks/useJobApplications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +81,7 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
   const [editing, setEditing] = useState<JobApplication | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const refreshShared = useRefreshJobApplications();
 
   const loadApplications = useCallback(async () => {
     setIsLoading(true);
@@ -129,13 +133,27 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
           title: t("pages.resumes.jobTracker.updatedTitle") || "Application updated",
         });
       } else {
-        await jobApplicationAPI.create(data);
-        toast({
-          title: t("pages.resumes.jobTracker.createdTitle") || "Application added",
-        });
+        const created = await jobApplicationAPI.create(data);
+        const before = computeApplyStreak(applications, 1);
+        const after = computeApplyStreak([...applications, created], 1);
+        if (after.appliedToday && !before.appliedToday) {
+          // Today's application lit (or extended) the streak: celebrate it
+          toast({
+            title:
+              after.current === 1
+                ? t("pages.resumes.jobTracker.streak.celebrateFirst")
+                : t("pages.resumes.jobTracker.streak.celebrate").replace("{n}", String(after.current)),
+            description: t("pages.resumes.jobTracker.streak.celebrateDesc"),
+          });
+        } else {
+          toast({
+            title: t("pages.resumes.jobTracker.createdTitle") || "Application added",
+          });
+        }
       }
       setDialogOpen(false);
       await loadApplications();
+      refreshShared();
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -154,6 +172,7 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
       toast({ title: t("pages.resumes.jobTracker.deletedTitle") || "Application deleted" });
       setDeleteId(null);
       await loadApplications();
+      refreshShared();
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -182,6 +201,8 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {!isLoading && !error && <ApplyStreakCard applications={applications} />}
 
       {isLoading ? (
         <div className="flex justify-center py-12">

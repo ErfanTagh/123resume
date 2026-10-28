@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { FileText, User, LogOut, Settings, Menu } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { StreakBadge } from './StreakBadge';
 import { RESUMES_TABS, resumesTabHref } from '@/components/resumes/resumesTabs';
 import { isSiteNavPath } from '@/components/dashboard/siteNav';
 
@@ -88,6 +89,7 @@ export const Header = () => {
           <LanguageSwitcher />
           {isAuthenticated ? (
             <>
+              <StreakBadge />
               <span className="hidden whitespace-nowrap text-xs font-medium text-foreground md:inline sm:text-sm">
                 {user?.first_name || user?.username}
               </span>

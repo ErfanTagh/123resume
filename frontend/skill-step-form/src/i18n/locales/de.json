@@ -990,6 +990,13 @@
       },
       "jobTracker": {
         "subtitle": "Behalten Sie Bewerbungen im Blick: Stelle, verwendeter Lebenslauf und Anschreiben.",
+        "filters": {
+          "all": "Alle",
+          "active": "Aktiv",
+          "saved": "Gespeichert",
+          "closed": "Abgeschlossen",
+          "empty": "Hier gibt es keine Bewerbungen."
+        },
         "streak": {
           "title": "Bewerbungs-Serie",
           "unitMany": "Tage in Folge",

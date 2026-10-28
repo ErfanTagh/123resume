@@ -990,6 +990,13 @@
       },
       "jobTracker": {
         "subtitle": "Keep track of jobs you applied to, which resume you used, and your cover letter for each.",
+        "filters": {
+          "all": "All",
+          "active": "Active",
+          "saved": "Saved",
+          "closed": "Closed",
+          "empty": "No applications here."
+        },
         "streak": {
           "title": "Apply streak",
           "unitMany": "days in a row",

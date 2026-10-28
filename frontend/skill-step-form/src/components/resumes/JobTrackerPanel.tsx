@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   jobApplicationAPI,
   type JobApplication,
@@ -10,9 +10,9 @@ import { JobApplicationFormDialog } from "@/components/resumes/JobApplicationFor
 import { ApplyStreakCard } from "@/components/resumes/ApplyStreakCard";
 import { computeApplyStreak } from "@/lib/applyStreak";
 import { useRefreshJobApplications } from "@/hooks/useJobApplications";
+import { RowAction } from "@/components/resumes/RowAction";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -27,7 +27,9 @@ import {
 import {
   AlertCircle,
   Briefcase,
+  CalendarDays,
   ExternalLink,
+  FileText,
   Pencil,
   Plus,
   Trash2,
@@ -47,32 +49,59 @@ const resumeLabel = (resume: Resume): string => {
   return parts.length > 0 ? parts.join(" ") : "Untitled Resume";
 };
 
-const statusBadgeClass = (status?: JobApplicationStatus): string => {
-  switch (status) {
-    case "offer":
-      return "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200";
-    case "interviewing":
-      return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-200";
-    case "rejected":
-    case "withdrawn":
-      return "bg-muted text-muted-foreground";
-    case "saved":
-      return "bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-100";
-    default:
-      return "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950 dark:text-violet-200";
-  }
+/** Per status: the row's edge stripe, the status pill and the phone-width text. */
+const STATUS_STYLE: Record<JobApplicationStatus, { stripe: string; pill: string; text: string }> = {
+  saved: {
+    stripe: "bg-amber-400",
+    pill: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100",
+    text: "text-amber-700 dark:text-amber-300",
+  },
+  applied: {
+    stripe: "bg-violet-500",
+    pill: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200",
+    text: "text-violet-700 dark:text-violet-300",
+  },
+  interviewing: {
+    stripe: "bg-sky-500",
+    pill: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
+    text: "text-sky-700 dark:text-sky-300",
+  },
+  offer: {
+    stripe: "bg-emerald-500",
+    pill: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+    text: "text-emerald-700 dark:text-emerald-300",
+  },
+  rejected: { stripe: "bg-muted-foreground/40", pill: "bg-muted text-muted-foreground", text: "text-muted-foreground" },
+  withdrawn: { stripe: "bg-muted-foreground/40", pill: "bg-muted text-muted-foreground", text: "text-muted-foreground" },
 };
 
-const formatDate = (value?: string): string => {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString();
+const FILTERS = ["all", "active", "saved", "closed"] as const;
+type Filter = (typeof FILTERS)[number];
+
+const matchesFilter = (app: JobApplication, filter: Filter): boolean => {
+  const status = app.status || "applied";
+  if (filter === "active") return status === "applied" || status === "interviewing" || status === "offer";
+  if (filter === "saved") return status === "saved";
+  if (filter === "closed") return status === "rejected" || status === "withdrawn";
+  return true;
+};
+
+const activityTime = (app: JobApplication): number => {
+  const time = new Date(app.appliedAt || app.createdAt || 0).getTime();
+  return Number.isFinite(time) ? time : 0;
 };
 
 export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const formatDate = (value?: string): string => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(language === "de" ? "de-DE" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
 
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +133,12 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
   useEffect(() => {
     loadApplications();
   }, [loadApplications]);
+
+  // Newest first by the date applied (or added, for saved jobs)
+  const visible = useMemo(
+    () => applications.filter((a) => matchesFilter(a, filter)).sort((a, b) => activityTime(b) - activityTime(a)),
+    [applications, filter],
+  );
 
   const resumeNameById = (id?: string) => {
     if (!id) return t("pages.resumes.jobTracker.fields.noResume") || "Not specified";
@@ -222,79 +257,114 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {applications.map((app) => (
-            <Card key={app.id} className="border-l-4 border-l-indigo-500 shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <CardTitle className="text-lg truncate">{app.jobTitle}</CardTitle>
-                    <CardDescription className="font-medium text-foreground/80">
-                      {app.company}
-                    </CardDescription>
+        <div className="space-y-3">
+          {/* Filters with counts, so a long list stays easy to scan */}
+          <div className="flex flex-wrap gap-1.5" role="tablist">
+            {FILTERS.map((f) => {
+              const count = applications.filter((a) => matchesFilter(a, f)).length;
+              const on = filter === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setFilter(f)}
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors ${
+                    on
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                  }`}
+                >
+                  {t(`pages.resumes.jobTracker.filters.${f}`)}
+                  <span className={`tabular-nums text-xs ${on ? "text-background/70" : "text-muted-foreground/80"}`}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {visible.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+              {t("pages.resumes.jobTracker.filters.empty")}
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {visible.map((app) => {
+                const status = app.status || "applied";
+                const date = formatDate(app.appliedAt || app.createdAt);
+                return (
+                  <div
+                    key={app.id}
+                    className="group relative flex items-center gap-3 overflow-hidden rounded-xl border border-border bg-card py-3 pl-4 pr-3 shadow-sm transition-shadow hover:shadow-md sm:gap-4 sm:pr-4"
+                  >
+                    {/* Status stripe: color-codes the list at a glance */}
+                    <span className={`absolute inset-y-0 left-0 w-1 ${STATUS_STYLE[status].stripe}`} aria-hidden />
+
+                    {/* Company monogram */}
+                    <div className="hidden h-11 w-11 flex-none items-center justify-center rounded-lg bg-primary/10 text-base font-bold text-primary sm:flex">
+                      {(app.company || "?").trim().charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Identity */}
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(app)}
+                        className="block max-w-full truncate text-left text-sm font-semibold text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline sm:text-base"
+                      >
+                        {app.jobTitle}
+                      </button>
+                      <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
+                        {/* Phones: the status leads the info line (no status column there) */}
+                        <span className={`font-semibold sm:hidden ${STATUS_STYLE[status].text}`}>{statusLabel(status)}</span>
+                        <span aria-hidden="true" className="sm:hidden">·</span>
+                        <span className="font-medium text-foreground/80">{app.company}</span>
+                        {date && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span className="inline-flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3 flex-none" />
+                              {date}
+                            </span>
+                          </>
+                        )}
+                        <span aria-hidden="true" className="hidden md:inline">·</span>
+                        <span className="hidden min-w-0 max-w-[16rem] items-center gap-1 md:inline-flex">
+                          <FileText className="h-3 w-3 flex-none" />
+                          <span className="truncate">{resumeNameById(app.resumeId)}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status column, aligned across rows */}
+                    <div className="hidden w-32 flex-none justify-end sm:flex">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLE[status].pill}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${STATUS_STYLE[status].stripe}`} aria-hidden />
+                        {statusLabel(status)}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-none items-center gap-1 sm:gap-1.5">
+                      {app.jobLink ? (
+                        <RowAction tone="sky" label={t("pages.resumes.jobTracker.viewJob") || "View job posting"} href={app.jobLink}>
+                          <ExternalLink className="h-4 w-4" />
+                        </RowAction>
+                      ) : (
+                        <span className="hidden h-9 w-9 sm:block" aria-hidden />
+                      )}
+                      <RowAction tone="primary" label={t("common.edit") || "Edit"} onClick={() => openEdit(app)}>
+                        <Pencil className="h-4 w-4" />
+                      </RowAction>
+                      <RowAction tone="danger" label={t("common.delete") || "Delete"} onClick={() => setDeleteId(app.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </RowAction>
+                    </div>
                   </div>
-                  <Badge variant="outline" className={statusBadgeClass(app.status)}>
-                    {statusLabel(app.status)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {app.appliedAt && (
-                  <p className="text-muted-foreground">
-                    {t("pages.resumes.jobTracker.appliedOn") || "Applied"}: {formatDate(app.appliedAt)}
-                  </p>
-                )}
-                {app.contactPerson && (
-                  <p>
-                    <span className="text-muted-foreground">
-                      {t("pages.resumes.jobTracker.fields.contactPerson") || "Contact"}:
-                    </span>{" "}
-                    {app.contactPerson}
-                    {app.contactEmail ? ` · ${app.contactEmail}` : ""}
-                  </p>
-                )}
-                <p>
-                  <span className="text-muted-foreground">
-                    {t("pages.resumes.jobTracker.fields.resume") || "Resume"}:
-                  </span>{" "}
-                  {resumeNameById(app.resumeId)}
-                </p>
-                {app.coverLetter?.trim() && (
-                  <p className="text-muted-foreground line-clamp-2 italic">
-                    {app.coverLetter.trim().slice(0, 160)}
-                    {app.coverLetter.length > 160 ? "…" : ""}
-                  </p>
-                )}
-                {app.jobLink && (
-                  <a
-                    href={app.jobLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
-                  >
-                    {t("pages.resumes.jobTracker.viewJob") || "View job posting"}
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                )}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => openEdit(app)}>
-                    <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                    {t("common.edit") || "Edit"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteId(app.id)}
-                  >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                    {t("common.delete") || "Delete"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

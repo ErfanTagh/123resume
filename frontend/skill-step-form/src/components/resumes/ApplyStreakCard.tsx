@@ -125,9 +125,9 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
 
       {/* Activity over the last weeks */}
       <div className="border-t border-border p-5 sm:p-6 lg:border-l lg:border-t-0">
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-base font-bold text-foreground">{k("chartTitle")}</h3>
-          <span className="text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <h3 className="whitespace-nowrap text-base font-bold text-foreground">{k("chartTitle")}</h3>
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
             {k("chartDesc")} · {range}
           </span>
         </div>

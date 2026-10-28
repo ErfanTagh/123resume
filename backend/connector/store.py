@@ -21,7 +21,8 @@ from typing import Any
 from bson import ObjectId
 from bson.errors import InvalidId
 
-from api.serializers import ResumeSerializer
+from api.serializers import JobApplicationSerializer, ResumeSerializer
+from api.views.job_application_views import COLLECTION as APPLICATIONS
 from api.views.match_views import _get_mongo_db
 
 # Where the links Claude shares point (the local builder when run locally).
@@ -107,9 +108,14 @@ def _own_resume(user_id: int, resume_id: str) -> dict:
 
 def _links(resume_id: str) -> dict:
     return {
+        # The resume page has the "Download PDF" button
         "view_url": f"{SITE_URL}/resume/{resume_id}",
+        # Opens on the first step (Personal info), where the photo is uploaded
         "edit_url": f"{SITE_URL}/create?edit={resume_id}",
     }
+
+
+TRACKER_URL = f"{SITE_URL}/resumes?tab=job-tracker"
 
 
 def _display_name(doc: dict) -> str:
@@ -157,10 +163,16 @@ def get_resume(user_id: int, resume_id: str) -> dict:
     doc = _own_resume(user_id, resume_id)
     content = {f: doc.get(f) for f in CONTENT_FIELDS if doc.get(f) is not None}
     personal = dict(content.get("personal_info") or {})
-    personal.pop("profile_image", None)  # base64 photo: large and not editable here
+    photo = personal.pop("profile_image", None)  # base64 photo: large and not editable here
     content["personal_info"] = personal
     content["name"] = doc.get("name") or _display_name(doc)
-    return {"id": resume_id, "template": doc.get("template", "modern"), **content, **_links(resume_id)}
+    return {
+        "id": resume_id,
+        "template": doc.get("template", "modern"),
+        "has_photo": bool(photo),
+        **content,
+        **_links(resume_id),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -193,6 +205,13 @@ def _apply(doc: dict, edit: dict) -> str:
     path = edit.get("path") or ""
     parts = _parse_path(path)
     value = edit.get("value")
+    if "profile_image" in parts:
+        # Claude only sees an attached photo, it can't pass the file on. Saving
+        # also puts the stored photo back, so say so rather than appear to work.
+        raise ConnectorError(
+            "The photo can't be changed through Claude. The user adds or changes it on "
+            "123resume.de: share edit_url (it opens on the Personal info step with the photo upload)."
+        )
 
     if op == "set":
         parent = _descend(doc, parts[:-1], path) if len(parts) > 1 else doc
@@ -345,3 +364,91 @@ def _camel(value: Any) -> Any:
 def _camel_key(key: str) -> str:
     head, *rest = key.split("_")
     return head + "".join(p[:1].upper() + p[1:] for p in rest)
+
+
+# --------------------------------------------------------------------------
+# Job applications (the website's Job tracker / Bewerbungsübersicht)
+# --------------------------------------------------------------------------
+
+APPLICATION_STATUSES = ("saved", "applied", "interviewing", "offer", "rejected", "withdrawn")
+# Long texts stay out of list_applications; only whether they exist is shown.
+_LONG_APPLICATION_FIELDS = ("job_description", "cover_letter")
+
+
+def _application_oid(application_id: str) -> ObjectId:
+    try:
+        return ObjectId(application_id)
+    except (InvalidId, TypeError):
+        raise ConnectorError(f"'{application_id}' is not an application id. Use list_applications to get the ids.")
+
+
+def _application_out(doc: dict, full: bool = False) -> dict:
+    out = {"id": str(doc["_id"])}
+    for key, value in doc.items():
+        if key in ("_id", "user_id"):
+            continue
+        if key in _LONG_APPLICATION_FIELDS and not full:
+            out[f"has_{key}"] = bool(value)
+            continue
+        out[key] = value.isoformat() if isinstance(value, datetime) else value
+    out["tracker_url"] = TRACKER_URL
+    return out
+
+
+def _check_resume(user_id: int, resume_id: str) -> None:
+    if resume_id:
+        _own_resume(user_id, resume_id)
+
+
+def _validated_application(fields: dict, partial: bool) -> dict:
+    data = dict(fields)
+    # A plain date ("2026-10-28") is what people say; the serializer wants a datetime
+    applied = data.get("applied_at")
+    if isinstance(applied, str) and len(applied.strip()) == 10:
+        data["applied_at"] = applied.strip() + "T00:00:00"
+    serializer = JobApplicationSerializer(data=data, partial=partial)
+    if not serializer.is_valid():
+        raise ConnectorError(f"Invalid application: {serializer.errors}")
+    return dict(serializer.validated_data)
+
+
+def list_applications(user_id: int) -> list[dict]:
+    docs = _db()[APPLICATIONS].find({"user_id": user_id}).sort("updated_at", -1)
+    return [_application_out(d) for d in docs]
+
+
+def add_application(user_id: int, fields: dict) -> dict:
+    data = _validated_application(fields, partial=False)
+    _check_resume(user_id, data.get("resume_id") or "")
+    if data.get("status") == "applied" and not data.get("applied_at"):
+        data["applied_at"] = datetime.utcnow()
+
+    col = _db()[APPLICATIONS]
+    same = col.find_one(
+        {"user_id": user_id, "company": data["company"], "job_title": data["job_title"]},
+        {"_id": 1},
+    )
+    now = datetime.utcnow()
+    inserted = col.insert_one({"user_id": user_id, **data, "created_at": now, "updated_at": now})
+    out = _application_out(col.find_one({"_id": inserted.inserted_id}))
+    if same:
+        out["note"] = (
+            f"The tracker already had {data['job_title']} at {data['company']} "
+            f"(id {same['_id']}). Tell the user, in case this one is a duplicate."
+        )
+    return out
+
+
+def update_application(user_id: int, application_id: str, fields: dict) -> dict:
+    if not fields:
+        raise ConnectorError("No changes given.")
+    oid = _application_oid(application_id)
+    col = _db()[APPLICATIONS]
+    if not col.find_one({"_id": oid, "user_id": user_id}, {"_id": 1}):
+        raise ConnectorError(f"No application {application_id} in this account. Use list_applications to get the ids.")
+    data = _validated_application(fields, partial=True)
+    if "resume_id" in data:
+        _check_resume(user_id, data["resume_id"] or "")
+    data["updated_at"] = datetime.utcnow()
+    col.update_one({"_id": oid, "user_id": user_id}, {"$set": data})
+    return _application_out(col.find_one({"_id": oid}), full=True)

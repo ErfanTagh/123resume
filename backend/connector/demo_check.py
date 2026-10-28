@@ -54,7 +54,7 @@ async def main(user, token):
             async with ClientSession(read, write) as s:
                 await s.initialize()
                 tools = sorted(t.name for t in (await s.list_tools()).tools)
-                results.append(ok("tools listed", len(tools) == 7, ", ".join(tools)))
+                results.append(ok("tools listed", len(tools) == 10, ", ".join(tools)))
 
                 resumes = payload(await s.call_tool("list_resumes", {}))
                 results.append(ok("list_resumes", isinstance(resumes, list) and resumes, f"{len(resumes)} resumes"))

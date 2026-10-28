@@ -86,6 +86,21 @@ Workflow:
    change, list_versions and restore_version undo it.
 5. Share view_url so the user can see the result on 123resume.de.
 
+PDF: the tools can't make a PDF. For a PDF or to apply somewhere, share
+view_url: that page has a "Download PDF" button.
+
+Photo: the photo can't be added or changed through these tools (get_resume
+shows has_photo). Share edit_url: it opens on the Personal info step, where
+the user uploads the photo.
+
+Job tracker (on the site: "Job tracker", German "Bewerbungen"):
+- list_applications shows what the user applied to and each status.
+- add_application when the user applied, or wants to save a job. Link the
+  resume they used (resume_id), e.g. the copy you tailored for this job, and
+  keep the job ad in job_description when they gave you one.
+- update_application for news: an interview, an offer, a rejection, notes.
+- Only record what the user told you. Share tracker_url afterwards.
+
 Write in the resume's own language.
 """.strip()
 
@@ -189,6 +204,73 @@ async def list_versions(resume_id: str) -> list[dict]:
 async def restore_version(resume_id: str, version_id: str) -> dict:
     """Put a resume back to a saved version (undo). The current state is saved first."""
     return await _run(store.restore_version, resume_id, version_id)
+
+
+ApplicationStatus = Literal["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"]
+
+
+class ApplicationChanges(BaseModel):
+    """Fields to change on an application; leave out what stays the same."""
+
+    status: ApplicationStatus | None = None
+    notes: str | None = Field(default=None, description="Replaces the notes; include the old ones to keep them.")
+    applied_at: str | None = Field(default=None, description='Date applied, "YYYY-MM-DD".')
+    job_title: str | None = None
+    company: str | None = None
+    job_link: str | None = None
+    resume_id: str | None = Field(default=None, description="The resume used for this application.")
+    contact_person: str | None = None
+    contact_email: str | None = None
+    cover_letter: str | None = None
+    job_description: str | None = None
+
+
+@mcp.tool(annotations=READ)
+async def list_applications() -> list[dict]:
+    """The user's job tracker: every job they saved or applied to, newest first, with
+    company, title, status, date applied, notes and the linked resume_id."""
+    return await _run(store.list_applications)
+
+
+@mcp.tool(annotations=WRITE)
+async def add_application(
+    job_title: str,
+    company: str,
+    status: ApplicationStatus = "applied",
+    resume_id: str = "",
+    job_link: str = "",
+    applied_at: str = "",
+    job_description: str = "",
+    cover_letter: str = "",
+    contact_person: str = "",
+    contact_email: str = "",
+    notes: str = "",
+) -> dict:
+    """Add a job to the user's job tracker. status "saved" is a job they want to apply to
+    later. resume_id links the resume they sent. applied_at is "YYYY-MM-DD" (today if
+    left empty and status is "applied")."""
+    fields = {
+        "job_title": job_title,
+        "company": company,
+        "status": status,
+        "resume_id": resume_id,
+        "job_link": job_link,
+        "job_description": job_description,
+        "cover_letter": cover_letter,
+        "contact_person": contact_person,
+        "contact_email": contact_email,
+        "notes": notes,
+    }
+    if applied_at:
+        fields["applied_at"] = applied_at
+    return await _run(store.add_application, fields)
+
+
+@mcp.tool(annotations=WRITE)
+async def update_application(application_id: str, changes: ApplicationChanges) -> dict:
+    """Update one application in the job tracker, e.g. the status after an interview
+    invite, an offer or a rejection, or new notes. Ids come from list_applications."""
+    return await _run(store.update_application, application_id, changes.model_dump(exclude_none=True))
 
 
 @mcp.tool(annotations=READ)

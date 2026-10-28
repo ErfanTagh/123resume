@@ -1005,7 +1005,7 @@
           "doneToday": "You applied today. Come back tomorrow to make it {next}.",
           "atRisk": "Your {n}-day streak ends at midnight. Apply to one job today to keep it.",
           "lost": "Your streak broke. One application today starts a new one.",
-          "best": "Best",
+          "today": "Today",
           "thisWeek": "This week",
           "total": "Total",
           "chartTitle": "Your applications",

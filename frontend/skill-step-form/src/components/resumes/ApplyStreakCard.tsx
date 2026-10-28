@@ -111,7 +111,7 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
 
         <dl className="mt-5 grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-card/70 text-center">
           {[
-            [k("best"), s.best],
+            [k("today"), s.todayCount],
             [k("thisWeek"), s.thisWeek],
             [k("total"), s.total],
           ].map(([label, value]) => (

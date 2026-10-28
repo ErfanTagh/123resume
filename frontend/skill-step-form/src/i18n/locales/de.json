@@ -1005,7 +1005,7 @@
           "doneToday": "Heute erledigt. Kommen Sie morgen wieder, dann sind es {next} Tage.",
           "atRisk": "Ihre Serie von {n} Tagen endet um Mitternacht. Bewerben Sie sich heute auf eine Stelle, um sie zu halten.",
           "lost": "Ihre Serie ist gerissen. Eine Bewerbung heute startet eine neue.",
-          "best": "Rekord",
+          "today": "Heute",
           "thisWeek": "Diese Woche",
           "total": "Gesamt",
           "chartTitle": "Ihre Bewerbungen",

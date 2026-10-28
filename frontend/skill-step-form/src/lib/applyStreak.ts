@@ -27,6 +27,8 @@ export type ApplyStreak = {
   best: number;
   appliedToday: boolean;
   state: StreakState;
+  /** Applications sent today */
+  todayCount: number;
   thisWeek: number;
   total: number;
   /** Mon..Sun of the current week */
@@ -131,6 +133,7 @@ export function computeApplyStreak(
     best: Math.max(bestStreak(counts), current),
     appliedToday,
     state,
+    todayCount: counts.get(today) || 0,
     thisWeek: week.reduce((sum, c) => sum + c.count, 0),
     total,
     week,

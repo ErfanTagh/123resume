@@ -1,8 +1,26 @@
+# Signed-in app pages: nothing to index, and they all serve the same app
+# shell, so crawling them only uses up visits that should go to real content.
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /resumes
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /oauth/
+Disallow: /connector/
+Disallow: /mcp
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /resumes
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /oauth/
+Disallow: /connector/
+Disallow: /mcp
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +30,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /resumes
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /oauth/
+Disallow: /connector/
+Disallow: /mcp
 
 Sitemap: https://123resume.de/sitemap.xml

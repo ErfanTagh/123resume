@@ -8,12 +8,9 @@ const CANONICAL_ORIGIN = 'https://123resume.de';
 function toCanonicalPublicUrl(href: string): string {
   try {
     const u = new URL(href, CANONICAL_ORIGIN);
-    if (u.hostname === 'www.123resume.de') {
-      u.hostname = '123resume.de';
-    }
-    u.protocol = 'https:';
-    u.hash = '';
-    return u.toString();
+    // Always the public host, whatever host the page was rendered on
+    const canonical = new URL(u.pathname, CANONICAL_ORIGIN);
+    return canonical.toString();
   } catch {
     return href;
   }
@@ -52,8 +49,10 @@ export const SEO = ({
 }: SEOProps) => {
   const location = useLocation();
   const { language } = useLanguage();
-  const rawUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
-  const canonicalUrl = toCanonicalPublicUrl(rawUrl || `${CANONICAL_ORIGIN}/`);
+  // Never derive the canonical from window.location: pages are pre-rendered on
+  // http://localhost:45678, and that host ended up in the homepage's canonical
+  // (and in every app route, which is served the homepage HTML).
+  const canonicalUrl = toCanonicalPublicUrl(url || `${CANONICAL_ORIGIN}${location.pathname}`);
   
   // Generate breadcrumbs from pathname if not provided
   const generateBreadcrumbsFromPath = (pathname: string): Array<{ name: string; url: string }> => {

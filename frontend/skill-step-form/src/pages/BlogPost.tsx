@@ -103,22 +103,44 @@ const BlogPost = () => {
     .filter(p => p.id !== id && p.category === post.category)
     .slice(0, 3);
 
-  // Render inline bold (**text**) and code (`text`) within a string
+  // Render inline links, bold (**text**), and code (`text`) within a string
   const renderInline = (text: string) =>
-    text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
-      part.startsWith('**') && part.endsWith('**') ? (
-        <strong key={i} className="font-bold text-[#242424]">{part.replace(/\*\*/g, '')}</strong>
-      ) : part.length > 1 && part.startsWith('`') && part.endsWith('`') ? (
-        <code
-          key={i}
-          className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[0.85em] text-slate-800 whitespace-nowrap"
-        >
-          {part.slice(1, -1)}
-        </code>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+    text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
+      const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
+        const [, label, href] = linkMatch;
+        const isInternal = href.startsWith('/');
+        return isInternal ? (
+          <Link key={i} to={href} className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+            {label}
+          </Link>
+        ) : (
+          <a
+            key={i}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+          >
+            {label}
+          </a>
+        );
+      }
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold text-[#242424]">{part.replace(/\*\*/g, '')}</strong>;
+      }
+      if (part.length > 1 && part.startsWith('`') && part.endsWith('`')) {
+        return (
+          <code
+            key={i}
+            className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[0.85em] text-slate-800 whitespace-nowrap"
+          >
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
 
   // Simple markdown-like rendering — Medium-style typography
   const renderContent = (content: string) => {
@@ -321,8 +343,18 @@ const BlogPost = () => {
   };
 
   const postUrl = `https://123resume.de/blog/${post.id}`;
-  const postImage = post.coverImage || post.image || 'https://123resume.de/resume-icon.svg';
+  // Crawlers/social need an absolute image URL (relative /blog-….png is ignored).
+  const rawImage = post.coverImage || post.image || '/resume-icon.svg';
+  const postImage = rawImage.startsWith('http')
+    ? rawImage
+    : `https://123resume.de${rawImage.startsWith('/') ? rawImage : `/${rawImage}`}`;
   const postDescription = post.excerpt || post.content?.substring(0, 160) || 'Read our latest resume tips and career advice';
+
+  // Prefer real publish dates; avoid "now" so JSON-LD does not change on every crawl.
+  const publishedIso =
+    post.publishedAt || post.createdAt || post.isoDate || undefined;
+  const modifiedIso =
+    post.updatedAt || post.publishedAt || post.createdAt || post.isoDate || undefined;
 
   // Structured data for article
   const articleStructuredData = {
@@ -331,8 +363,8 @@ const BlogPost = () => {
     headline: post.title,
     description: postDescription,
     image: postImage,
-    datePublished: post.publishedAt || post.createdAt || new Date().toISOString(),
-    dateModified: post.updatedAt || post.publishedAt || post.createdAt || new Date().toISOString(),
+    ...(publishedIso ? { datePublished: publishedIso } : {}),
+    ...(modifiedIso ? { dateModified: modifiedIso } : {}),
     author: {
       '@type': 'Organization',
       name: '123Resume',
@@ -361,8 +393,8 @@ const BlogPost = () => {
         url={postUrl}
         type="article"
         structuredData={articleStructuredData}
-        publishedTime={post.publishedAt || post.createdAt}
-        modifiedTime={post.updatedAt || post.publishedAt || post.createdAt}
+        publishedTime={publishedIso}
+        modifiedTime={modifiedIso}
         breadcrumbs={[
           { name: 'Home', url: 'https://123resume.de/' },
           { name: 'Blog', url: 'https://123resume.de/blog' },

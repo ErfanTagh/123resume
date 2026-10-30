@@ -29,9 +29,15 @@
   </url>
   <url>
     <loc>https://123resume.de/blog</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://123resume.de/blog/daily-apply-streak</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://123resume.de/blog/edit-resume-with-claude</loc>

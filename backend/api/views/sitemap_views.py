@@ -89,6 +89,7 @@ def generate_sitemap(request):
         {'loc': '/pricing', 'priority': '0.8', 'changefreq': 'monthly', 'lastmod': datetime.now().strftime('%Y-%m-%d')},
         {'loc': '/blog', 'priority': '0.8', 'changefreq': 'weekly', 'lastmod': datetime.now().strftime('%Y-%m-%d')},
         # Posts written into the frontend (src/lib/blogPosts.ts), not stored in blog_posts
+        {'loc': '/blog/daily-apply-streak', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': '2026-10-30'},
         {'loc': '/blog/edit-resume-with-claude', 'priority': '0.9', 'changefreq': 'monthly', 'lastmod': '2026-10-27'},
         {'loc': '/contact', 'priority': '0.7', 'changefreq': 'monthly', 'lastmod': datetime.now().strftime('%Y-%m-%d')},
         {'loc': '/privacy', 'priority': '0.3', 'changefreq': 'yearly', 'lastmod': datetime.now().strftime('%Y-%m-%d')},
@@ -185,6 +186,12 @@ def generate_static_sitemap():
     <lastmod>{today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>{base_url}/blog/daily-apply-streak</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>{base_url}/blog/edit-resume-with-claude</loc>

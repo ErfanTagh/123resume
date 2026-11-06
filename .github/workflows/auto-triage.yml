@@ -42,6 +42,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # The workflow's own token, so the Claude GitHub App needn't be installed.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: "--max-turns 80"
           prompt: |
             You are triaging a production error on 123resume.de (this repository

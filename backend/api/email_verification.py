@@ -1225,3 +1225,199 @@ def _apply_streak_announcement_html(greet: str) -> str:
   </table>
 </body>
 </html>"""
+
+
+def send_germany_blog_announcement_email(to_email: str, name: str = "") -> bool:
+    """Announce the international-students-in-Germany blog post (EN + DE in one email)."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="New post: Interviews in Germany are won with words \U0001F1E9\U0001F1EA",
+        plain_message=_germany_blog_announcement_plain(greet),
+        html_message=_germany_blog_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            "o:tag": "blog-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+GERMANY_BLOG_URL = "https://123resume.de/blog/job-search-international-students-germany"
+GERMANY_DECK_URL = "https://recallcards.net/import/ix3OWCwiUx7S"
+
+
+def _germany_blog_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+We just published a new post on the 123Resume blog, written for everyone job hunting in Germany as a non-native speaker.
+
+The uncomfortable truth: you could have all the knowledge in the world, but if you can't express it well in the interview, another applicant who speaks better and uses better vocabulary might get the job. And German is not an easy language.
+
+The good news: interview language repeats itself. The same questions, phrases and words come up again and again. Learn the vocabulary that appears most often in interviews, and you've covered most of what's coming.
+
+To make that easy, we put together a free German interview vocabulary deck on RecallCards, our flashcard app. One click adds it to your account:
+{GERMANY_DECK_URL}
+
+Read the full post with all the tips:
+{GERMANY_BLOG_URL}
+
+--- Deutsche Version ---
+
+Hallo {greet},
+
+wir haben einen neuen Artikel im 123Resume-Blog veroeffentlicht, geschrieben fuer alle, die als Nicht-Muttersprachler in Deutschland einen Job suchen.
+
+Die unbequeme Wahrheit: Sie koennen alles Wissen der Welt haben, doch wenn Sie es im Vorstellungsgespraech nicht gut ausdruecken koennen, bekommt vielleicht ein anderer Bewerber den Job, der besser spricht und die passenderen Worte findet. Und Deutsch ist keine einfache Sprache.
+
+Die gute Nachricht: Interview-Sprache wiederholt sich. Dieselben Fragen, Phrasen und Woerter tauchen immer wieder auf. Lernen Sie die Vokabeln, die am haeufigsten im Interview vorkommen, und Sie haben das Meiste abgedeckt.
+
+Damit das leicht faellt, gibt es ein kostenloses Deck mit deutschen Interview-Vokabeln auf RecallCards, unserer Karteikarten-App. Ein Klick fuegt es Ihrem Konto hinzu:
+{GERMANY_DECK_URL}
+
+Den ganzen Artikel mit allen Tipps lesen:
+{GERMANY_BLOG_URL}
+
+Best regards / Viele Gruesse,
+Erfan
+
+---
+123Resume, https://123resume.de
+You're receiving this because you have a 123Resume account.
+"""
+
+
+def _germany_blog_announcement_html(greet: str) -> str:
+    pink = "#e83a6a"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Interviews in Germany are won with words</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Job hunting in Germany as a non-native speaker? Learn the words that decide interviews. / Deutsche Version unten.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ee;border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #ebe4df;box-shadow:0 8px 24px -4px rgba(120,40,70,0.10);">
+          <tr>
+            <td style="padding:28px 28px 8px;text-align:center;">
+              <a href="https://123resume.de" style="text-decoration:none;">
+                <img src="https://123resume.de/logoo.png" alt="123Resume" width="132" height="34" style="display:inline-block;border:0;height:34px;width:auto;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 0;">
+              <a href="{GERMANY_BLOG_URL}" style="text-decoration:none;">
+                <img src="https://123resume.de/blog-germany-interview.png" alt="Two people in a job interview" width="544" style="display:block;width:100%;height:auto;border:0;border-radius:12px;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Interviews in Germany are won with words
+              </h1>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                We just published a new post on the 123Resume blog, written for everyone job hunting in Germany as a non-native speaker.
+              </p>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                The uncomfortable truth: you could have all the knowledge in the world, but if you can't express it well in the interview,
+                another applicant who speaks better and uses better vocabulary might get the job. And German is not an easy language.
+              </p>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                The good news: interview language repeats itself. Learn the vocabulary that appears most often in interviews,
+                and you've covered most of what's coming. We put together a free
+                <a href="{GERMANY_DECK_URL}" style="color:{pink};font-weight:600;">German interview vocabulary deck on RecallCards</a>,
+                our flashcard app &mdash; one click adds it to your account.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 6px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{GERMANY_BLOG_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Read the full post
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-top:1px solid #f0e4ea;padding-top:18px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#8a8490;text-align:center;">
+                    &#127465;&#127466; Deutsche Version
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hallo {greet},</p>
+              <h2 style="margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Vorstellungsgespr&auml;che gewinnt man mit Worten
+              </h2>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                Wir haben einen neuen Artikel im 123Resume-Blog ver&ouml;ffentlicht, geschrieben f&uuml;r alle,
+                die als Nicht-Muttersprachler in Deutschland einen Job suchen.
+              </p>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                Die unbequeme Wahrheit: Sie k&ouml;nnen alles Wissen der Welt haben, doch wenn Sie es im Vorstellungsgespr&auml;ch
+                nicht gut ausdr&uuml;cken k&ouml;nnen, bekommt vielleicht ein anderer Bewerber den Job, der besser spricht
+                und die passenderen Worte findet. Und Deutsch ist keine einfache Sprache.
+              </p>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                Die gute Nachricht: Interview-Sprache wiederholt sich. Lernen Sie die Vokabeln, die am h&auml;ufigsten
+                im Interview vorkommen, und Sie haben das Meiste abgedeckt. Daf&uuml;r gibt es ein kostenloses
+                <a href="{GERMANY_DECK_URL}" style="color:{pink};font-weight:600;">Deck mit deutschen Interview-Vokabeln auf RecallCards</a>,
+                unserer Karteikarten-App &mdash; ein Klick f&uuml;gt es Ihrem Konto hinzu.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 8px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{GERMANY_BLOG_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Zum Blogartikel
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 28px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#3f3a42;">Best regards / Viele Gr&uuml;&szlig;e,</p>
+              <p style="margin:0;font-size:14px;color:#3f3a42;">Erfan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#faf6f8;border-top:1px solid #f0e4ea;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8a8490;">
+                <a href="https://123resume.de" style="color:{pink};text-decoration:none;">123resume.de</a>
+                &middot; You're receiving this because you have a 123Resume account
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""

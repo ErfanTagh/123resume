@@ -46,7 +46,7 @@ _STARTED = time.time()
 
 
 def _format_uptime(stats):
-    minutes, seconds = divmod(stats["uptime_secs"], 60)
+    minutes, seconds = divmod(stats["uptime_seconds"], 60)
     hours, minutes = divmod(minutes, 60)
     return f"{hours}h {minutes}m {seconds}s"
 

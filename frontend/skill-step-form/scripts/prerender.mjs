@@ -30,6 +30,7 @@ const ROUTES = [
   "/data-protection",
   "/cookies",
   "/blog",
+  "/blog/job-search-international-students-germany",
   "/blog/daily-apply-streak",
   "/blog/edit-resume-with-claude",
 ];

@@ -22,6 +22,59 @@ type BlogPostsByLanguage = {
 export const blogPostsByLanguage: BlogPostsByLanguage = {
   en: [
     {
+      id: "job-search-international-students-germany",
+      title: "How to Increase Your Chances in the Job Search as an International Student in Germany",
+      excerpt: "You can have all the knowledge in the world, but interviews are won with words. Here is how non-native speakers can prepare for German interviews.",
+      category: "Job Search",
+      readTime: "4 min read",
+      date: "Nov 6, 2026",
+      isoDate: "2026-11-06",
+      gradient: "from-sky-500/20 via-blue-500/10 to-indigo-500/5",
+      iconColor: "text-sky-500",
+      image: "/blog-germany-interview.png",
+      tags: ["Job Search", "Germany", "International Students", "German Language", "Interviews"],
+      content: `
+Here is an uncomfortable truth about job interviews: you could have all the knowledge in the world, but if you can't express it well in the interview, another applicant who speaks better and uses better vocabulary might get the job and take over the role that should have been yours. Hiring managers don't grade what's in your head. They grade what comes out of your mouth in those 45 minutes.
+
+## The interview is a language test in disguise
+
+That sounds unfair, and sometimes it is. But put yourself in the interviewer's chair: they meet two candidates with similar degrees and similar projects. One searches for words, answers in short, hesitant sentences, and falls back on vague phrases. The other explains their work clearly, uses the right professional terms, and asks sharp questions back. Guess who feels like "a better fit for the team".
+
+**It was never only about knowledge. It's about how convincingly you can present it.**
+
+## Why Germany makes this extra hard
+
+If you're looking for a job in Germany as a non-native speaker, you already know the challenge: German is not an easy language. The grammar is unforgiving, the professional vocabulary is long and specific, and interview German is its own register — more formal than the German you use with friends, but full of standard phrases that native speakers produce without thinking.
+
+Many international students in Germany speak good everyday German and still freeze in interviews. Not because their German is bad, but because interview vocabulary — words like **Berufserfahrung**, **Gehaltsvorstellung**, **Kündigungsfrist**, **Stärken und Schwächen** — simply never came up in daily life or at university.
+
+## The trick: learn the words that actually appear in interviews
+
+Here is the good news: interview language is surprisingly repetitive. The same questions, the same phrases, and the same vocabulary come up again and again, across companies and industries. You don't need to master all of German. You need to master the few hundred words that dominate the interview setting.
+
+That is a much smaller, much more realistic goal — and it's exactly what spaced repetition flashcards are built for.
+
+1. Learn the high-frequency interview words first | Focus on the vocabulary that appears in almost every interview: experience, strengths, notice period, salary expectations, teamwork, responsibilities.
+2. Review a few minutes every day | Ten minutes of daily review beats a cram session the night before. By interview day, the words come out automatically instead of being searched for.
+3. Practice saying them out loud | Knowing a word passively is not the same as producing it under pressure. Build example sentences and say them aloud.
+
+To make this easy, we put together a free German interview vocabulary collection on RecallCards, our flashcard app. One click adds the deck to your account, and you can start reviewing right away:
+
+[Get the German interview vocabulary deck on RecallCards →](https://recallcards.net/import/ix3OWCwiUx7S)
+
+!> Review the deck daily in the two weeks before your interview. The goal is that words like "Gehaltsvorstellung" trigger an instant answer, not a pause.
+
+## A few more things that help
+
++ Prepare answers to the standard questions (tell me about yourself, strengths and weaknesses, why this company) and rehearse them in German out loud
++ Reuse the vocabulary from the job ad — if the posting says "eigenverantwortlich", say "eigenverantwortlich" in your answers
++ It's fine to speak slower and simpler, but correctly, rather than fast and messy
++ If you blank on a word, describe it instead of stopping — interviewers care about communication, not perfection
+
+Your knowledge got you the interview. Make sure your words can carry it over the finish line.
+`,
+    },
+    {
       id: "daily-apply-streak",
       title: "Why Doing Something Daily Beats Doing It Perfectly Once",
       excerpt: "Consistency leads to success. A few solid applications every day beat waiting for the perfect weekend, especially in a tough job market.",
@@ -129,6 +182,59 @@ It gives Claude secure access to one app, here your 123Resume account, so it can
     },
   ],
   de: [
+    {
+      id: "job-search-international-students-germany",
+      title: "So erhöhen Sie Ihre Chancen bei der Jobsuche als internationale:r Studierende:r in Deutschland",
+      excerpt: "Sie können alles Wissen der Welt haben, doch Interviews werden mit Worten gewonnen. So bereiten sich Nicht-Muttersprachler auf deutsche Vorstellungsgespräche vor.",
+      category: "Jobsuche",
+      readTime: "4 Min. Lesezeit",
+      date: "6. Nov. 2026",
+      isoDate: "2026-11-06",
+      gradient: "from-sky-500/20 via-blue-500/10 to-indigo-500/5",
+      iconColor: "text-sky-500",
+      image: "/blog-germany-interview.png",
+      tags: ["Jobsuche", "Deutschland", "Internationale Studierende", "Deutsch lernen", "Vorstellungsgespräch"],
+      content: `
+Eine unbequeme Wahrheit über Vorstellungsgespräche: Sie können alles Wissen der Welt haben, doch wenn Sie es im Gespräch nicht gut ausdrücken können, bekommt vielleicht ein anderer Bewerber den Job, der besser spricht und die passenderen Worte findet — und übernimmt die Rolle, die eigentlich Ihre hätte sein sollen. Hiring Manager bewerten nicht, was in Ihrem Kopf ist. Sie bewerten, was in diesen 45 Minuten aus Ihrem Mund kommt.
+
+## Das Interview ist ein versteckter Sprachtest
+
+Das klingt unfair, und manchmal ist es das auch. Aber versetzen Sie sich in die Lage der Interviewer: Zwei Kandidaten mit ähnlichen Abschlüssen und ähnlichen Projekten. Einer sucht nach Worten, antwortet in kurzen, zögerlichen Sätzen und flüchtet sich in vage Floskeln. Der andere erklärt seine Arbeit klar, nutzt die richtigen Fachbegriffe und stellt kluge Rückfragen. Raten Sie, wer „besser ins Team passt".
+
+**Es ging nie nur um Wissen. Es geht darum, wie überzeugend Sie es präsentieren können.**
+
+## Warum Deutschland es besonders schwer macht
+
+Wenn Sie als Nicht-Muttersprachler in Deutschland einen Job suchen, kennen Sie die Herausforderung: Deutsch ist keine einfache Sprache. Die Grammatik verzeiht wenig, das Berufsvokabular ist lang und spezifisch, und Interview-Deutsch ist ein eigenes Register — formeller als das Deutsch mit Freunden, aber voller Standardphrasen, die Muttersprachler produzieren, ohne nachzudenken.
+
+Viele internationale Studierende in Deutschland sprechen gutes Alltagsdeutsch und blockieren trotzdem im Interview. Nicht weil ihr Deutsch schlecht ist, sondern weil Interview-Vokabeln — Wörter wie **Berufserfahrung**, **Gehaltsvorstellung**, **Kündigungsfrist**, **Stärken und Schwächen** — im Alltag und an der Uni schlicht nie vorkamen.
+
+## Der Trick: Lernen Sie die Wörter, die wirklich im Interview auftauchen
+
+Die gute Nachricht: Interview-Sprache wiederholt sich erstaunlich oft. Dieselben Fragen, dieselben Phrasen und dieselben Vokabeln tauchen immer wieder auf, über Unternehmen und Branchen hinweg. Sie müssen nicht das gesamte Deutsch beherrschen. Sie müssen die paar hundert Wörter beherrschen, die im Interview-Kontext dominieren.
+
+Das ist ein viel kleineres, viel realistischeres Ziel — und genau dafür sind Karteikarten mit Spaced Repetition gemacht.
+
+1. Zuerst die häufigsten Interview-Wörter lernen | Konzentrieren Sie sich auf das Vokabular, das in fast jedem Gespräch vorkommt: Erfahrung, Stärken, Kündigungsfrist, Gehaltsvorstellung, Teamarbeit, Verantwortung.
+2. Jeden Tag ein paar Minuten wiederholen | Zehn Minuten tägliche Wiederholung schlagen das Pauken am Abend davor. Am Tag des Interviews kommen die Wörter automatisch, statt gesucht zu werden.
+3. Laut aussprechen üben | Ein Wort passiv zu kennen ist nicht dasselbe, wie es unter Druck zu produzieren. Bilden Sie Beispielsätze und sagen Sie sie laut.
+
+Damit das leicht fällt, haben wir eine kostenlose Sammlung mit deutschen Interview-Vokabeln auf RecallCards zusammengestellt, unserer Karteikarten-App. Ein Klick fügt das Deck Ihrem Konto hinzu, und Sie können sofort loslegen:
+
+[Deutsches Interview-Vokabel-Deck auf RecallCards holen →](https://recallcards.net/import/ix3OWCwiUx7S)
+
+!> Wiederholen Sie das Deck täglich in den zwei Wochen vor Ihrem Interview. Das Ziel: Wörter wie „Gehaltsvorstellung" lösen eine sofortige Antwort aus, keine Pause.
+
+## Was außerdem hilft
+
++ Bereiten Sie Antworten auf die Standardfragen vor (erzählen Sie von sich, Stärken und Schwächen, warum dieses Unternehmen) und üben Sie sie laut auf Deutsch
++ Übernehmen Sie das Vokabular aus der Stellenanzeige — steht dort „eigenverantwortlich", sagen Sie „eigenverantwortlich" in Ihren Antworten
++ Lieber langsamer und einfacher, aber korrekt sprechen, als schnell und durcheinander
++ Fällt Ihnen ein Wort nicht ein, umschreiben Sie es, statt zu stoppen — Interviewern geht es um Kommunikation, nicht um Perfektion
+
+Ihr Wissen hat Ihnen das Interview verschafft. Sorgen Sie dafür, dass Ihre Worte es über die Ziellinie tragen.
+`,
+    },
     {
       id: "daily-apply-streak",
       title: "Warum täglich etwas tun besser ist als einmal perfekt",

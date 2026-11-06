@@ -2,6 +2,7 @@
 API error alerts emailed to the operator (Mailgun, background thread).
 
 Always notify on HTTP 500+ / uncaught exceptions; sample 1-in-5 of other 4xx.
+Scanner probe paths (/.env, /wp-admin, …) never alert on 4xx — they are noise.
 Never blocks the request.
 
 An alert should answer, at a glance: what broke (in plain words, with the
@@ -145,11 +146,63 @@ _KNOWN_CAUSES = [
 _BOT_RE = re.compile(
     r"(Googlebot|bingbot|Applebot|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot|"
     r"facebookexternalhit|Twitterbot|LinkedInBot|GPTBot|ClaudeBot|PerplexityBot|"
-    r"bot\b|crawler|spider|curl/|python-requests)",
+    r"ChatGPT-User|bot\b|crawler|spider|curl/|python-requests)",
     re.IGNORECASE,
 )
 
+# Paths scanners hit looking for leaked secrets / CMS installs. Matched as
+# substrings against the request path (after stripping query string).
+_PROBE_PATH_RE = re.compile(
+    r"(?i)("
+    r"\.env(\.|$|/)|"
+    r"\.git(/|$)|"
+    r"wp-admin|wp-login|xmlrpc\.php|wordpress|"
+    r"phpmyadmin|adminer|"
+    r"\.aws|/credentials|"
+    r"cgi-bin|"
+    r"vendor/phpunit|"
+    r"\.svn|"
+    r"id_rsa|id_ed25519|"
+    r"docker-compose\.ya?ml|"
+    r"\.DS_Store|"
+    r"etc/passwd|"
+    r"telescope|_ignition"
+    r")"
+)
+
+# Real Django routes under /api/ (see api/urls.py). Anything else under /api
+# is almost always a scanner (Grafana /api/contents, /api/v1/.env, …).
+_KNOWN_API_RE = re.compile(
+    r"^/api/("
+    r"health/?$"
+    r"|auth/"
+    r"|resumes/"
+    r"|blog-posts/"
+    r"|job-applications/"
+    r"|public/"
+    r"|ai/"
+    r"|feedback/?$"
+    r"|sitemap\.xml$"
+    r")"
+)
+
 _ID_IN_PATH = re.compile(r"/(?:[0-9a-f]{24}|\d+|[0-9a-f-]{36})(?=/|$)", re.IGNORECASE)
+
+
+def is_probe_path(path: str) -> bool:
+    """True for common secret/CMS scanner URLs (e.g. /api/v1/.env)."""
+    bare = (path or "").split("?", 1)[0]
+    return bool(_PROBE_PATH_RE.search(bare))
+
+
+def is_unknown_api_path(path: str) -> bool:
+    """True for /api/... URLs that are not part of this app."""
+    bare = (path or "").split("?", 1)[0]
+    if not bare.startswith("/api"):
+        return False
+    if bare in ("/api", "/api/"):
+        return True
+    return _KNOWN_API_RE.match(bare) is None
 
 
 def _esc(value: Any) -> str:
@@ -195,6 +248,9 @@ def should_alert(status, path, exc_type=""):
         return False
     if status >= 500:
         return True
+    # Never email about scanner 4xx — /.env, /wp-admin, /api/contents, …
+    if is_probe_path(path) or is_unknown_api_path(path):
+        return False
     fp = _fingerprint(path, status, exc_type or "client")
     digest = hashlib.sha256(fp.encode("utf-8")).hexdigest()
     return int(digest[:8], 16) % 5 == 0
@@ -392,6 +448,17 @@ def notify_api_error(ctx):
     diagnosis = diagnose(" ".join([ctx.get("exc_type", ""), ctx.get("error_text", ""), ctx.get("response_error", "")]))
     kind = ctx.get("exc_type") or (diagnosis["what"] if diagnosis else _summary_line(ctx)[:60]) or "unknown"
     occurrences = _record_occurrence(_fingerprint(ctx.get("api_path") or "", status, kind))
+
+    # First sighting of a 5xx in its 24h window: file a GitHub issue so the
+    # auto-triage workflow can investigate and propose a fix as a PR.
+    if status >= 500 and occurrences["count"] == 1:
+        try:
+            from .error_triage import file_triage_issue
+
+            file_triage_issue(ctx, diagnosis)
+        except Exception as e:
+            logger.error("Triage hook failed: %s", type(e).__name__)
+
     if not occurrences["send"]:
         return
 

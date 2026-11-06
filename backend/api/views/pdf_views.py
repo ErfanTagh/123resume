@@ -7,9 +7,30 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from bson import ObjectId
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from urllib.parse import urlsplit
 import base64
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+# The HTML comes from the user's browser, so it can name any URL (browser
+# extensions inject their own files, too). Only our CSS and Google Fonts are
+# needed: photos are data: URIs. Anything else is blocked, which also keeps
+# the server's browser from reaching internal services.
+PDF_ALLOWED_HOSTS = {
+    '123resume.de', 'www.123resume.de',
+    'fonts.googleapis.com', 'fonts.gstatic.com',
+    'localhost', '127.0.0.1',
+}
+
+
+def _pdf_request_allowed(url: str) -> bool:
+    parts = urlsplit(url)
+    if parts.scheme in ('data', 'blob', 'about'):
+        return True
+    return parts.scheme in ('http', 'https') and parts.hostname in PDF_ALLOWED_HOSTS
 
 
 def generate_pdf_from_html(html_content: str) -> bytes:
@@ -19,12 +40,19 @@ def generate_pdf_from_html(html_content: str) -> bytes:
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
+        page.route('**/*', lambda route: route.continue_()
+                   if _pdf_request_allowed(route.request.url) else route.abort())
         # Match browser PDF output: layout uses print CSS (same as page.pdf default)
         page.emulate_media(media='print')
-        
-        # Set content and wait for it to load
-        page.set_content(html_content, wait_until='networkidle')
-        
+
+        # Wait for CSS and fonts, but a slow or never-ending request must not
+        # fail the download: past the limit, print what has loaded.
+        try:
+            page.set_content(html_content, wait_until='load', timeout=15000)
+            page.wait_for_load_state('networkidle', timeout=5000)
+        except PlaywrightTimeoutError:
+            logger.warning('PDF: page still loading after the time limit, printing as is')
+
         # Generate PDF with A4 format and zero margins (padding is handled in CSS)
         # prefer_css_page_size ensures @page rules and margin boxes are respected
         pdf_bytes = page.pdf(

@@ -10,7 +10,6 @@ app_name = 'api'
 urlpatterns = [
     # Public endpoints
     path('health/', views.health_check, name='health-check'),
-    path('health/stats/', views.health_stats, name='health-stats'),
     
     # Authentication endpoints
     path('auth/register/', auth_views.register, name='register'),

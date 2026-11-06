@@ -8,7 +8,7 @@ from .resume_views import (
     resume_public_profile_toggle,
 )
 from .parse_views import parse_resume
-from .health_views import health_check, health_stats
+from .health_views import health_check
 from .pdf_views import generate_resume_pdf
 from .blog_views import blog_post_list, blog_post_detail
 from .sitemap_views import generate_sitemap

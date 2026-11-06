@@ -1232,7 +1232,7 @@ def send_germany_blog_announcement_email(to_email: str, name: str = "") -> bool:
     greet = (name or "").strip() or "there"
     from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
     return _send_with_mailgun(
-        subject="New post: Interviews in Germany are won with words \U0001F1E9\U0001F1EA",
+        subject="How to increase your chances of success in a German interview \U0001F1E9\U0001F1EA",
         plain_message=_germany_blog_announcement_plain(greet),
         html_message=_germany_blog_announcement_html(greet),
         to_email=to_email,
@@ -1298,7 +1298,7 @@ def _germany_blog_announcement_html(greet: str) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Interviews in Germany are won with words</title>
+<title>How to increase your chances of success in a German interview</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Job hunting in Germany as a non-native speaker? Learn the words that decide interviews. / Deutsche Version unten.</div>
@@ -1324,7 +1324,7 @@ def _germany_blog_announcement_html(greet: str) -> str:
             <td style="padding:20px 28px 4px;">
               <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
               <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
-                Interviews in Germany are won with words
+                How to increase your chances of success in a German interview
               </h1>
               <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
                 We just published a new post on the 123Resume blog, written for everyone job hunting in Germany as a non-native speaker.
@@ -1369,7 +1369,7 @@ def _germany_blog_announcement_html(greet: str) -> str:
             <td style="padding:16px 28px 4px;">
               <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hallo {greet},</p>
               <h2 style="margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
-                Vorstellungsgespr&auml;che gewinnt man mit Worten
+                So erh&ouml;hen Sie Ihre Erfolgschancen im Vorstellungsgespr&auml;ch
               </h2>
               <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
                 Wir haben einen neuen Artikel im 123Resume-Blog ver&ouml;ffentlicht, geschrieben f&uuml;r alle,

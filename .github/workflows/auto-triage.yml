@@ -38,13 +38,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Investigate and open a fix PR
         uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # The workflow's own token, so the Claude GitHub App needn't be installed.
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--max-turns 80"
+          # Prompt-driven runs can't use shell commands unless listed here. Pushing
+          # is allowed only to this issue's triage branch, never to main.
+          claude_args: >-
+            --max-turns 80
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git checkout -b triage/issue-${{ github.event.issue.number }}),Bash(git add:*),Bash(git commit:*),Bash(git push -u origin triage/issue-${{ github.event.issue.number }}),Bash(python3 -m py_compile:*)"
           prompt: |
             You are triaging a production error on 123resume.de (this repository
             runs the site: Django backend in backend/, React frontend in
@@ -68,10 +79,12 @@ jobs:
             3. Decide whether a code fix is warranted. One-off infrastructure
                hiccups (network blips, provider outages) may need no code change;
                in that case, comment your analysis on the issue and stop.
-            4. If a fix is warranted: implement the smallest safe fix on a new
-               branch named triage/issue-${{ github.event.issue.number }}, verify
-               it (compile/parse the touched files at minimum), and open a pull
-               request targeting main. In the PR description explain: what broke,
+            4. If a fix is warranted: create the branch with exactly
+               `git checkout -b triage/issue-${{ github.event.issue.number }}`,
+               implement the smallest safe fix, verify it (at minimum
+               `python3 -m py_compile` on touched Python files), commit, push with
+               exactly `git push -u origin triage/issue-${{ github.event.issue.number }}`,
+               and open a pull request targeting main with `gh pr create`. In the PR description explain: what broke,
                the root cause, the fix, the risk, and anything you could not
                verify. Reference the issue with "Fixes #${{ github.event.issue.number }}".
             5. Comment on the issue with a one-paragraph summary and the PR link.

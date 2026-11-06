@@ -31,6 +31,8 @@ import requests
 
 from django.core.cache import cache
 
+from .error_alerts import _ID_IN_PATH
+
 logger = logging.getLogger(__name__)
 
 _MAX_ISSUES_PER_DAY = 3
@@ -62,10 +64,9 @@ def _under_daily_cap() -> bool:
 
 
 def _issue_body(ctx: Dict[str, Any], diagnosis) -> str:
-    endpoint = f"{ctx.get('method', '')} {ctx.get('api_path', '')}"
-    who = "anonymous"
-    if ctx.get("username"):
-        who = f"{ctx['username']} (id {ctx.get('user_id')})"
+    endpoint = f"{ctx.get('method', '')} {_ID_IN_PATH.sub('/:id', ctx.get('api_path', ''))}"
+    # The repo is public: no usernames, emails, user ids or record ids in issues.
+    who = "signed-in user" if ctx.get("username") else "anonymous"
     duration = f"{ctx['duration_ms']} ms" if ctx.get("duration_ms") is not None else "-"
     error_shown = ctx.get("response_error") or ctx.get("error_text") or "(no error text)"
     tb = ctx.get("traceback") or "(none: the view caught the error and returned the response itself)"
@@ -118,8 +119,8 @@ def file_triage_issue(ctx: Dict[str, Any], diagnosis) -> None:
         logger.info("Triage issue skipped: daily cap reached")
         return
 
-    endpoint = f"{ctx.get('method', '')} {ctx.get('api_path', '')}"
-    summary = (ctx.get("response_error") or ctx.get("error_text") or "").strip()[:100]
+    endpoint = f"{ctx.get('method', '')} {_ID_IN_PATH.sub('/:id', ctx.get('api_path', ''))}"
+    summary =(ctx.get("response_error") or ctx.get("error_text") or "").strip()[:100]
     title = f"[auto-triage] {status} {endpoint}: {summary or 'server error'}"[:200]
     body = _issue_body(ctx, diagnosis)
 

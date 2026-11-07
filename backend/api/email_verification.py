@@ -1421,3 +1421,207 @@ def _germany_blog_announcement_html(greet: str) -> str:
   </table>
 </body>
 </html>"""
+
+
+def send_job_suggestions_announcement_email(to_email: str, name: str = "") -> bool:
+    """Announce Job suggestions (LinkedIn jobs that fit a resume), with its test-phase limits."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="New on 123Resume: jobs that fit your resume \U0001F9ED",
+        plain_message=_job_suggestions_announcement_plain(greet),
+        html_message=_job_suggestions_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            "o:tag": "product-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+JOB_SUGGESTIONS_URL = "https://123resume.de/resumes?tab=job-suggestions"
+JOB_SUGGESTIONS_IMAGE = "https://123resume.de/media/announcements/job-suggestions.png"
+
+
+def _job_suggestions_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+This is our biggest update since the Claude connector: 123Resume now finds jobs for you.
+
+How it works:
+1. Open My Resumes.
+2. Click the green compass next to a resume.
+3. See jobs posted on LinkedIn in the last week that fit that resume's job title and city.
+
+What you get:
+- Fits your skills and level: tags show which of your skills a job asks for, and whether it fits your experience.
+- Filters: fits my level, matches my skills, last 24 hours, newest first.
+- One click to save: saved jobs go straight into your job tracker. When you apply, mark it as applied and your streak grows.
+
+Good to know: this is a test phase, so searches are limited.
+- You get 1 new search per day. Opening Job suggestions for a resume runs that search, and changing the job title or city counts as a new one. So start with the resume you care about most.
+- Your results stay for 24 hours. Sorting, filtering and saving are free, as often as you like.
+- There is also a daily limit for the whole site. If you see "try again tomorrow", the day's searches are used up.
+- If Job suggestions shows as unavailable, the test searches have run out. We'll let you know when it's back.
+
+Find jobs for your resume: {JOB_SUGGESTIONS_URL}
+
+Happy job hunting,
+Erfan
+
+---
+123Resume, https://123resume.de
+You're receiving this because you have a 123Resume account.
+"""
+
+
+def _job_suggestions_announcement_html(greet: str) -> str:
+    pink = "#e83a6a"
+    green = "#059669"
+
+    def step(number: str, text: str) -> str:
+        return f"""
+              <tr>
+                <td width="36" valign="top" style="padding:0 0 10px;">
+                  <div style="width:26px;height:26px;line-height:26px;border-radius:13px;background:#ecfdf5;border:1px solid #a7f3d0;color:{green};font-size:13px;font-weight:800;text-align:center;">{number}</div>
+                </td>
+                <td valign="top" style="padding:3px 0 10px;font-size:15px;line-height:1.5;color:#3f3a42;">{text}</td>
+              </tr>"""
+
+    def feature(emoji: str, title: str, text: str) -> str:
+        return f"""
+              <tr>
+                <td width="40" valign="top" style="padding:0 0 14px;font-size:22px;line-height:1.2;">{emoji}</td>
+                <td valign="top" style="padding:0 0 14px;font-size:14px;line-height:1.55;color:#3f3a42;">
+                  <strong style="color:#1c1917;">{title}</strong><br/>{text}
+                </td>
+              </tr>"""
+
+    def limit(text: str) -> str:
+        return f"""
+                    <tr>
+                      <td width="18" valign="top" style="padding:0 0 8px;font-size:14px;line-height:1.55;color:#b45309;">&#8226;</td>
+                      <td valign="top" style="padding:0 0 8px;font-size:14px;line-height:1.55;color:#3f3a42;">{text}</td>
+                    </tr>"""
+
+    steps = (
+        step("1", "Open <strong>My Resumes</strong>.")
+        + step("2", f'Click the <strong style="color:{green};">green compass &#129517;</strong> next to a resume.')
+        + step("3", "See jobs posted on LinkedIn in the last week that fit that resume's job title and city.")
+    )
+    features = (
+        feature("&#127919;", "Fits your skills and level", "Tags show which of your skills a job asks for, and whether it fits your experience.")
+        + feature("&#128270;", "Filters that help", "Fits my level, matches my skills, last 24 hours, newest first.")
+        + feature("&#128278;", "One click to save", "Saved jobs go straight into your job tracker. When you apply, mark it as applied and your streak grows.")
+    )
+    limits = (
+        limit("<strong>1 new search per day.</strong> Opening Job suggestions for a resume runs that search, and changing the job title or city counts as a new one. So start with the resume you care about most.")
+        + limit("<strong>Results stay for 24 hours.</strong> Sorting, filtering and saving are free, as often as you like.")
+        + limit("<strong>A daily limit for the whole site.</strong> If you see &ldquo;try again tomorrow&rdquo;, the day's searches are used up.")
+        + limit("If Job suggestions shows as unavailable, the test searches have run out. We'll let you know when it's back.")
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New on 123Resume: jobs that fit your resume</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Open a resume, click the green compass, and see fresh LinkedIn jobs from this week.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ee;border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #ebe4df;box-shadow:0 8px 24px -4px rgba(120,40,70,0.10);">
+          <tr>
+            <td style="padding:28px 28px 8px;text-align:center;">
+              <a href="https://123resume.de" style="text-decoration:none;">
+                <img src="https://123resume.de/logoo.png" alt="123Resume" width="132" height="34" style="display:inline-block;border:0;height:34px;width:auto;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
+              <div style="display:inline-block;margin:0 0 10px;padding:4px 10px;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;font-size:12px;font-weight:700;color:{green};">New: Job suggestions</div>
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Jobs that fit your resume,<br/>found for you.
+              </h1>
+              <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#5c5660;">
+                This is our biggest update since the Claude connector. 123Resume now looks at your resume and finds fresh jobs on LinkedIn that fit it.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 4px;">
+              <a href="{JOB_SUGGESTIONS_URL}" style="text-decoration:none;">
+                <img src="{JOB_SUGGESTIONS_IMAGE}" alt="Job suggestions in 123Resume: software jobs with skill tags, level fit and a Save button" width="544" style="display:block;width:100%;max-width:544px;height:auto;border:1px solid #ebe4df;border-radius:12px;"/>
+              </a>
+              <p style="margin:6px 0 0;font-size:12px;color:#8a8490;text-align:center;">Example with sample jobs</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 0;">
+              <h2 style="margin:0 0 12px;font-size:17px;font-weight:700;color:#1c1917;">How it works</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">{steps}
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 4px;">
+              <h2 style="margin:0 0 14px;font-size:17px;font-weight:700;color:#1c1917;">What you get</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">{features}
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 28px 8px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;">
+                <tr>
+                  <td style="padding:16px 18px 10px;">
+                    <div style="margin:0 0 10px;font-size:15px;font-weight:800;color:#92400e;">&#9888;&#65039; Good to know: this is a test phase, so searches are limited</div>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">{limits}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 6px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{JOB_SUGGESTIONS_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Find jobs for my resume &#129517;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 28px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#3f3a42;">Happy job hunting,</p>
+              <p style="margin:0;font-size:14px;color:#3f3a42;">Erfan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#faf6f8;border-top:1px solid #f0e4ea;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8a8490;">
+                <a href="https://123resume.de" style="color:{pink};text-decoration:none;">123resume.de</a>
+                · You're receiving this because you have a 123Resume account
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""

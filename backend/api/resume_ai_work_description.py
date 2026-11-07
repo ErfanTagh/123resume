@@ -1,5 +1,5 @@
 """
-Improve a work-experience role summary via DeepSeek (structured JSON).
+Improve a work-experience role summary via Claude (structured JSON).
 """
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from typing import Any, Dict
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
@@ -118,14 +118,14 @@ Current role summary:
 
 
 def _call_improve_model(*, system: str, user: str, log_key: str, lang: str, in_len: int) -> str:
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(min(settings.DEEPSEEK_MAX_OUTPUT_TOKENS, 512)),
+        max_tokens=min(settings.AI_MAX_OUTPUT_TOKENS, 512),
         temperature=0.3,
     )
     raw = (completion.choices[0].message.content or "").strip()
@@ -134,7 +134,7 @@ def _call_improve_model(*, system: str, user: str, log_key: str, lang: str, in_l
 
     improved = _parse_description_from_model(raw)
     logger.info("%s model_ok lang=%s in_chars=%d out_chars=%d", log_key, lang, in_len, len(improved))
-    log_deepseek_exchange(log_key, completion, raw, {"description": improved})
+    log_ai_exchange(log_key, completion, raw, {"description": improved})
     return improved
 
 

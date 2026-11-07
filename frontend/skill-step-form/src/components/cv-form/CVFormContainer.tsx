@@ -324,7 +324,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   }, [formData, skills]);
 
   /**
-   * DeepSeek resume score for the current form. Always runs the request when called (no snapshot skip):
+   * Claude resume score for the current form. Always runs the request when called (no snapshot skip):
    * skipping caused missed loads / no loading state when refs and serialize were slightly out of sync.
    * Call sites: Review step mount (useEffect), Score tab open / explicit request, Re-analyze.
    */
@@ -584,7 +584,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
 
   const reviewStepIndex = steps.length - 1;
 
-  // DeepSeek score only on the Review step (not on every navigation or preview tab).
+  // Claude score only on the Review step (not on every navigation or preview tab).
   useEffect(() => {
     if (!user || currentStep !== reviewStepIndex) return;
     // When editing, wait until resume is loaded into the form before scoring.

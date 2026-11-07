@@ -52,8 +52,7 @@ RUN pip install --no-cache-dir \
     python-dotenv==1.0.0 \
     PyJWT==2.8.0 \
     requests>=2.31.0 \
-    requests-oauthlib>=1.3.1 \
-    "openai>=1.54.0"
+    requests-oauthlib>=1.3.1
 
 # Install ML dependencies for resume parsing
 # Install PyTorch CPU version (smaller, no CUDA needed)

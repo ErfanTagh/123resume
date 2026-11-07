@@ -298,13 +298,13 @@ export const feedbackAPI = {
 };
 
 // ============================================
-// AI (DeepSeek resume assistant — backend; requires login)
+// AI (Claude resume assistant — backend; requires login)
 // ============================================
 
 export const aiAPI = {
   /**
-   * Ask the server-side resume assistant (DeepSeek). Returns { reply: string }.
-   * 401 if not logged in; 503 if DEEPSEEK_API_KEY is not set on the server.
+   * Ask the server-side resume assistant (Claude). Returns { reply: string }.
+   * 401 if not logged in; 503 if ANTHROPIC_API_KEY is not set on the server.
    */
   resumeAssistant: async (message: string): Promise<{ reply: string }> => {
     const payload = camelToSnakeObject({ message });
@@ -319,7 +319,7 @@ export const aiAPI = {
   },
 
   /**
-   * AI resume score (DeepSeek). Body sends { resume, outputLanguage }. Returns camelCase:
+   * AI resume score (Claude). Body sends { resume, outputLanguage }. Returns camelCase:
    * overallScore, estimatedPages?, overallFeedback?, categories[{name,score,maxScore,feedback}], suggestions
    */
   scoreResume: async (
@@ -369,7 +369,7 @@ export const aiAPI = {
   },
 
   /**
-   * Suggest one new work-experience bullet (DeepSeek). Returns { bullet: string }.
+   * Suggest one new work-experience bullet (Claude). Returns { bullet: string }.
    */
   suggestWorkBullet: async (input: {
     position?: string;
@@ -400,7 +400,7 @@ export const aiAPI = {
   },
 
   /**
-   * Improve resume text (DeepSeek). Returns { description: string }.
+   * Improve resume text (Claude). Returns { description: string }.
    */
   improveResumeText: async (input: {
     fieldType?: AiImproveFieldType;
@@ -433,7 +433,7 @@ export const aiAPI = {
   },
 
   /**
-   * One-click "Improve my resume" (DeepSeek). Rewrites only editable free-text
+   * One-click "Improve my resume" (Claude). Rewrites only editable free-text
    * fields (professional summary, work role summaries, project descriptions) and
    * returns a per-field list of proposed changes for the user to accept/reject.
    */
@@ -456,7 +456,7 @@ export const aiAPI = {
   },
 
   /**
-   * Translate a whole resume into `targetLanguage` (DeepSeek). Only prose fields
+   * Translate a whole resume into `targetLanguage` (Claude). Only prose fields
    * are translated (summary, work/education/project descriptions and bullets);
    * skills, technologies, job titles, names and dates are left as-is. Returns the
    * translated resume DATA — the caller saves it or applies it in place.
@@ -883,7 +883,7 @@ export const resumeAPI = {
   },
 
   /**
-   * Generate a tailored cover letter from a saved resume and job posting (DeepSeek).
+   * Generate a tailored cover letter from a saved resume and job posting (Claude).
    */
   generateCoverLetter: async (
     resumeId: string,

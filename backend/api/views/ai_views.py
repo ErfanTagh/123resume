@@ -1,5 +1,5 @@
 """
-AI-assisted features (authenticated). Backed by DeepSeek's OpenAI-compatible API.
+AI-assisted features (authenticated). Backed by Claude (Anthropic API).
 """
 import copy
 import json
@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .. import deepseek_chat
+from .. import ai_client
 from .. import resume_ai_improve
 from .. import resume_ai_scoring
 from .. import resume_ai_translate
@@ -25,7 +25,7 @@ MAX_RESUME_JSON_CHARS = 320_000
 
 
 def _resume_without_profile_images(resume: dict) -> dict:
-    """Drop photo fields before DeepSeek — images are not used by the rubric and waste context."""
+    """Drop photo fields before the AI call — images are not used by the rubric and waste context."""
     out = copy.deepcopy(resume)
     for block_key in ("personalInfo", "personal_info"):
         pi = out.get(block_key)
@@ -70,7 +70,7 @@ def resume_assistant_chat(request):
         )
 
     try:
-        reply = deepseek_chat.resume_assistant_reply(message)
+        reply = ai_client.resume_assistant_reply(message)
         return Response({"reply": reply}, status=status.HTTP_200_OK)
     except RuntimeError as e:
         logger.error("Resume assistant configuration error: %s", e)
@@ -79,7 +79,7 @@ def resume_assistant_chat(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     except Exception:
-        logger.exception("DeepSeek resume assistant failed")
+        logger.exception("AI resume assistant failed")
         return Response(
             {"error": "Could not get a response from the AI service. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -90,7 +90,7 @@ def resume_assistant_chat(request):
 @permission_classes([IsAuthenticated])
 def resume_score(request):
     """
-    AI resume score for logged-in users (DeepSeek).
+    AI resume score for logged-in users (Claude).
 
     Body JSON:
       - resume (required): CV JSON object
@@ -141,7 +141,7 @@ def resume_score(request):
     )
 
     try:
-        result = resume_ai_scoring.score_resume_with_deepseek(resume, out_lang, data.get("previous"))
+        result = resume_ai_scoring.score_resume_with_ai(resume, out_lang, data.get("previous"))
         logger.info(
             "resume_score ok user_id=%s overall=%s categories=%s",
             getattr(request.user, "pk", None),
@@ -156,7 +156,7 @@ def resume_score(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     except Exception:
-        logger.exception("DeepSeek resume scoring failed")
+        logger.exception("AI resume scoring failed")
         return Response(
             {"error": "Could not score this resume with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -167,7 +167,7 @@ def resume_score(request):
 @permission_classes([IsAuthenticated])
 def improve_resume(request):
     """
-    One-click "Improve my resume" (DeepSeek). Rewrites only free-text fields the
+    One-click "Improve my resume" (Claude). Rewrites only free-text fields the
     user can edit in the builder (professional summary, work-experience role
     summaries, project descriptions) and returns a per-field list of proposed
     changes so the UI can Accept/Reject each one.
@@ -233,7 +233,7 @@ def improve_resume(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     except Exception:
-        logger.exception("DeepSeek resume improve failed")
+        logger.exception("AI resume improve failed")
         return Response(
             {"error": "Could not generate improvements with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -244,7 +244,7 @@ def improve_resume(request):
 @permission_classes([IsAuthenticated])
 def translate_resume(request):
     """
-    Translate a whole resume between English and German (DeepSeek).
+    Translate a whole resume between English and German (Claude).
 
     Only free-text prose is translated (summary, interests, work descriptions and
     bullets, education field/descriptions, project descriptions/highlights). Skills,
@@ -323,7 +323,7 @@ def translate_resume(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     except Exception:
-        logger.exception("DeepSeek resume translate failed")
+        logger.exception("AI resume translate failed")
         return Response(
             {"error": "Could not translate this resume with AI. Try again later."},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -334,7 +334,7 @@ def translate_resume(request):
 @permission_classes([IsAuthenticated])
 def suggest_work_bullet(request):
     """
-    Suggest one new work-experience bullet (DeepSeek).
+    Suggest one new work-experience bullet (Claude).
 
     Body JSON:
       - position, company, description (optional strings)
@@ -436,7 +436,7 @@ def suggest_work_bullet(request):
 @permission_classes([IsAuthenticated])
 def improve_work_description(request):
     """
-    Improve a work-experience role summary (DeepSeek).
+    Improve a work-experience role summary (Claude).
 
     Body JSON:
       - description (optional string)

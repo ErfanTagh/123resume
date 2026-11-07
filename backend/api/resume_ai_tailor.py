@@ -1,5 +1,5 @@
 """
-Incremental resume tailoring suggestions for a target job (DeepSeek).
+Incremental resume tailoring suggestions for a target job (Claude).
 Each round suggests ~20% match improvement across summary, skills, experience, projects.
 """
 from __future__ import annotations
@@ -11,8 +11,8 @@ from typing import Any, Dict, List
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
@@ -427,14 +427,14 @@ Current resume snapshot:
 {snapshot_json}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(min(int(getattr(settings, "DEEPSEEK_TAILOR_MAX_TOKENS", 4096)), 4096)),
+        max_tokens=min(int(getattr(settings, "AI_TAILOR_MAX_TOKENS", 4096)), 4096),
         temperature=0.35,
     )
     raw = (completion.choices[0].message.content or "").strip()
@@ -473,7 +473,7 @@ Current resume snapshot:
         "projected_match_percentage": projected,
         "round_target_boost": ROUND_TARGET_BOOST,
     }
-    log_deepseek_exchange(
+    log_ai_exchange(
         "resume_tailor",
         completion,
         raw,

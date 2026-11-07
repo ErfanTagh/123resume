@@ -55,7 +55,7 @@ class ResumeScoreViewTests(SimpleTestCase):
         self.factory = APIRequestFactory()
         self.user = User(username="scoretester")
 
-    @patch("api.views.ai_views.resume_ai_scoring.score_resume_with_deepseek")
+    @patch("api.views.ai_views.resume_ai_scoring.score_resume_with_ai")
     def test_resume_score_ok(self, mock_score):
         mock_score.return_value = _minimal_ai_score_result()
         request = self.factory.post(

@@ -91,7 +91,7 @@ class MetricsMiddleware:
 
 
 # --------------------------------------------------------------------------
-# AI calls (recorded by the client wrapper in deepseek_chat)
+# AI calls (recorded by the client wrapper in ai_client)
 # --------------------------------------------------------------------------
 
 def observe_ai_call(feature: str, model: str, seconds: float, outcome: str, usage=None) -> None:

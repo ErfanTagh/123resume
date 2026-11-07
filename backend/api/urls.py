@@ -53,7 +53,7 @@ urlpatterns = [
     # Feedback / contact endpoint
     path('feedback/', views.send_feedback, name='send-feedback'),
 
-    # AI resume assistant (DeepSeek, authenticated only)
+    # AI resume assistant (Claude, authenticated only)
     path('ai/resume-assistant/', views.resume_assistant_chat, name='resume-assistant-chat'),
     path('ai/resume-score/', views.resume_score, name='resume-score'),
     path('ai/work-bullet-suggest/', views.suggest_work_bullet, name='work-bullet-suggest'),

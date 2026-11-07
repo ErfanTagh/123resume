@@ -14,7 +14,7 @@ export interface ResumeScore {
   overallScore: number; // 0-10 scale
   categories: ScoreCategory[];
   suggestions: string[];
-  /** Closing narrative from server-side AI (DeepSeek); empty for local heuristic. */
+  /** Closing narrative from server-side AI (Claude); empty for local heuristic. */
   overallFeedback?: string;
   /** True when the feedback text was written by the AI rather than taken from the canned messages below. */
   fromAi?: boolean;

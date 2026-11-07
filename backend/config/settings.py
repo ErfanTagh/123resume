@@ -99,70 +99,52 @@ ADMIN_NOTIFICATION_EMAIL = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'contact@123res
 # Operator inbox for API error alerts.
 ERROR_ALERT_EMAIL = os.getenv('ERROR_ALERT_EMAIL', '').strip() or ADMIN_NOTIFICATION_EMAIL
 
-# DeepSeek — OpenAI-compatible HTTP API (cheaper than GPT for many workloads).
-# Keys: https://platform.deepseek.com/ — set DEEPSEEK_API_KEY in .env (never commit it).
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '').strip()
-DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com').strip().rstrip('/')
-# Current IDs (GET /models, Sep 2026): deepseek-flash, deepseek-v4-pro.
-# `deepseek-chat` is an unlisted legacy alias DeepSeek routes to deepseek-flash —
-# always use a real name so a retired alias can't take every AI feature down.
-#
-# Fast by design: users wait on these calls. With reasoning, a 2-page resume
-# took ~45-53s to parse and ~38s to score, so reasoning stays off.
-DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-v4-pro').strip()
-# Both models reason by default when called by name, so "off" must be sent
-# explicitly (see deepseek_request_options).
-DEEPSEEK_THINKING = os.getenv('DEEPSEEK_THINKING', '').strip().lower() in ('1', 'true', 'yes', 'on')
-# Only used when DEEPSEEK_THINKING is on: reasoning tokens count against
-# max_tokens, and every per-feature cap below is sized for the visible answer
-# alone, so this is added on top (see deepseek_max_tokens).
-DEEPSEEK_REASONING_TOKEN_BUDGET = int(os.getenv('DEEPSEEK_REASONING_TOKEN_BUDGET', '16000'))
-# Per-attempt limit for one DeepSeek request. With one retry the worst case is
-# ~2x this, which must stay under gunicorn's --timeout and nginx's
-# proxy_read_timeout (both 60s) so a stuck call fails cleanly instead of the
-# worker being killed mid-request.
-DEEPSEEK_TIMEOUT_SECONDS = float(os.getenv('DEEPSEEK_TIMEOUT_SECONDS', '28'))
-DEEPSEEK_MAX_OUTPUT_TOKENS = int(os.getenv('DEEPSEEK_MAX_OUTPUT_TOKENS', '1024'))
-# Larger budget for structured resume scoring JSON
-DEEPSEEK_RESUME_SCORE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_SCORE_MAX_TOKENS', '2048'))
-# Resume upload → structured JSON (large completion). A 2-page resume came back
-# cut off at 4096; Claude writes ~200 tokens/s, so 9000 fits the time budget below.
-DEEPSEEK_RESUME_PARSE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_PARSE_MAX_TOKENS', '9000'))
-# One attempt for the parse call (no retry): it must finish under the 60s
-# gunicorn/nginx limits, and a long answer can't fit twice.
-RESUME_PARSE_TIMEOUT_SECONDS = float(os.getenv('RESUME_PARSE_TIMEOUT_SECONDS', '50'))
-# Resume ↔ job match (JSON score + short rationale)
-DEEPSEEK_JOB_MATCH_MAX_TOKENS = int(os.getenv('DEEPSEEK_JOB_MATCH_MAX_TOKENS', '1024'))
-# Whole-resume translation EN<->DE (batch of prose fields → JSON)
-DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS', '4096'))
-# "Improve my resume" batch rewrite JSON — needs headroom so long/German resumes
-# don't truncate the JSON (which broke parsing at the old 2048 cap).
-DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS', '8192'))
-# When true, log raw model text + parsed/structured result (may contain PII)
-DEEPSEEK_LOG_AI_RESPONSES = os.getenv('DEEPSEEK_LOG_AI_RESPONSES', '').strip().lower() in (
-    '1', 'true', 'yes', 'on',
-)
-DEEPSEEK_LOG_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_MAX_CHARS', '12000'))
-DEEPSEEK_LOG_RESULT_MAX_CHARS = int(os.getenv('DEEPSEEK_LOG_RESULT_MAX_CHARS', '32000'))
-
-# Claude (Anthropic API) answers every AI feature. AI_PROVIDER=deepseek
-# switches back to DeepSeek with a one-line .env change and a restart.
-# The DEEPSEEK_* timeout, token caps and logging settings above apply to both.
-AI_PROVIDER = os.getenv('AI_PROVIDER', 'anthropic').strip().lower()
+# Claude (Anthropic API) answers every AI feature (see api/ai_client.py).
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '').strip()
 # Only for a key that is not scoped to a workspace (the API then demands this header).
 ANTHROPIC_WORKSPACE_ID = os.getenv('ANTHROPIC_WORKSPACE_ID', '').strip()
 ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-5-5').strip()
-# low | medium | high. Thinking is kept off for speed (see deepseek_chat).
+# low | medium | high. Thinking is kept off for speed (see ai_client).
 ANTHROPIC_EFFORT = os.getenv('ANTHROPIC_EFFORT', 'medium').strip().lower()
 # If Sonnet 5.5's safety classifier declines a request, the API retries it on
 # Anthropic's recommended fallback model inside the same call.
 ANTHROPIC_FALLBACKS = os.getenv('ANTHROPIC_FALLBACKS', 'on').strip().lower() in ('1', 'true', 'yes', 'on')
+AI_MODEL = ANTHROPIC_MODEL
+# Views check this before calling the AI.
+AI_ENABLED = bool(ANTHROPIC_API_KEY)
 
-USE_CLAUDE = AI_PROVIDER == 'anthropic'
-AI_MODEL = ANTHROPIC_MODEL if USE_CLAUDE else DEEPSEEK_MODEL
-# Whether the active provider has a key. Views check this before calling the AI.
-AI_ENABLED = bool(ANTHROPIC_API_KEY if USE_CLAUDE else DEEPSEEK_API_KEY)
+# Per-attempt limit for one AI request. With one retry the worst case is
+# ~2x this, which must stay under gunicorn's --timeout and nginx's
+# proxy_read_timeout (both 60s) so a stuck call fails cleanly instead of the
+# worker being killed mid-request.
+AI_TIMEOUT_SECONDS = float(os.getenv('AI_TIMEOUT_SECONDS', '28'))
+# Output token caps per feature. Claude writes ~200 tokens/s, so a cap is also a
+# time budget: calls with large answers get one long attempt (see *_TIMEOUT_SECONDS).
+AI_MAX_OUTPUT_TOKENS = int(os.getenv('AI_MAX_OUTPUT_TOKENS', '1024'))
+# Larger budget for structured resume scoring JSON
+AI_RESUME_SCORE_MAX_TOKENS = int(os.getenv('AI_RESUME_SCORE_MAX_TOKENS', '2048'))
+# Resume upload → structured JSON (large completion). A 2-page resume came back
+# cut off at 4096, so 9000 fits the time budget below.
+AI_RESUME_PARSE_MAX_TOKENS = int(os.getenv('AI_RESUME_PARSE_MAX_TOKENS', '9000'))
+# One attempt for the parse call (no retry): it must finish under the 60s
+# gunicorn/nginx limits, and a long answer can't fit twice.
+RESUME_PARSE_TIMEOUT_SECONDS = float(os.getenv('RESUME_PARSE_TIMEOUT_SECONDS', '50'))
+# Resume ↔ job match (JSON score + short rationale)
+AI_JOB_MATCH_MAX_TOKENS = int(os.getenv('AI_JOB_MATCH_MAX_TOKENS', '1024'))
+# Whole-resume translation (every text field → JSON). A full two-page resume
+# (~150 fields) came back cut off at 4096.
+AI_RESUME_TRANSLATE_MAX_TOKENS = int(os.getenv('AI_RESUME_TRANSLATE_MAX_TOKENS', '8192'))
+# One attempt for the translate call, like parsing: a long answer can't fit twice.
+RESUME_TRANSLATE_TIMEOUT_SECONDS = float(os.getenv('RESUME_TRANSLATE_TIMEOUT_SECONDS', '50'))
+# "Improve my resume" batch rewrite JSON — needs headroom so long/German resumes
+# don't truncate the JSON (which broke parsing at the old 2048 cap).
+AI_RESUME_IMPROVE_MAX_TOKENS = int(os.getenv('AI_RESUME_IMPROVE_MAX_TOKENS', '8192'))
+# When true, log raw model text + parsed/structured result (may contain PII)
+AI_LOG_RESPONSES = os.getenv('AI_LOG_RESPONSES', '').strip().lower() in (
+    '1', 'true', 'yes', 'on',
+)
+AI_LOG_MAX_CHARS = int(os.getenv('AI_LOG_MAX_CHARS', '12000'))
+AI_LOG_RESULT_MAX_CHARS = int(os.getenv('AI_LOG_RESULT_MAX_CHARS', '32000'))
 
 # Job suggestions: LinkedIn job search through SearchApi.io (1 credit per search).
 # Results are cached and shared between users; the limits count uncached searches.
@@ -220,7 +202,7 @@ DATABASES = {
 
 # Shared, process-safe cache. Used to memoize AI resume scores so an identical
 # resume always returns the same score — across all gunicorn workers and repeat
-# presses — instead of a fresh (jittery) DeepSeek call each time. File-based so
+# presses — instead of a fresh (jittery) AI call each time. File-based so
 # it needs no extra service (Redis/Memcached) and is shared within the container.
 CACHES = {
     'default': {

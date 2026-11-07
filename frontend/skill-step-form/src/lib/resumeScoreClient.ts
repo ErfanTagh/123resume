@@ -90,7 +90,7 @@ export type GetResumeScoreOptions = {
 };
 
 /**
- * For logged-in users, scores via DeepSeek on the server (rubric-aware).
+ * For logged-in users, scores via Claude on the server (rubric-aware).
  * Falls back to local heuristic when `fallbackToLocal` is true (default), or user is a guest.
  */
 export async function getResumeScoreWithOptionalAI(

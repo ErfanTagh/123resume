@@ -1,5 +1,5 @@
 """
-Resume–job fit scoring via DeepSeek (structured JSON).
+Resume–job fit scoring via Claude (structured JSON).
 """
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from typing import Any, Dict
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def _extract_json_object(text: str) -> Dict[str, Any]:
     return json.loads(text)
 
 
-def match_job_with_deepseek(
+def match_job_with_ai(
     resume_text: str,
     job_title: str,
     job_description: str,
@@ -67,14 +67,14 @@ Resume text:
 {rt}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(settings.DEEPSEEK_JOB_MATCH_MAX_TOKENS),
+        max_tokens=settings.AI_JOB_MATCH_MAX_TOKENS,
         temperature=0.15,
     )
     raw = (completion.choices[0].message.content or "").strip()
@@ -108,5 +108,5 @@ Resume text:
         "similarity": sim,
         "resume_summary": summary,
     }
-    log_deepseek_exchange("job_match", completion, raw, out)
+    log_ai_exchange("job_match", completion, raw, out)
     return out

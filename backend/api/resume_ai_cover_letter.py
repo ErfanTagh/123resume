@@ -10,8 +10,8 @@ from typing import Any, Dict
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .ai_language import language_name, normalize_output_language
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def _parse_letter_from_model(raw: str) -> str:
     raise ValueError("empty cover letter in model response")
 
 
-def generate_cover_letter_with_deepseek(
+def generate_cover_letter_with_ai(
     resume_text: str,
     job_title: str,
     job_description: str,
@@ -184,17 +184,17 @@ Candidate resume (source of truth for facts):
 {rt}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(min(
-            int(getattr(settings, "DEEPSEEK_COVER_LETTER_MAX_TOKENS", 2048)),
+        max_tokens=min(
+            int(getattr(settings, "AI_COVER_LETTER_MAX_TOKENS", 2048)),
             2048,
-        )),
+        ),
         # Higher temperature for more natural, human-sounding variation (less robotic).
         temperature=0.8,
     )
@@ -209,5 +209,5 @@ Candidate resume (source of truth for facts):
         len(rt),
         len(letter),
     )
-    log_deepseek_exchange("cover_letter_generate", completion, raw, {"cover_letter": letter[:500]})
+    log_ai_exchange("cover_letter_generate", completion, raw, {"cover_letter": letter[:500]})
     return letter

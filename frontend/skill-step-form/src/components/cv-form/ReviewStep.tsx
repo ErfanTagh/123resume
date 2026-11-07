@@ -21,7 +21,7 @@ interface ReviewStepProps {
   onEditStep: (step: number) => void;
   resumeScoreFromNav?: ResumeScore;
   resumeScoreLoadingFromNav?: boolean;
-  /** Logged-in: force a new DeepSeek run (Re-analyze). */
+  /** Logged-in: force a new Claude run (Re-analyze). */
   onReanalyzeAiScore?: () => void;
   reanalyzeAiScoreLoading?: boolean;
 }

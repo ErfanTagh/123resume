@@ -126,23 +126,43 @@ export const RESUME_SECTION_HEADINGS: Record<string, SectionHeadings> = {
   },
 };
 
+// Language levels (`resume.proficiency.*`), in the resume's language too, so a
+// translated resume doesn't show levels in the app's UI language.
+const PROFICIENCY_PREFIX = "resume.proficiency.";
+
+export const RESUME_PROFICIENCY_LABELS: Record<string, Record<string, string>> = {
+  en: { native: "Native", fluent: "Fluent", advanced: "Advanced", intermediate: "Intermediate", basic: "Basic" },
+  de: { native: "Muttersprache", fluent: "Fließend", advanced: "Fortgeschritten", intermediate: "Mittelstufe", basic: "Grundkenntnisse" },
+  es: { native: "Nativo", fluent: "Fluido", advanced: "Avanzado", intermediate: "Intermedio", basic: "Básico" },
+  fr: { native: "Langue maternelle", fluent: "Courant", advanced: "Avancé", intermediate: "Intermédiaire", basic: "Notions de base" },
+  it: { native: "Madrelingua", fluent: "Fluente", advanced: "Avanzato", intermediate: "Intermedio", basic: "Base" },
+  pt: { native: "Nativo", fluent: "Fluente", advanced: "Avançado", intermediate: "Intermediário", basic: "Básico" },
+  tr: { native: "Ana dil", fluent: "Akıcı", advanced: "İleri", intermediate: "Orta", basic: "Temel" },
+};
+
 type UiTranslate = (key: string, ...args: unknown[]) => string;
 
 /**
- * Wrap the UI translator so that `resume.sections.*` keys resolve to the
- * resume's own language (when set and supported); every other key falls through
- * to the UI translator unchanged. Templates swap their `t` for this.
+ * Wrap the UI translator so that `resume.sections.*` and `resume.proficiency.*`
+ * keys resolve to the resume's own language (when set and supported); every
+ * other key falls through to the UI translator unchanged. Templates swap their
+ * `t` for this.
  */
 export const makeResumeT = (
   uiT: UiTranslate,
   resumeLanguage?: string | null,
 ): UiTranslate => {
   const table = resumeLanguage ? RESUME_SECTION_HEADINGS[resumeLanguage] : undefined;
-  if (!table) return uiT;
+  const levels = resumeLanguage ? RESUME_PROFICIENCY_LABELS[resumeLanguage] : undefined;
+  if (!table && !levels) return uiT;
   return (key: string, ...args: unknown[]): string => {
-    if (typeof key === "string" && key.startsWith(SECTION_PREFIX)) {
+    if (typeof key === "string" && table && key.startsWith(SECTION_PREFIX)) {
       const heading = table[key.slice(SECTION_PREFIX.length)];
       if (heading) return heading;
+    }
+    if (typeof key === "string" && levels && key.startsWith(PROFICIENCY_PREFIX)) {
+      const level = levels[key.slice(PROFICIENCY_PREFIX.length)];
+      if (level) return level;
     }
     return uiT(key, ...args);
   };

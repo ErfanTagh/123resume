@@ -1,7 +1,7 @@
 """
-Opt-in logging of DeepSeek / OpenAI-style completions (raw + parsed).
+Opt-in logging of AI completions (raw + parsed).
 
-Enable with DEEPSEEK_LOG_AI_RESPONSES=1 in the environment. Logs may contain
+Enable with AI_LOG_RESPONSES=1 in the environment. Logs may contain
 PII when prompts/responses include resume or job text — use only in dev/staging
 or short-lived production debugging.
 """
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def ai_response_logging_enabled() -> bool:
-    return bool(getattr(settings, "DEEPSEEK_LOG_AI_RESPONSES", False))
+    return bool(getattr(settings, "AI_LOG_RESPONSES", False))
 
 
 def _usage_str(completion: Any) -> str:
@@ -39,7 +39,7 @@ def _usage_str(completion: Any) -> str:
         return ""
 
 
-def log_deepseek_exchange(
+def log_ai_exchange(
     feature: str,
     completion: Any,
     raw_text: str,
@@ -50,8 +50,8 @@ def log_deepseek_exchange(
     """
     if not ai_response_logging_enabled():
         return
-    max_raw = int(getattr(settings, "DEEPSEEK_LOG_MAX_CHARS", 12000))
-    max_result = int(getattr(settings, "DEEPSEEK_LOG_RESULT_MAX_CHARS", 32000))
+    max_raw = int(getattr(settings, "AI_LOG_MAX_CHARS", 12000))
+    max_result = int(getattr(settings, "AI_LOG_RESULT_MAX_CHARS", 32000))
     model = getattr(completion, "model", None) or getattr(settings, "AI_MODEL", "")
     usage = _usage_str(completion)
     raw = raw_text or ""

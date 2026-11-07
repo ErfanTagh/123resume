@@ -35,12 +35,12 @@ services:
       - PYTHONUNBUFFERED=1
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,backend:8000
       # Local dev: print AI_RAW / AI_RESULT lines to container stdout (docker logs -f resume_backend)
-      - DEEPSEEK_LOG_AI_RESPONSES=1
+      - AI_LOG_RESPONSES=1
     depends_on:
       mongodb:
         condition: service_healthy
-    # Ensure openai SDK exists (avoids ModuleNotFoundError if image predates Dockerfile openai line)
-    command: sh -c "pip install -q 'openai>=1.54.0' 'anthropic>=1.11.0,<2' 'prometheus-client>=0.26,<1' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
+    # Ensure the AI and metrics SDKs exist (avoids ModuleNotFoundError if the image is older)
+    command: sh -c "pip install -q 'anthropic>=1.11.0,<2' 'prometheus-client>=0.26,<1' && python manage.py migrate 2>&1 | grep -v 'Operations to perform' | grep -v 'Running migrations' | grep -v 'No migrations to apply' | grep -v 'Apply all migrations' || true && PYTHONUNBUFFERED=1 python manage.py runserver 0.0.0.0:8000"
     networks:
       - resume-network
 

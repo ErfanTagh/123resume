@@ -1,5 +1,5 @@
 """
-Parse raw resume text into structured CV JSON using DeepSeek (OpenAI-compatible API).
+Parse raw resume text into structured CV JSON using Claude.
 Falls back to regex parser in parse_views when this raises or when no API key is set.
 """
 from __future__ import annotations
@@ -12,8 +12,8 @@ from typing import Any, Dict, List
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .resume_parser.utils import get_empty_structure
 
 logger = logging.getLogger(__name__)
@@ -340,9 +340,9 @@ Dates: YYYY-MM when month and year are known, YYYY when only the year is; leave 
 Do not invent employers, degrees, or dates not supported by the text."""
 
 
-def parse_resume_text_with_deepseek(text: str) -> Dict[str, Any]:
+def parse_resume_text_with_ai(text: str) -> Dict[str, Any]:
     """
-    Full pipeline: truncate → DeepSeek → normalize.
+    Full pipeline: truncate → Claude → normalize.
     Raises on configuration or model/JSON errors (caller may fall back to regex parser).
     """
     if not settings.AI_ENABLED:
@@ -385,14 +385,14 @@ sectionOrder: the sections in the order they appear in the resume.
 
     user_msg = f"{schema_hint}\n\n--- RESUME TEXT ---\n{t}"
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": PARSE_SYSTEM},
             {"role": "user", "content": user_msg},
         ],
-        max_tokens=deepseek_max_tokens(settings.DEEPSEEK_RESUME_PARSE_MAX_TOKENS),
+        max_tokens=settings.AI_RESUME_PARSE_MAX_TOKENS,
         temperature=0.05,
         timeout=settings.RESUME_PARSE_TIMEOUT_SECONDS,
     )
@@ -414,5 +414,5 @@ sectionOrder: the sections in the order they appear in the resume.
         parsed = _extract_json_object(_close_truncated_json(raw_text))
 
     normalized = normalize_ai_parse(parsed)
-    log_deepseek_exchange("resume_parse", completion, raw_text, normalized)
+    log_ai_exchange("resume_parse", completion, raw_text, normalized)
     return normalized

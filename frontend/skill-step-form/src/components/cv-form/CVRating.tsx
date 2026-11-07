@@ -28,7 +28,7 @@ interface CVRatingProps {
     overallFeedback?: string;
     fromAi?: boolean;
   };
-  /** True while DeepSeek score is in flight. */
+  /** True while Claude score is in flight. */
   ratingLoading?: boolean;
 }
 

@@ -25,7 +25,7 @@ def parse_resume(request):
     Query:
     - parser=auto (default): AI JSON extraction when an AI provider key is set,
       otherwise the classic rules-based parser; on AI failure, falls back to rules.
-    - parser=ai: DeepSeek only (502 if AI fails).
+    - parser=ai: Claude only (502 if AI fails).
     - parser=rules: classic parser only.
 
     Body:
@@ -90,17 +90,17 @@ def parse_resume(request):
 
         if use_ai and parser_mode != "rules":
             try:
-                from ..resume_ai_parsing import parse_resume_text_with_deepseek
+                from ..resume_ai_parsing import parse_resume_text_with_ai
 
-                parsed_data = parse_resume_text_with_deepseek(text)
+                parsed_data = parse_resume_text_with_ai(text)
                 logger.info(
-                    "Resume parse via DeepSeek: work=%s edu=%s skills=%s",
+                    "Resume parse via Claude: work=%s edu=%s skills=%s",
                     len(parsed_data.get("workExperience") or []),
                     len(parsed_data.get("education") or []),
                     len(parsed_data.get("skills") or []),
                 )
             except Exception as e:
-                logger.warning("DeepSeek resume parse failed, using rules parser: %s", e)
+                logger.warning("AI resume parse failed, using rules parser: %s", e)
                 if parser_mode == "ai":
                     return Response(
                         {

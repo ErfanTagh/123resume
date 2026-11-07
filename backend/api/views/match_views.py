@@ -1,5 +1,5 @@
 """
-Resume-Job Matching: DeepSeek (default when configured) with embedding fallback.
+Resume-Job Matching: Claude (default when configured) with embedding fallback.
 """
 import logging
 import os
@@ -213,7 +213,7 @@ def match_resume_to_job(request, resume_id):
     Query:
     - matcher=auto (default): AI when an AI provider key is set; else embeddings;
       on AI failure in auto mode, falls back to embeddings.
-    - matcher=ai: DeepSeek only (502 on failure).
+    - matcher=ai: Claude only (502 on failure).
     - matcher=embeddings: sentence-transformers only.
 
     Returns: resume_id, job_title, job_description, similarity (0–1),
@@ -255,11 +255,11 @@ def match_resume_to_job(request, resume_id):
 
         if use_ai and matcher != "embeddings":
             try:
-                from ..resume_ai_job_match import match_job_with_deepseek
+                from ..resume_ai_job_match import match_job_with_ai
 
-                ai = match_job_with_deepseek(resume_text, job_title, job_description)
+                ai = match_job_with_ai(resume_text, job_title, job_description)
                 logger.info(
-                    "Job match via DeepSeek resume=%s match_pct=%s",
+                    "Job match via Claude resume=%s match_pct=%s",
                     resume_id,
                     ai.get("match_percentage"),
                 )
@@ -274,7 +274,7 @@ def match_resume_to_job(request, resume_id):
                     }
                 )
             except Exception as e:
-                logger.warning("DeepSeek job match failed: %s", e)
+                logger.warning("AI job match failed: %s", e)
                 if matcher == "ai":
                     return Response(
                         {
@@ -310,7 +310,7 @@ def match_resume_to_job(request, resume_id):
 @permission_classes([IsAuthenticated])
 def generate_resume_cover_letter(request, resume_id):
     """
-    Generate a tailored cover letter (DeepSeek) from a saved resume and job posting.
+    Generate a tailored cover letter (Claude) from a saved resume and job posting.
 
     POST body:
       - title (optional)
@@ -346,7 +346,7 @@ def generate_resume_cover_letter(request, resume_id):
             )
 
         from ..resume_ai_scoring import normalize_output_language
-        from ..resume_ai_cover_letter import generate_cover_letter_with_deepseek
+        from ..resume_ai_cover_letter import generate_cover_letter_with_ai
 
         out_lang = normalize_output_language(
             (request.data.get("output_language") or request.data.get("outputLanguage") or "en"),
@@ -360,7 +360,7 @@ def generate_resume_cover_letter(request, resume_id):
         )
 
         try:
-            letter = generate_cover_letter_with_deepseek(
+            letter = generate_cover_letter_with_ai(
                 resume_text,
                 str(job_title or ""),
                 str(job_description or ""),

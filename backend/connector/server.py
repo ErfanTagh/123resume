@@ -299,10 +299,10 @@ async def suggest_jobs(resume_id: str, keywords: str = "", location: str = "") -
 async def score_resume(resume_id: str) -> dict:
     """123Resume's AI review: an interview-chance score from 1 to 10 for the resume's target
     role, feedback per area and the top suggestions. Takes about 5-10 seconds."""
-    from api.resume_ai_scoring import score_resume_with_deepseek
+    from api.resume_ai_scoring import score_resume_with_ai
 
     payload = await _run(store.scoring_payload, resume_id)
-    return await anyio.to_thread.run_sync(lambda: score_resume_with_deepseek(payload, "en"))
+    return await anyio.to_thread.run_sync(lambda: score_resume_with_ai(payload, "en"))
 
 
 @mcp.custom_route("/connector/login", methods=["GET"])

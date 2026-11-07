@@ -1,5 +1,5 @@
 """
-Suggest a new work-experience bullet via DeepSeek (structured JSON).
+Suggest a new work-experience bullet via Claude (structured JSON).
 """
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from typing import Any, Dict, List
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
@@ -147,14 +147,14 @@ Existing bullets:
 {bullets_block}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(min(settings.DEEPSEEK_MAX_OUTPUT_TOKENS, 512)),
+        max_tokens=min(settings.AI_MAX_OUTPUT_TOKENS, 512),
         temperature=0.35,
     )
     raw = (completion.choices[0].message.content or "").strip()
@@ -169,5 +169,5 @@ Existing bullets:
         len(bullet),
     )
 
-    log_deepseek_exchange("work_bullet_suggest", completion, raw, {"bullet": bullet})
+    log_ai_exchange("work_bullet_suggest", completion, raw, {"bullet": bullet})
     return bullet

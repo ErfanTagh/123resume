@@ -1,5 +1,5 @@
 """
-Batch "Improve my resume" via DeepSeek.
+Batch "Improve my resume" via Claude.
 
 Rewrites ONLY free-text fields the user can edit in the builder:
   - personalInfo.summary            (professional summary)
@@ -26,8 +26,8 @@ from typing import Any, Dict, List
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 from .ai_language import normalize_output_language, output_language_rule
 
 logger = logging.getLogger(__name__)
@@ -376,16 +376,16 @@ Roles, projects and current skills (for additions; "role"/"project" are the numb
 {json.dumps({"roles": ctx["roles"], "projects": ctx["projects"], "skills": ctx["skills"]}, ensure_ascii=False)}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
         # Long / German resumes produce many improved fields; a low cap truncated
         # the JSON mid-string and broke parsing. Give ample room and force JSON mode.
-        max_tokens=deepseek_max_tokens(getattr(settings, "DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS", 8192)),
+        max_tokens=getattr(settings, "AI_RESUME_IMPROVE_MAX_TOKENS", 8192),
         temperature=0.3,
         response_format={"type": "json_object"},
     )
@@ -432,7 +432,7 @@ Roles, projects and current skills (for additions; "role"/"project" are the numb
         len(items),
         len(changes),
     )
-    log_deepseek_exchange(
+    log_ai_exchange(
         "resume_improve",
         completion,
         raw,

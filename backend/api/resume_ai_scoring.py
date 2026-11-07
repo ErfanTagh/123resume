@@ -1,5 +1,5 @@
 """
-Server-side resume scoring via DeepSeek using a fixed rubric and JSON output.
+Server-side resume scoring via Claude using a fixed rubric and JSON output.
 """
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from django.conf import settings
 from django.core.cache import cache
 
 from .ai_language import normalize_output_language, output_language_rule  # noqa: F401 (re-exported)
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 
 logger = logging.getLogger(__name__)
 
@@ -294,7 +294,7 @@ reasons unrelated to these edits.
 """
 
 
-def score_resume_with_deepseek(
+def score_resume_with_ai(
     resume: Dict[str, Any],
     output_language: str = "en",
     previous: Optional[Dict[str, Any]] = None,
@@ -379,10 +379,10 @@ raise the interview chance. Each is **one** line starting with "- " (max ~110 ch
         f"resume_json:\n{payload}"
     )
 
-    client = get_deepseek_client()
-    max_out = settings.DEEPSEEK_RESUME_SCORE_MAX_TOKENS
+    client = get_ai_client()
+    max_out = settings.AI_RESUME_SCORE_MAX_TOKENS
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {
                 "role": "system",
@@ -393,7 +393,7 @@ raise the interview chance. Each is **one** line starting with "- " (max ~110 ch
             },
             {"role": "user", "content": user_msg},
         ],
-        max_tokens=deepseek_max_tokens(max_out),
+        max_tokens=max_out,
         # Run-to-run jitter is handled by the content cache: same resume => same score.
         temperature=0,
     )
@@ -436,7 +436,7 @@ raise the interview chance. Each is **one** line starting with "- " (max ~110 ch
         "suggestions": suggestions,
         "overall_feedback": overall_feedback,
     }
-    log_deepseek_exchange("resume_score", completion, raw_text, result)
+    log_ai_exchange("resume_score", completion, raw_text, result)
 
     # Cache so the same resume always returns this exact score on future requests.
     try:

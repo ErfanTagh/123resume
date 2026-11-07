@@ -1,5 +1,5 @@
 """
-Translate a whole resume into a target language via DeepSeek.
+Translate a whole resume into a target language via Claude.
 
 The user keeps their original resume; the caller saves the returned data as a
 NEW resume (or applies it in place in the editor). We translate EVERY
@@ -8,8 +8,9 @@ locations, skills, technologies, competencies, courses, certificate names,
 language names, and all prose (summaries, descriptions, bullets, highlights).
 
 We deliberately DO NOT translate structural or identifier fields: the person's
-name, email, phone, links/URLs, dates, credential IDs, the language proficiency
-key (a canonical value rendered via i18n), section order, template, and styling.
+name, email, phone, links/URLs, dates, credential IDs, section order, template,
+and styling. Language levels become a canonical key (rendered in the resume's
+language by the templates) when recognized; other free-text levels are translated.
 
 The caller passes an explicit `target_language`; the model translates every
 collected field into that language regardless of the source language. Well-known
@@ -25,8 +26,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 from django.conf import settings
 
-from .ai_response_log import log_deepseek_exchange
-from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .ai_response_log import log_ai_exchange
+from .ai_client import ai_request_options, get_ai_client
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,7 @@ _KIND_TO_CATEGORY: Dict[str, str] = {
     "organization": "organizations",
     "location": "locations",
     "language_name": "languages",
+    "language_level": "languages",
     "interest": "interests",
 }
 
@@ -128,6 +130,48 @@ def _norm(text: Any) -> str:
     return str(text or "").strip()
 
 
+# Language levels are stored as a canonical key the templates render in the
+# resume's own language. Older resumes hold free text ("Fließend",
+# "Muttersprache"): a recognized label becomes its key, anything else is
+# translated. Keep in sync with PROFICIENCY_ALIASES in
+# src/lib/languageProficiency.ts.
+PROFICIENCY_KEYS = ("native", "fluent", "advanced", "intermediate", "basic")
+PROFICIENCY_ALIASES: Dict[str, str] = {
+    **{a: "native" for a in (
+        "native", "native speaker", "mother tongue", "muttersprache", "muttersprachlich",
+        "muttersprachler", "muttersprachlerin", "nativo", "nativa", "lengua materna",
+        "langue maternelle", "madrelingua", "lingua madre", "língua materna", "ana dil", "anadil",
+    )},
+    **{a: "fluent" for a in (
+        "fluent", "business fluent", "fließend", "fliessend", "verhandlungssicher", "fluido", "fluida",
+        "courant", "couramment", "fluente", "akıcı", "akici",
+    )},
+    **{a: "advanced" for a in (
+        "advanced", "fortgeschritten", "sehr gut", "sehr gute kenntnisse", "avanzado", "avanzada",
+        "avancé", "avancée", "avanzato", "avançado", "ileri", "ileri düzey",
+    )},
+    **{a: "intermediate" for a in (
+        "intermediate", "mittelstufe", "gut", "gute kenntnisse", "intermedio", "intermedia",
+        "intermédiaire", "intermediário", "intermediario", "orta", "orta düzey",
+    )},
+    **{a: "basic" for a in (
+        "basic", "beginner", "elementary", "grundkenntnisse", "grundlagen", "anfänger", "básico",
+        "basico", "básica", "débutant", "notions", "notions de base", "base", "di base", "temel",
+        "başlangıç",
+    )},
+}
+# CEFR levels (A1 … C2) read the same in every language
+_CEFR = re.compile(r"^[abc][12][+-]?$", re.IGNORECASE)
+
+
+def proficiency_key(value: Any) -> Optional[str]:
+    """The canonical key for a stored level, or None when it isn't a known label."""
+    text = _norm(value).lower()
+    if text in PROFICIENCY_KEYS:
+        return text
+    return PROFICIENCY_ALIASES.get(text)
+
+
 def _get_block(resume: Dict[str, Any], camel: str, snake: str) -> Any:
     val = resume.get(camel)
     if val is None:
@@ -155,8 +199,8 @@ def _collect_slots(resume: Dict[str, Any]) -> List[_Slot]:
     model's response even if the model drops some.
 
     Structural/identifier fields (name, email, phone, links, dates, credential
-    ids, proficiency key, template, styling, section order) are intentionally
-    skipped.
+    ids, template, styling, section order) are intentionally skipped. Language
+    levels that are known labels are set to their canonical key here instead.
     """
     slots: List[_Slot] = []
     # Sentinel raised internally once the cap is hit, to unwind the whole walk.
@@ -269,7 +313,9 @@ def _collect_slots(resume: Dict[str, Any]) -> List[_Slot]:
             add_field(pub, "publisher", "organization")
             add_field(pub, "description", "publication_description")
 
-    # Languages: translate the language NAME; keep the proficiency key untouched
+    # Languages: translate the language NAME. A level the templates know becomes
+    # its canonical key (they render it in the resume's language); other free
+    # text is translated; CEFR levels stay as they are.
     languages = resume.get("languages")
     if isinstance(languages, list):
         for lang in languages:
@@ -277,6 +323,12 @@ def _collect_slots(resume: Dict[str, Any]) -> List[_Slot]:
                 break
             if isinstance(lang, dict):
                 add_field(lang, "language", "language_name")
+                level = _norm(lang.get("proficiency"))
+                key = proficiency_key(level)
+                if key:
+                    lang["proficiency"] = key
+                elif level and not _CEFR.match(level):
+                    add_field(lang, "proficiency", "language_level")
 
     # Skills
     add_list(resume.get("skills"), "skill", "skill")
@@ -379,7 +431,7 @@ Each field has a "kind" — keep the same format:
 - "work_description" / "project_description" / "education_description": keep concise sentences.
 - "work_bullet" / "project_highlight": ONE tight accomplishment line, no leading "- ".
 - "title" (job/degree/project titles), "organization" (company/school), "location", "field",
-  "skill", "skill_group", "course", "certificate_name", "language_name", "interest": short phrase —
+  "skill", "skill_group", "course", "certificate_name", "language_name", "language_level", "interest": short phrase —
   translate to the natural equivalent term, but keep well-known brand/technology names as-is.
 
 Return JSON exactly as:
@@ -390,14 +442,16 @@ Fields to translate (JSON):
 {json.dumps(model_items, ensure_ascii=False)}
 """.strip()
 
-    client = get_deepseek_client()
+    client = get_ai_client()
     completion = client.chat.completions.create(
-        **deepseek_request_options(),
+        **ai_request_options(),
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(getattr(settings, "DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS", 4096)),
+        max_tokens=settings.AI_RESUME_TRANSLATE_MAX_TOKENS,
+        # One long attempt: a full resume's answer can't fit twice in the 60s budget
+        timeout=settings.RESUME_TRANSLATE_TIMEOUT_SECONDS,
         temperature=0.2,
     )
     raw = (completion.choices[0].message.content or "").strip()
@@ -432,7 +486,7 @@ Fields to translate (JSON):
         len(slots),
         applied,
     )
-    log_deepseek_exchange(
+    log_ai_exchange(
         "resume_translate",
         completion,
         raw,

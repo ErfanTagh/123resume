@@ -5,6 +5,7 @@ export const ROW_ACTION_TONES = {
   primary: "bg-primary/10 text-primary ring-primary/20 hover:bg-primary/20",
   sky: "bg-sky-500/10 text-sky-600 ring-sky-500/20 hover:bg-sky-500/20 dark:text-sky-400",
   violet: "bg-violet-500/10 text-violet-600 ring-violet-500/20 hover:bg-violet-500/20 dark:text-violet-400",
+  emerald: "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 hover:bg-emerald-500/20 dark:text-emerald-400",
   neutral: "bg-muted text-muted-foreground ring-border hover:bg-muted/70 hover:text-foreground",
   danger: "bg-muted text-muted-foreground ring-border hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30",
 } as const;

@@ -164,6 +164,13 @@ AI_MODEL = ANTHROPIC_MODEL if USE_CLAUDE else DEEPSEEK_MODEL
 # Whether the active provider has a key. Views check this before calling the AI.
 AI_ENABLED = bool(ANTHROPIC_API_KEY if USE_CLAUDE else DEEPSEEK_API_KEY)
 
+# Job suggestions: LinkedIn job search through SearchApi.io (1 credit per search).
+# Results are cached and shared between users; the limits count uncached searches.
+SEARCHAPI_API_KEY = os.getenv('SEARCHAPI_API_KEY', '').strip()
+JOB_SUGGESTIONS_CACHE_HOURS = int(os.getenv('JOB_SUGGESTIONS_CACHE_HOURS', '24'))
+JOB_SUGGESTIONS_USER_DAILY_LIMIT = int(os.getenv('JOB_SUGGESTIONS_USER_DAILY_LIMIT', '1'))
+JOB_SUGGESTIONS_TOTAL_DAILY_LIMIT = int(os.getenv('JOB_SUGGESTIONS_TOTAL_DAILY_LIMIT', '10'))
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

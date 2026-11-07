@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { resumeAPI, Resume } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, AlertCircle, Download, Edit } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Compass, Download, Edit } from 'lucide-react';
 import { downloadResumePDFFromElement } from '@/lib/resumePdfUtils';
 import {
   Dialog,
@@ -171,20 +171,30 @@ export default function ResumeView() {
         {/* Action Buttons - Hide on print */}
         <div className="no-print" style={{ padding: '20px', textAlign: 'center', backgroundColor: 'white', borderBottom: '1px solid #e9ecef' }}>
           <div style={{ maxWidth: '210mm', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button variant="outline" onClick={() => navigate('/resumes')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('common.back')}
+            <Button variant="outline" onClick={() => navigate('/resumes')} aria-label={t('common.back')}>
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('common.back')}</span>
             </Button>
             <div style={{ display: 'flex', gap: '8px' }}>
+              {/* Same green as the compass on the resume list rows */}
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/resumes?tab=job-suggestions&resume=${id}`)}
+                aria-label={t('pages.resumes.actions.matchingJobs') || 'Matching jobs'}
+                className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200"
+              >
+                <Compass className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('pages.resumes.actions.matchingJobs') || 'Matching jobs'}</span>
+              </Button>
               {/* Edit lives here now rather than on every list row — it's the
                   common next step after looking at a resume */}
               <Button onClick={() => navigate(`/create?edit=${id}`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 {t('pages.resumes.actions.edit') || 'Edit'}
               </Button>
-              <Button variant="outline" onClick={handleDownloadPDF}>
-                <Download className="mr-2 h-4 w-4" />
-                {t('common.downloadPDF')}
+              <Button variant="outline" onClick={handleDownloadPDF} aria-label={t('common.downloadPDF')}>
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('common.downloadPDF')}</span>
               </Button>
             </div>
           </div>

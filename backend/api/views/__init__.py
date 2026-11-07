@@ -14,6 +14,7 @@ from .blog_views import blog_post_list, blog_post_detail
 from .sitemap_views import generate_sitemap
 from .match_views import match_resume_to_job, generate_resume_cover_letter, tailor_resume_suggestions
 from .job_application_views import job_application_list, job_application_detail
+from .job_suggestion_views import job_suggestions
 from .feedback_views import send_feedback
 from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet, improve_work_description, improve_resume, translate_resume
 
@@ -33,6 +34,7 @@ __all__ = [
     'tailor_resume_suggestions',
     'job_application_list',
     'job_application_detail',
+    'job_suggestions',
     'send_feedback',
     'resume_assistant_chat',
     'resume_score',

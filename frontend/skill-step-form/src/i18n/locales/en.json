@@ -857,6 +857,7 @@
       "tabs": {
         "resumes": "My Resumes",
         "jobMatching": "Job matching",
+        "jobSuggestions": "Job suggestions",
         "jobTracker": "Job tracker",
         "portfolio": "Portfolio",
         "businessCard": "Card"
@@ -988,6 +989,60 @@
           "saveAsNewFailed": "Could not save a copy."
         }
       },
+      "jobSuggestions": {
+        "subtitle": "Fresh LinkedIn jobs from the last week that fit your resume. Save the ones you like to your job tracker.",
+        "resume": "Resume",
+        "keywords": "Job title or keywords",
+        "keywordsPlaceholder": "e.g. Frontend Developer",
+        "location": "Location",
+        "locationPlaceholder": "City or country",
+        "search": "Search",
+        "searching": "Searching LinkedIn...",
+        "postedThisWeek": "Posted in the last week",
+        "matches": "Fits your skills:",
+        "save": "Save",
+        "saved": "Saved",
+        "unsave": "Remove",
+        "removedTitle": "Removed from your job tracker",
+        "inTracker": "Already in your job tracker",
+        "savedTitle": "Saved to your job tracker",
+        "savedDesc": "Find it under Job tracker, Saved.",
+        "open": "Open on LinkedIn",
+        "source": "Jobs from LinkedIn, updated {time}",
+        "searchesLeft": "New searches left today: {n}",
+        "noResumesTitle": "Create a resume first",
+        "noResumesDesc": "We use your resume's job title and city to find jobs that fit you.",
+        "emptyTitle": "No jobs posted this week for this search",
+        "emptyDesc": "Try a broader job title or another city.",
+        "sort": "Sort",
+        "sortBest": "Best match",
+        "sortNewest": "Newest",
+        "showing": "{shown} of {total} jobs",
+        "filters": {
+          "fitsLevel": "Fits my level",
+          "matchesSkills": "Matches my skills",
+          "last24h": "Last 24 hours",
+          "hideSaved": "Hide saved"
+        },
+        "levels": {
+          "entry": "Entry level",
+          "mid": "Mid level",
+          "senior": "Senior"
+        },
+        "yourLevel": "Your level: {level}, about {years} years of experience",
+        "fitsYourLevel": "Fits your level",
+        "levelAbove": "Senior role",
+        "levelBelow": "Entry-level role",
+        "noFilterMatches": "No jobs match these filters.",
+        "clearFilters": "Clear filters",
+        "errors": {
+          "no_keywords": "Your resume has no job title yet. Type a job title above to search.",
+          "limit_user": "You've used today's searches. Your earlier searches still work, and you get new ones tomorrow.",
+          "limit_total": "Job search is very busy today. Please try again tomorrow.",
+          "not_configured": "Job suggestions aren't available right now.",
+          "upstream": "We couldn't reach LinkedIn right now. Please try again in a few minutes."
+        }
+      },
       "jobTracker": {
         "subtitle": "Keep track of jobs you applied to, which resume you used, and your cover letter for each.",
         "filters": {
@@ -1111,6 +1166,7 @@
         "edit": "Edit",
         "pdf": "PDF",
         "downloadPDF": "Download PDF",
+        "matchingJobs": "Matching jobs",
         "translate": "Translate",
         "translating": "Translating…",
         "rename": "Rename"

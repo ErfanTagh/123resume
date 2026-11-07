@@ -1069,6 +1069,63 @@ export const jobApplicationAPI = {
 };
 
 // ============================================
+// Job suggestions (LinkedIn jobs for a resume)
+// ============================================
+
+export type JobSuggestionErrorCode = 'no_keywords' | 'limit_user' | 'limit_total' | 'not_configured' | 'upstream';
+
+export interface SuggestedJob {
+  jobId: string;
+  title: string;
+  company: string;
+  location: string;
+  postedAt: string;
+  date: string;
+  link: string;
+  companyLogo: string;
+  note: string;
+  /** Resume skills the job title names */
+  matchedSkills: string[];
+  /** From the title: interns/juniors, seniors/leads, or neither */
+  level: 'entry' | 'mid' | 'senior';
+}
+
+export interface JobSuggestionsResult {
+  query: { q: string; location: string; defaultQ: string; defaultLocation: string };
+  /** Experience worked out from the resume's job dates; level is null without dated jobs */
+  profile?: { experienceYears: number; level: 'entry' | 'mid' | 'senior' | null };
+  jobs: SuggestedJob[];
+  fetchedAt?: string;
+  fromCache?: boolean;
+  /** Uncached searches this user can still run today */
+  searchesLeft: number;
+  error?: JobSuggestionErrorCode;
+}
+
+export const jobSuggestionAPI = {
+  /** Without a search, the resume's title and city are used. */
+  get: async (resumeId: string, search?: { q: string; location: string }): Promise<JobSuggestionsResult> => {
+    const params = new URLSearchParams({ resume_id: resumeId });
+    if (search) {
+      params.set('q', search.q);
+      params.set('location', search.location);
+    }
+    const makeRequest = () =>
+      fetch(`${API_BASE_URL}/job-suggestions/?${params}`, {
+        headers: createHeaders(true),
+        cache: 'no-store',
+      });
+    const response = await makeRequest();
+    // A failed search still returns the query and searches left, so the panel can explain it
+    if (!response.ok && response.status !== 401 && response.status !== 404) {
+      const body = await response.json().catch(() => ({}));
+      return snakeToCamelObject({ jobs: [], searches_left: 0, ...body, error: body.error || 'upstream' });
+    }
+    return handleResponse(response, makeRequest);
+  },
+};
+
+// ============================================
 // Blog Post API - Using @123resume/react-blog-system
 // ============================================
 

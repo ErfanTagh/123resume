@@ -857,6 +857,7 @@
       "tabs": {
         "resumes": "Meine Lebensläufe",
         "jobMatching": "Stellenabgleich",
+        "jobSuggestions": "Jobvorschläge",
         "jobTracker": "Bewerbungen",
         "portfolio": "Portfolio",
         "businessCard": "Karte"
@@ -988,6 +989,60 @@
           "saveAsNewFailed": "Kopie konnte nicht gespeichert werden."
         }
       },
+      "jobSuggestions": {
+        "subtitle": "Neue LinkedIn-Jobs aus der letzten Woche, die zu deinem Lebenslauf passen. Speichere die interessanten in deinen Bewerbungen.",
+        "resume": "Lebenslauf",
+        "keywords": "Jobtitel oder Stichwörter",
+        "keywordsPlaceholder": "z. B. Frontend-Entwickler",
+        "location": "Ort",
+        "locationPlaceholder": "Stadt oder Land",
+        "search": "Suchen",
+        "searching": "LinkedIn wird durchsucht...",
+        "postedThisWeek": "In der letzten Woche veröffentlicht",
+        "matches": "Passt zu deinen Skills:",
+        "save": "Speichern",
+        "saved": "Gespeichert",
+        "unsave": "Entfernen",
+        "removedTitle": "Aus deinen Bewerbungen entfernt",
+        "inTracker": "Schon in deinen Bewerbungen",
+        "savedTitle": "In deinen Bewerbungen gespeichert",
+        "savedDesc": "Du findest den Job unter Bewerbungen, Gespeichert.",
+        "open": "Auf LinkedIn öffnen",
+        "source": "Jobs von LinkedIn, aktualisiert {time}",
+        "searchesLeft": "Neue Suchen heute übrig: {n}",
+        "noResumesTitle": "Erstelle zuerst einen Lebenslauf",
+        "noResumesDesc": "Wir nutzen den Jobtitel und die Stadt aus deinem Lebenslauf, um passende Jobs zu finden.",
+        "emptyTitle": "Diese Woche gab es keine Jobs für diese Suche",
+        "emptyDesc": "Versuche einen allgemeineren Jobtitel oder eine andere Stadt.",
+        "sort": "Sortieren",
+        "sortBest": "Beste Treffer",
+        "sortNewest": "Neueste",
+        "showing": "{shown} von {total} Jobs",
+        "filters": {
+          "fitsLevel": "Passt zu meinem Level",
+          "matchesSkills": "Passt zu meinen Skills",
+          "last24h": "Letzte 24 Stunden",
+          "hideSaved": "Gespeicherte ausblenden"
+        },
+        "levels": {
+          "entry": "Einstieg",
+          "mid": "Professional",
+          "senior": "Senior"
+        },
+        "yourLevel": "Dein Level: {level}, etwa {years} Jahre Berufserfahrung",
+        "fitsYourLevel": "Passt zu deinem Level",
+        "levelAbove": "Senior-Stelle",
+        "levelBelow": "Einstiegsstelle",
+        "noFilterMatches": "Keine Jobs passen zu diesen Filtern.",
+        "clearFilters": "Filter zurücksetzen",
+        "errors": {
+          "no_keywords": "Dein Lebenslauf hat noch keinen Jobtitel. Gib oben einen Jobtitel ein, um zu suchen.",
+          "limit_user": "Deine Suchen für heute sind aufgebraucht. Frühere Suchen funktionieren weiter, morgen gibt es neue.",
+          "limit_total": "Die Jobsuche ist heute sehr gefragt. Bitte versuche es morgen wieder.",
+          "not_configured": "Jobvorschläge sind gerade nicht verfügbar.",
+          "upstream": "LinkedIn ist gerade nicht erreichbar. Bitte versuche es in ein paar Minuten noch einmal."
+        }
+      },
       "jobTracker": {
         "subtitle": "Behalten Sie Bewerbungen im Blick: Stelle, verwendeter Lebenslauf und Anschreiben.",
         "filters": {
@@ -1111,6 +1166,7 @@
         "edit": "Bearbeiten",
         "pdf": "PDF",
         "downloadPDF": "PDF herunterladen",
+        "matchingJobs": "Passende Jobs",
         "translate": "Übersetzen",
         "translating": "Übersetze…",
         "rename": "Umbenennen"

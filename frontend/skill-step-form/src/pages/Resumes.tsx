@@ -9,6 +9,7 @@ import type { TranslationCategory } from '@/lib/translationCategories';
 import { ResumeTranslateControls } from '@/components/cv-form/ResumeTranslateControls';
 import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
 import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
+import { JobSuggestionsPanel } from '@/components/resumes/JobSuggestionsPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
 import { BusinessCardPanel } from '@/components/resumes/BusinessCardPanel';
 import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
@@ -25,6 +26,7 @@ import {
   Trash2,
   AlertCircle,
   Clock,
+  Compass,
   X,
   Download,
   Pencil,
@@ -575,6 +577,14 @@ export default function Resumes() {
                   {/* Actions — icon buttons in tinted frames, labelled by tooltip. Rename
                       and Delete are rarer and riskier, so they sit behind the menu. */}
                   <div className="flex flex-none items-center gap-1 sm:gap-1.5">
+                    {/* Opens Job suggestions with this resume picked */}
+                    <RowAction
+                      tone="emerald"
+                      label={t('pages.resumes.actions.matchingJobs') || 'Matching jobs'}
+                      onClick={() => navigate(`/resumes?tab=job-suggestions&resume=${resume.id}`)}
+                    >
+                      <Compass className="h-4 w-4" />
+                    </RowAction>
                     <RowAction
                       tone="primary"
                       label={t('pages.resumes.actions.downloadPDF') || 'Download PDF'}
@@ -671,6 +681,13 @@ export default function Resumes() {
             className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
           >
             <JobMatchingPanel resumes={resumes} isLoadingResumes={isLoading} />
+          </TabsContent>
+
+          <TabsContent
+            value="job-suggestions"
+            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
+          >
+            <JobSuggestionsPanel resumes={resumes} isLoadingResumes={isLoading} />
           </TabsContent>
 
           <TabsContent

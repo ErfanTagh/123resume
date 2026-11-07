@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  Compass,
   CreditCard,
   FileText,
   Globe,
@@ -33,6 +34,12 @@ export const RESUMES_TABS: ResumesTabConfig[] = [
     labelKey: "pages.resumes.tabs.jobMatching",
     fallback: "Job matching",
     icon: Sparkles,
+  },
+  {
+    id: "job-suggestions",
+    labelKey: "pages.resumes.tabs.jobSuggestions",
+    fallback: "Job suggestions",
+    icon: Compass,
   },
   {
     id: "job-tracker",

@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 export type ResumesTabId =
   | "resumes"
   | "job-matching"
+  | "job-suggestions"
   | "job-tracker"
   | "portfolio"
   | "business-card";

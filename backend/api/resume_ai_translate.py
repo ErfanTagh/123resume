@@ -27,6 +27,7 @@ from django.conf import settings
 
 from .ai_response_log import log_deepseek_exchange
 from .deepseek_chat import deepseek_max_tokens, deepseek_request_options, get_deepseek_client
+from .resume_ai_parsing import _close_truncated_json
 
 logger = logging.getLogger(__name__)
 
@@ -397,18 +398,27 @@ Fields to translate (JSON):
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        max_tokens=deepseek_max_tokens(getattr(settings, "DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS", 4096)),
+        max_tokens=deepseek_max_tokens(getattr(settings, "DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS", 9000)),
         temperature=0.2,
+        # One long attempt instead of two short ones: a big answer can't fit twice
+        # in the 60s gunicorn/nginx limit (same budget as the parse call).
+        timeout=settings.RESUME_PARSE_TIMEOUT_SECONDS,
     )
     raw = (completion.choices[0].message.content or "").strip()
     if not raw:
         raise ValueError("empty model response")
+    finish = getattr(completion.choices[0], "finish_reason", "")
 
     try:
         parsed = _extract_json_object(raw)
     except json.JSONDecodeError as e:
-        logger.warning("resume_translate JSON parse error: %s | snippet=%s", e, raw[:300])
-        raise
+        if finish != "length":
+            logger.warning("resume_translate JSON parse error: %s | snippet=%s", e, raw[:300])
+            raise
+        # Cut off at max_tokens: apply the items that came back complete; the
+        # rest keep their original text instead of the whole request failing.
+        logger.warning("resume_translate hit max_tokens (%s chars); keeping the complete part", len(raw))
+        parsed = _extract_json_object(_close_truncated_json(raw))
 
     translated_by_id: Dict[str, str] = {}
     for row in parsed.get("items") or []:

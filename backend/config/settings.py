@@ -133,8 +133,10 @@ DEEPSEEK_RESUME_PARSE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_PARSE_MAX_TOKE
 RESUME_PARSE_TIMEOUT_SECONDS = float(os.getenv('RESUME_PARSE_TIMEOUT_SECONDS', '50'))
 # Resume ↔ job match (JSON score + short rationale)
 DEEPSEEK_JOB_MATCH_MAX_TOKENS = int(os.getenv('DEEPSEEK_JOB_MATCH_MAX_TOKENS', '1024'))
-# Whole-resume translation EN<->DE (batch of prose fields → JSON)
-DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS', '4096'))
+# Whole-resume translation (batch of fields → JSON). A long resume came back
+# cut off at 4096 (~9.5k chars of German); 9000 fits one attempt of
+# RESUME_PARSE_TIMEOUT_SECONDS, like the parse call.
+DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_TRANSLATE_MAX_TOKENS', '9000'))
 # "Improve my resume" batch rewrite JSON — needs headroom so long/German resumes
 # don't truncate the JSON (which broke parsing at the old 2048 cap).
 DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS = int(os.getenv('DEEPSEEK_RESUME_IMPROVE_MAX_TOKENS', '8192'))

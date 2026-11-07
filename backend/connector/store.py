@@ -452,3 +452,78 @@ def update_application(user_id: int, application_id: str, fields: dict) -> dict:
     data["updated_at"] = datetime.utcnow()
     col.update_one({"_id": oid, "user_id": user_id}, {"$set": data})
     return _application_out(col.find_one({"_id": oid}), full=True)
+
+
+# --------------------------------------------------------------------------
+# Job suggestions (the website's "Job suggestions" / "Jobvorschläge" tab)
+# --------------------------------------------------------------------------
+
+_SEARCH_REFUSED = {
+    "limit_user": (
+        "The user has used today's job search: 1 new search per day while Job suggestions is "
+        "in a test phase. A search they ran in the last 24 hours still works (same keywords "
+        "and location); a new one is possible tomorrow. Tell the user."
+    ),
+    "limit_total": "Today's job searches for the whole site are used up. Tell the user to try again tomorrow.",
+    "not_configured": "Job suggestions isn't available right now (the test searches may have run out). Tell the user.",
+    "upstream": "LinkedIn couldn't be reached. Try again in a few minutes.",
+}
+
+
+def suggest_jobs(user_id: int, resume_id: str, keywords: str, location: str) -> dict:
+    from api import job_suggestions as js
+
+    doc = _own_resume(user_id, resume_id)
+    default_keywords, default_location = js.resume_search_defaults(doc)
+    keywords = js.clean_text(keywords, 100) or default_keywords
+    location = js.normalize_location(location) if (location or "").strip() else default_location
+    if not keywords:
+        raise ConnectorError(
+            "This resume has no job title or position to search for. Ask the user which job "
+            "title to search, then pass it as keywords."
+        )
+
+    db = _db()
+    try:
+        jobs, fetched_at, from_cache = js.find_jobs(db, user_id, keywords, location)
+    except js.JobSearchError as e:
+        raise ConnectorError(_SEARCH_REFUSED.get(e.code, _SEARCH_REFUSED["upstream"]))
+
+    years = js.experience_years(doc)
+    level = js.user_level(years)
+    tracked = {
+        js.job_key(a.get("job_link")): a.get("status") or "applied"
+        for a in db[APPLICATIONS].find({"user_id": user_id, "job_link": {"$nin": [None, ""]}}, {"job_link": 1, "status": 1})
+    }
+    out_jobs = []
+    for job in js.annotate_jobs(jobs, js.resume_skills(doc)):
+        item = {
+            "title": job["title"],
+            "company": job["company"],
+            "location": job["location"],
+            "posted": job["posted_at"],
+            "date": job["date"],
+            "link": job["link"],
+            "matched_skills": job["matched_skills"],
+            "level": job["level"],
+            "level_fit": js.level_fit(job["level"], level),
+        }
+        status = tracked.get(js.job_key(job["link"]))
+        if status:
+            item["in_tracker"] = status
+        out_jobs.append(item)
+
+    return {
+        "query": {"keywords": keywords, "location": location or "worldwide", "posted": "last week"},
+        "user_level": level,
+        "experience_years": years,
+        "jobs": out_jobs,
+        "from_cache": from_cache,
+        "fetched_at": fetched_at.isoformat() + "Z",
+        "new_searches_left_today": js.searches_left_today(db, user_id),
+        "suggestions_url": f"{SITE_URL}/resumes?tab=job-suggestions&resume={resume_id}",
+        "note": (
+            "Only titles, companies and links: no job descriptions. matched_skills are resume "
+            "skills the title names; level_fit compares the title's level to the user's experience."
+        ),
+    }

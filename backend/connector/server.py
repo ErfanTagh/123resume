@@ -101,6 +101,18 @@ Job tracker (on the site: "Job tracker", German "Bewerbungen"):
 - update_application for news: an interview, an offer, a rejection, notes.
 - Only record what the user told you. Share tracker_url afterwards.
 
+Job suggestions (on the site: "Job suggestions", German "Jobvorschläge"):
+- suggest_jobs finds LinkedIn jobs posted in the last week that fit a resume,
+  from its job title and city unless you pass other keywords or a location.
+- It's in a test phase: each user gets 1 new search per day. Search once with
+  the best keywords; don't try variations unless the user asks. If a search is
+  refused, tell the user why (the message says) and when they can search again.
+- Present the best fits first (matched_skills, level_fit "fit") with their
+  links. The results have no job descriptions: don't claim what a job requires
+  beyond its title, ask the user to paste the ad when they want details.
+- To save a job: add_application with status "saved", job_link and the
+  resume_id. Share suggestions_url to see the jobs on 123resume.de.
+
 Write in the resume's own language.
 """.strip()
 
@@ -271,6 +283,16 @@ async def update_application(application_id: str, changes: ApplicationChanges) -
     """Update one application in the job tracker, e.g. the status after an interview
     invite, an offer or a rejection, or new notes. Ids come from list_applications."""
     return await _run(store.update_application, application_id, changes.model_dump(exclude_none=True))
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True, open_world_hint=True))
+async def suggest_jobs(resume_id: str, keywords: str = "", location: str = "") -> dict:
+    """Find LinkedIn jobs posted in the last week that fit a resume. Empty keywords and
+    location use the resume's job title and city. Each job has matched_skills (resume
+    skills its title names), level_fit against the user's experience, and in_tracker if
+    it's already in the job tracker. No job descriptions. Limited to 1 new search per
+    user per day; repeating a search from the last 24 hours is free."""
+    return await _run(store.suggest_jobs, resume_id, keywords, location)
 
 
 @mcp.tool(annotations=READ)

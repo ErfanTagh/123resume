@@ -155,6 +155,24 @@ def user_level(years):
     return "entry" if years < 2 else "mid" if years < 5 else "senior"
 
 
+def level_fit(job, user):
+    """How a job's level compares to the user's: 'fit', 'neutral', 'below' or 'above'.
+    Mirrors levelFit in the app (lib/jobSuggestionRanking.ts)."""
+    if not user:
+        return "neutral"
+    if job == user:
+        return "fit"
+    if user == "entry":
+        return "above" if job == "senior" else "neutral"
+    return "below" if job == "entry" else "neutral"
+
+
+def job_key(link):
+    """LinkedIn's job id from a posting link (or the link itself), to spot a job already in the tracker."""
+    match = re.search(r"(\d{6,})/?(?:[?#]|$)", link or "")
+    return match.group(1) if match else (link or "")
+
+
 def annotate_jobs(jobs, skills):
     """Add the resume skills each title names and the job's level. The order
     stays LinkedIn's relevance order; sorting and filters happen in the app."""

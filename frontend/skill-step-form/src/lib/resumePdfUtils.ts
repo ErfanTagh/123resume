@@ -13,7 +13,7 @@ import { PrismTemplate } from '@/components/cv-form/templates/PrismTemplate';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import i18n from '@/i18n/config';
 import { formatProficiency as formatProficiencyShared } from '@/lib/languageProficiency';
-import { makeResumeT } from '@/lib/resumeSectionHeadings';
+import { makeResumeT, getMadeWithLabel } from '@/lib/resumeSectionHeadings';
 import { formatDateRange, formatMonthYear } from '@/lib/dateFormatter';
 import { hasWebLink, normalizeExternalUrl } from '@/lib/contactLinkUtils';
 import { withResumeSectionsSortedForDisplay } from '@/lib/resumeDisplaySort';
@@ -732,6 +732,22 @@ function addSinglePageClassToHTML(html: string): string {
 /**
  * Download PDF from resume HTML (from DOM element)
  */
+/**
+ * Small "Made with 123resume" line appended at the end of the resume content,
+ * in the resume's language (UI language as fallback, like section headings).
+ * Appended after the flex spacer so it anchors to the bottom of the last PDF
+ * page; must be in the DOM before the spacer/single-page measurements run so
+ * the fitting math accounts for its height.
+ */
+function createMadeWithElement(resumeLanguage?: string): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'resume-made-with';
+  el.style.cssText =
+    'flex:0 0 auto;margin-top:5mm;text-align:center;font-size:9px;line-height:1.2;color:#9ca3af;';
+  el.textContent = getMadeWithLabel(resumeLanguage || i18n.language);
+  return el;
+}
+
 async function downloadPDFFromHTML(
   resumeId: string,
   resumeHTML: string,
@@ -1279,6 +1295,9 @@ export async function downloadResumePDF(
     // This runs in the same offscreen DOM that becomes the PDF, so measurement
     // and export share the exact same layout context.
     const resumeContainer = innerWrapper.querySelector('.resume-page-container') as HTMLElement | null;
+    (resumeContainer ?? innerWrapper).appendChild(
+      createMadeWithElement(resume.styling?.resumeLanguage)
+    );
     if (resumeContainer) {
       await applyDynamicSpacerForPDF(resumeContainer);
     }
@@ -1348,8 +1367,14 @@ export async function downloadResumePDFFromElement(
   const resumeContainer = htmlElement.querySelector('.resume-page-container') as HTMLElement | null;
   let restoreSpacerStyles: (() => void) | undefined;
 
+  // Temporarily added for export; removed again in finally (live DOM).
+  const madeWithEl = createMadeWithElement(
+    typeof resumeOrFilename === 'object' ? resumeOrFilename.styling?.resumeLanguage : undefined
+  );
+
   htmlElement.classList.add('resume-pdf-offscreen');
   try {
+    (resumeContainer ?? htmlElement).appendChild(madeWithEl);
     if (resumeContainer) {
       restoreSpacerStyles = await applyDynamicSpacerForPDF(resumeContainer);
     }
@@ -1393,6 +1418,7 @@ export async function downloadResumePDFFromElement(
 
     await downloadPDFFromHTML(resumeId, resumeHTML, finalFilename, { isSinglePage });
   } finally {
+    madeWithEl.remove();
     htmlElement.classList.remove('resume-pdf-offscreen');
     restoreSpacerStyles?.();
   }

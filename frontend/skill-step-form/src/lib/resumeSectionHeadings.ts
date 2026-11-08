@@ -140,6 +140,23 @@ export const RESUME_PROFICIENCY_LABELS: Record<string, Record<string, string>> =
   tr: { native: "Ana dil", fluent: "Akıcı", advanced: "İleri", intermediate: "Orta", basic: "Temel" },
 };
 
+// "Made with 123resume" branding line printed in the PDF page footer, in the
+// resume's own language (not the app UI language), like the section headings.
+export const RESUME_MADE_WITH_LABELS: Record<string, string> = {
+  en: "Made with 123resume.de",
+  de: "Erstellt mit 123resume.de",
+  es: "Creado con 123resume.de",
+  fr: "Créé avec 123resume.de",
+  it: "Creato con 123resume.de",
+  pt: "Criado com 123resume.de",
+  tr: "123resume.de ile oluşturuldu",
+};
+
+export const getMadeWithLabel = (language?: string | null): string => {
+  const lang = (language || "").toLowerCase().split("-")[0];
+  return RESUME_MADE_WITH_LABELS[lang] || RESUME_MADE_WITH_LABELS.en;
+};
+
 type UiTranslate = (key: string, ...args: unknown[]) => string;
 
 /**

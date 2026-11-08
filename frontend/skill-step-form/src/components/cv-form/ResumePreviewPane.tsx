@@ -40,15 +40,29 @@ interface MarkRect {
   height: number;
 }
 
-/** One pending AI suggestion located on the rendered resume. */
+/**
+ * One pending AI suggestion located on the rendered resume.
+ * Colors are meaningful: green = new text added, amber = your text rewritten
+ * (an edit — hover shows your original), red = text to remove.
+ */
+type MarkColor = "green" | "amber" | "red";
 interface ChangeMark {
   /** Index into review.changes. */
   index: number;
-  color: "green" | "red";
+  color: MarkColor;
+  /** "skill" = a suggested skill chip: highlight the whole chip, not a thin underline. */
+  variant?: "skill";
   rects: MarkRect[];
 }
 
 const POPOVER_WIDTH = 300;
+
+/** Overlay colors per mark kind: fill + the underline bar. */
+const MARK_STYLE: Record<MarkColor, { bg: string; bar: string }> = {
+  green: { bg: "rgba(16, 185, 129, 0.16)", bar: "rgba(16, 185, 129, 0.65)" }, // added
+  amber: { bg: "rgba(245, 158, 11, 0.18)", bar: "rgba(245, 158, 11, 0.75)" }, // edited
+  red: { bg: "rgba(239, 68, 68, 0.16)", bar: "rgba(239, 68, 68, 0.65)" }, // removed
+};
 
 // Item key inside each array an AI addition can go into (matches useResumeAiReview).
 const ADDITION_ITEM_KEY: Record<string, string> = {
@@ -179,18 +193,44 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
   // Hover: a short grace period lets the mouse travel from the mark into the
   // popover (and between lines of one mark) without the dialog closing.
   const hoverCloseTimer = useRef<number>();
+  // Switching to a different suggestion needs hover intent: brushing the mouse
+  // over the next mark while you read the current one should not yank focus.
+  const hoverOpenTimer = useRef<number>();
+  const HOVER_OPEN_DELAY = 220;
+  // Open a mark's popover right away (click, or once hover intent is met).
   const openMark = (index: number, anchor: HTMLElement) => {
     window.clearTimeout(hoverCloseTimer.current);
+    window.clearTimeout(hoverOpenTimer.current);
     const r = anchor.getBoundingClientRect();
     setPopoverPlacement(window.innerHeight - r.bottom < 260 ? "above" : "below");
     setActiveMarkIndex(index);
   };
+  // Hover over a mark: keep the current popover if it is this one; otherwise
+  // open after a short delay so a passing cursor does not switch suggestions.
+  const openMarkOnHover = (index: number, anchor: HTMLElement) => {
+    window.clearTimeout(hoverCloseTimer.current);
+    if (index === activeMarkIndex) return;
+    window.clearTimeout(hoverOpenTimer.current);
+    hoverOpenTimer.current = window.setTimeout(() => openMark(index, anchor), HOVER_OPEN_DELAY);
+  };
   const scheduleCloseMark = () => {
+    window.clearTimeout(hoverOpenTimer.current);
     window.clearTimeout(hoverCloseTimer.current);
     hoverCloseTimer.current = window.setTimeout(() => setActiveMarkIndex(null), 250);
   };
-  const cancelCloseMark = () => window.clearTimeout(hoverCloseTimer.current);
-  useEffect(() => () => window.clearTimeout(hoverCloseTimer.current), []);
+  // Inside the open popover: never close it, and never let a queued hover
+  // switch to a different suggestion.
+  const cancelCloseMark = () => {
+    window.clearTimeout(hoverCloseTimer.current);
+    window.clearTimeout(hoverOpenTimer.current);
+  };
+  useEffect(
+    () => () => {
+      window.clearTimeout(hoverCloseTimer.current);
+      window.clearTimeout(hoverOpenTimer.current);
+    },
+    [],
+  );
   const reviewChanges = review?.changes;
   useEffect(() => {
     const pending = (reviewChanges ?? []).filter((c) => c.status === "pending");
@@ -228,6 +268,29 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
             if (at >= 0) len = Math.min(content.length - at, target.length);
           }
           if (at < 0) continue;
+          // A suggested skill renders as its own chip; highlight the whole chip
+          // (fully green, like a "magic" addition) rather than a tiny underline.
+          const isSkillAdd = isAdd && change.path.split(".").pop() === "skills";
+          const chip = node.parentElement;
+          if (isSkillAdd && chip && (chip.textContent || "").trim() === target) {
+            const cr = chip.getBoundingClientRect();
+            if (cr.width >= 1 && cr.height >= 1) {
+              marks.push({
+                index,
+                color: "green",
+                variant: "skill",
+                rects: [
+                  {
+                    top: cr.top - wrapperRect.top,
+                    left: cr.left - wrapperRect.left,
+                    width: cr.width,
+                    height: cr.height,
+                  },
+                ],
+              });
+            }
+            break;
+          }
           const range = document.createRange();
           range.setStart(node, at);
           range.setEnd(node, Math.min(at + len, content.length));
@@ -243,7 +306,10 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
           }
           range.detach();
           if (rects.length > 0) {
-            marks.push({ index, color: change.kind === "delete" ? "red" : "green", rects });
+            // add = green (new), delete = red, replace = amber (your text edited)
+            const color: MarkColor =
+              change.kind === "delete" ? "red" : change.kind === "add" ? "green" : "amber";
+            marks.push({ index, color, rects });
           }
           break;
         }
@@ -279,6 +345,9 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
   const activeChange = activeMarkIndex !== null ? reviewChanges?.[activeMarkIndex] : undefined;
   const activeMark =
     activeMarkIndex !== null ? changeMarks.find((m) => m.index === activeMarkIndex) : undefined;
+  // Popover accent follows the mark meaning: edits (replace) are amber, not green.
+  const activeAccent =
+    activeChange?.kind === "delete" ? "red" : activeChange?.kind === "add" ? "green" : "amber";
 
   const handleSendFeedback = async () => {
     const resolvedEmail = (user?.email || feedbackEmail).trim();
@@ -725,33 +794,67 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
             <style>{RESUME_PREVIEW_INLINE_STYLES}</style>
             {renderResumeTemplate(previewData)}
             {changeMarks.map((mark) =>
-              mark.rects.map((r, i) => (
-                <div
-                  key={`mark-${mark.index}-${i}`}
-                  role="button"
-                  aria-label={reviewChanges?.[mark.index]?.label}
-                  className="absolute cursor-pointer rounded-[2px] transition-opacity hover:opacity-60"
-                  onMouseEnter={(e) => openMark(mark.index, e.currentTarget)}
-                  onMouseLeave={scheduleCloseMark}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openMark(mark.index, e.currentTarget);
-                  }}
-                  style={{
-                    top: r.top - 1,
-                    left: r.left - 2,
-                    width: r.width + 4,
-                    height: r.height + 2,
-                    zIndex: 60,
-                    backgroundColor:
-                      mark.color === "red" ? "rgba(239, 68, 68, 0.16)" : "rgba(16, 185, 129, 0.16)",
-                    boxShadow:
-                      mark.color === "red"
-                        ? "inset 0 -2px 0 rgba(239, 68, 68, 0.65)"
-                        : "inset 0 -2px 0 rgba(16, 185, 129, 0.65)",
-                  }}
-                />
-              )),
+              mark.variant === "skill"
+                ? mark.rects.map((r, i) => (
+                    // Suggested skill: a solid green chip with white text, sitting
+                    // over the original — eye-catching, not a tiny underline.
+                    <div
+                      key={`mark-${mark.index}-${i}`}
+                      role="button"
+                      aria-label={reviewChanges?.[mark.index]?.label}
+                      className="absolute flex cursor-pointer items-center justify-center overflow-hidden transition-transform hover:scale-[1.04]"
+                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.currentTarget)}
+                      onMouseLeave={scheduleCloseMark}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openMark(mark.index, e.currentTarget);
+                      }}
+                      style={{
+                        // border-box + a small inset keeps a gap between adjacent chips
+                        boxSizing: "border-box",
+                        top: r.top - 3,
+                        left: r.left + 1,
+                        width: r.width - 2,
+                        height: r.height + 6,
+                        zIndex: 60,
+                        padding: "2px 7px",
+                        backgroundColor: "#a7f3d0", // emerald-200
+                        border: "1.5px solid #059669", // emerald-600
+                        borderRadius: 7,
+                        boxShadow: "0 1px 4px rgba(5,150,105,0.25)",
+                        color: "#064e3b", // emerald-900 (near-black green)
+                        fontSize: Math.max(9, Math.round(r.height * 0.5)),
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {reviewChanges?.[mark.index]?.improved}
+                    </div>
+                  ))
+                : mark.rects.map((r, i) => (
+                    <div
+                      key={`mark-${mark.index}-${i}`}
+                      role="button"
+                      aria-label={reviewChanges?.[mark.index]?.label}
+                      className="absolute cursor-pointer rounded-[2px] transition-opacity hover:opacity-60"
+                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.currentTarget)}
+                      onMouseLeave={scheduleCloseMark}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openMark(mark.index, e.currentTarget);
+                      }}
+                      style={{
+                        top: r.top - 1,
+                        left: r.left - 2,
+                        width: r.width + 4,
+                        height: r.height + 2,
+                        zIndex: 60,
+                        backgroundColor: MARK_STYLE[mark.color].bg,
+                        boxShadow: `inset 0 -2px 0 ${MARK_STYLE[mark.color].bar}`,
+                      }}
+                    />
+                  )),
             )}
             {review && activeChange && activeMark && (
               <div
@@ -776,9 +879,11 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
               >
                 <div
                   className={`flex items-center justify-between gap-2 rounded-t-lg border-b px-3 py-2 ${
-                    activeChange.kind === "delete"
+                    activeAccent === "red"
                       ? "border-red-200 bg-red-50/70 dark:border-red-900 dark:bg-red-950/40"
-                      : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/40"
+                      : activeAccent === "amber"
+                        ? "border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/40"
+                        : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/40"
                   }`}
                 >
                   <span className="truncate text-xs font-semibold text-foreground">
@@ -789,9 +894,11 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                       <Badge
                         variant="outline"
                         className={
-                          activeChange.kind === "delete"
+                          activeAccent === "red"
                             ? "gap-1 border-red-300 text-red-600 dark:border-red-800 dark:text-red-400"
-                            : "gap-1 border-emerald-300 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400"
+                            : activeAccent === "amber"
+                              ? "gap-1 border-amber-300 text-amber-600 dark:border-amber-800 dark:text-amber-400"
+                              : "gap-1 border-emerald-300 text-emerald-600 dark:border-emerald-800 dark:text-emerald-400"
                         }
                       >
                         <TrendingUp className="h-3 w-3" />
@@ -831,10 +938,16 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                     </p>
                   ) : (
                     <>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("resume.improve.before") || "Current"}
+                      </p>
+                      <p className="max-h-32 overflow-y-auto rounded-md bg-muted/60 p-2 text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                        {activeChange.original}
+                      </p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
                         {t("resume.improve.after") || "Suggested"}
                       </p>
-                      <p className="max-h-40 overflow-y-auto rounded-md bg-emerald-50 p-2 text-xs leading-relaxed text-foreground dark:bg-emerald-950/40 whitespace-pre-wrap">
+                      <p className="max-h-40 overflow-y-auto rounded-md bg-amber-50 p-2 text-xs leading-relaxed text-foreground dark:bg-amber-950/40 whitespace-pre-wrap">
                         {activeChange.improved}
                       </p>
                     </>

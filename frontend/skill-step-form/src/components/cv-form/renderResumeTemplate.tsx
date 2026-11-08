@@ -34,6 +34,12 @@ export const RESUME_PREVIEW_INLINE_STYLES = `
   .resume-content-wrapper {
     position: relative;
   }
+  /* Preview only: links (LinkedIn, GitHub, website, email, project URLs) are not
+     clickable here, so a stray click can't navigate away during AI review. */
+  .resume-content-wrapper a {
+    pointer-events: none;
+    cursor: text;
+  }
   .resume-content-wrapper::-webkit-scrollbar {
     display: none;
   }

@@ -503,7 +503,7 @@
     },
     "preview": {
       "title": "Vorschau",
-      "notice": "Nur Vorschau — Seitenumbrüche sind ungefähr. Im PDF-Export erscheinen nur die von Ihnen ausgefüllten Felder.",
+      "notice": "Nur Vorschau: Seitenumbrüche sind ungefähr und externe Links sind hier nicht anklickbar. Im PDF-Export erscheinen nur die von Ihnen ausgefüllten Felder.",
       "pages": "Seiten",
       "page": "Seite"
     },

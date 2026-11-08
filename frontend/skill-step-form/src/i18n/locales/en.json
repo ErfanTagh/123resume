@@ -503,7 +503,7 @@
     },
     "preview": {
       "title": "Preview",
-      "notice": "Preview only — page breaks are approximate. Your PDF export will use the formatting you see when fields are filled in.",
+      "notice": "Preview only: page breaks are approximate and external links are not clickable here. Your PDF export will use the formatting you see when fields are filled in.",
       "pages": "pages",
       "page": "Page"
     },

@@ -11,15 +11,17 @@ import { ExperienceStep } from "./ExperienceStep";
 import { EducationStep } from "./EducationStep";
 import { SkillsStep } from "./SkillsStep";
 import { ReviewStep } from "./ReviewStep";
+import { useResumeAiReview } from "./useResumeAiReview";
 import { ResumePreviewPane } from "./ResumePreviewPane";
 import { ResumeCustomizeSidebar } from "./ResumeCustomizeSidebar";
 import { SignupOverlay } from "./SignupOverlay";
 import { SaveStatusBadge, type SaveStatus } from "./SaveStatusBadge";
 import { cvFormSchema, CVFormData } from "./types";
-import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare, Check, LogIn } from "lucide-react";
 import { RESUME_COLOR_THEMES, getActiveResumeThemeId } from "@/lib/resumeColorThemes";
 import { toast } from "@/hooks/use-toast";
 import { getTestProfile, getTestProfileNames } from "@/lib/testData";
+import { fireworks } from "@/lib/celebrate";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getResumeScoreWithOptionalAI } from "@/lib/resumeScoreClient";
@@ -583,6 +585,57 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
   ];
 
   const reviewStepIndex = steps.length - 1;
+  /** Review step: the form column closes and the preview becomes the page,
+   *  with the automatic AI review (score + Claude suggestions) beside it. */
+  const isReviewMode = currentStep === reviewStepIndex;
+
+  /** Claude's review: runs automatically on the Review step — once the score is
+   *  known, so the suggestions' points are calibrated to close the exact gap to
+   *  10 — and is shown directly ON the resume preview as clickable marks. */
+  const aiReview = useResumeAiReview(form, {
+    enabled: isReviewMode && !!user && navResumeScore != null,
+    currentScore: navResumeScore?.overallScore,
+  });
+  const { reset: resetAiReview } = aiReview;
+  useEffect(() => {
+    resetAiReview();
+  }, [editId, resetAiReview]);
+
+  // The shown score climbs live as suggestions are accepted: base AI score plus
+  // the points accepted since that score was fetched (a fresh AI score already
+  // reflects earlier accepts, so the boost restarts there). Accepting every
+  // suggestion lands exactly on 10 — the backend calibrates points to the gap.
+  const acceptedPointsRef = useRef(0);
+  acceptedPointsRef.current = aiReview.acceptedPoints;
+  const acceptedPointsAtScoreRef = useRef(0);
+  useEffect(() => {
+    acceptedPointsAtScoreRef.current = acceptedPointsRef.current;
+  }, [navResumeScore]);
+  const displayedScore = aiReview.allAccepted
+    ? 10
+    : navResumeScore != null
+      ? Math.min(
+          10,
+          Math.round(
+            (navResumeScore.overallScore +
+              aiReview.acceptedPoints -
+              acceptedPointsAtScoreRef.current) *
+              10,
+          ) / 10,
+        )
+      : undefined;
+
+  // Every suggestion accepted → 10/10: one volley of green fireworks.
+  const celebratedRef = useRef(false);
+  useEffect(() => {
+    if (!aiReview.allAccepted) {
+      celebratedRef.current = false;
+      return;
+    }
+    if (celebratedRef.current || !isReviewMode) return;
+    celebratedRef.current = true;
+    fireworks();
+  }, [aiReview.allAccepted, isReviewMode]);
 
   // Claude score only on the Review step (not on every navigation or preview tab).
   useEffect(() => {
@@ -651,6 +704,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
       lastScoredRef.current = null;
       scoreRequestIdRef.current = 0;
       setNavResumeScore(undefined);
+      resetAiReview();
       toast({
         title: "Test Profile Loaded! 🧪",
         description: `Loaded "${profileName}" profile with test data.`,
@@ -1140,18 +1194,109 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                {/* Live preview only — left on desktop */}
-                <div className="hidden lg:col-span-5 lg:block lg:col-start-1">
+              {/* Review step: a slim action bar on top (score, Claude's progress, nav) —
+                  the suggestions themselves live ON the preview as clickable marks. */}
+              {isReviewMode && (
+                <Card className="relative mb-6 p-4 shadow-elevated animate-in fade-in slide-in-from-top-4 duration-500">
+                  <ProgressIndicator
+                    currentStep={currentStep}
+                    totalSteps={steps.length}
+                    stepLabels={steps.map((s) => s.label)}
+                    onStepClick={handleStepClick}
+                  />
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" onClick={handlePrevious}>
+                        <ChevronLeft className="mr-2 h-4 w-4" />
+                        Previous
+                      </Button>
+                      <SaveStatusBadge status={saveStatus} />
+                    </div>
+
+                    {/* Score and AI review controls live ON the preview, not here. */}
+                    {!user && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => navigate("/login")}
+                      >
+                        <LogIn className="h-3.5 w-3.5" />
+                        {t("resume.improve.signIn") || "Sign in for the AI review"}
+                      </Button>
+                    )}
+
+                    <Button
+                      type="button"
+                      className="gap-2"
+                      disabled={isSaving}
+                      onClick={() => form.handleSubmit(onSubmit, onError)()}
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FileCheck className="h-4 w-4" />
+                          Complete CV
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* The form column animates closed (0fr) on the review step, leaving the preview full-width. */}
+              <div
+                className="grid grid-cols-1 gap-6 lg:[grid-template-columns:var(--editor-cols)] lg:[transition:grid-template-columns_700ms_cubic-bezier(0.4,0,0.2,1),gap_700ms_cubic-bezier(0.4,0,0.2,1)]"
+                style={
+                  {
+                    "--editor-cols": isReviewMode
+                      ? "minmax(0,1fr) 0fr"
+                      : "minmax(0,5fr) minmax(0,7fr)",
+                    ...(isReviewMode ? { gap: "0rem" } : null),
+                  } as React.CSSProperties
+                }
+              >
+                {/* Live preview — the whole page on the review step */}
+                <div className={isReviewMode ? "min-w-0" : "hidden min-w-0 lg:block"}>
                   <ResumePreviewPane
                     data={formDataWithSkills}
                     form={form}
+                    review={
+                      isReviewMode && user
+                        ? {
+                            changes: aiReview.changes ?? [],
+                            onAction: (index, status) => aiReview.setStatus(index, status),
+                            loading: aiReview.loading,
+                            fetched: aiReview.changes !== null,
+                            failed: aiReview.failed,
+                            score: displayedScore,
+                            scoreLoading: navResumeScoreLoading,
+                            onReanalyzeScore: () => {
+                              logResumeScore("ui:reanalyze-click", {});
+                              fetchAiResumeScoreIfDirty({ force: true });
+                            },
+                            pendingCount: aiReview.pendingCount,
+                            pendingPoints: aiReview.pendingPoints,
+                            allAccepted: aiReview.allAccepted,
+                            onAcceptAll: aiReview.acceptAll,
+                            onRunAgain: aiReview.fetchImprovements,
+                            onUndo: aiReview.canUndo ? aiReview.undoLast : undefined,
+                          }
+                        : undefined
+                    }
                     onTranslated={user ? () => fetchAiResumeScoreIfDirty({ force: true }) : undefined}
                   />
                 </div>
 
-                {/* Customize tools + form — right on desktop */}
-                <div className="lg:col-span-7 lg:col-start-6">
+                {/* Customize tools + form — right on desktop; collapses on review */}
+                <div className="min-w-0 overflow-hidden">
+                {!isReviewMode && (
+                <div className="min-w-0">
                   <ResumeCustomizeSidebar
                     data={formDataWithSkills}
                     serverResumeScore={navResumeScore}
@@ -1231,23 +1376,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                         }
                       }}
                     >
-                      {currentStep === steps.length - 1 ? (
-                        <ReviewStep
-                          form={form}
-                          onEditStep={handleEditStep}
-                          resumeScoreFromNav={navResumeScore}
-                          resumeScoreLoadingFromNav={navResumeScoreLoading}
-                          onReanalyzeAiScore={
-                            user
-                              ? () => {
-                                  logResumeScore("ui:reanalyze-click", {});
-                                  fetchAiResumeScoreIfDirty({ force: true });
-                                }
-                              : undefined
-                          }
-                          reanalyzeAiScoreLoading={!!user && navResumeScoreLoading}
-                        />
-                      ) : currentStep === 0 ? (
+                      {/* The Review step renders outside this card (isReviewMode above). */}
+                      {currentStep === 0 ? (
                         <PersonalInfoStep form={form} />
                       ) : (
                         <CurrentStepComponent form={form} />
@@ -1268,38 +1398,15 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                           {currentStep === 0 && <div />}
                         </div>
 
-                        {currentStep === steps.length - 1 ? (
-                          <Button
-                            type="button"
-                            className="gap-2"
-                            disabled={isSaving}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              // Explicitly trigger form submission
-                              form.handleSubmit(onSubmit, onError)();
-                            }}
-                          >
-                            {isSaving ? (
-                              <>
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <FileCheck className="h-4 w-4" />
-                                Complete CV
-                              </>
-                            )}
-                          </Button>
-                        ) : (
-                          <Button type="button" onClick={handleNext}>
-                            Next
-                            <ChevronRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button type="button" onClick={handleNext}>
+                          Next
+                          <ChevronRight className="ml-2 h-4 w-4" />
+                        </Button>
                       </div>
                     </form>
                   </Card>
+                </div>
+                )}
                 </div>
               </div>
             </>

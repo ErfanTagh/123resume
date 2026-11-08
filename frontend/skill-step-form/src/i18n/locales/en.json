@@ -508,6 +508,7 @@
       "page": "Page"
     },
     "score": {
+      "chip": "Score",
       "label": "Resume Score",
       "title": "CV Rating & Analysis",
       "subtitle": "Real-time completeness analysis",
@@ -623,6 +624,21 @@
       }
     },
     "improve": {
+      "reviewTitle": "Claude's review of your resume",
+      "reviewSubtitle": "Green suggestions improve or add text; red ones flag text that weakens your resume. Each shows how much your score could gain.",
+      "points": "+{points} pts",
+      "potentialGain": "Up to +{points} score points left",
+      "deleteBadge": "Remove",
+      "deleteWhy": "Why remove it:",
+      "keep": "Keep it",
+      "additionsTitle": "Suggested additions",
+      "suggestionsSummary": "{count} suggestions · up to +{points} pts",
+      "signIn": "Sign in for the AI review",
+      "perfect": "Perfect — your resume reached 10/10!",
+      "loadingTitle": "Claude is reviewing your resume",
+      "loadingHint": "This usually takes under a minute.",
+      "stepScore": "Scoring your resume",
+      "stepSuggest": "Finding improvements worth points",
       "newBadge": "New",
       "addNote": "Only accept this if it's true for you.",
       "title": "Improve my resume with AI",

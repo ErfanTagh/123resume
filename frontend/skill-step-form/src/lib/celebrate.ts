@@ -133,3 +133,113 @@ export function celebrate(from?: Element | null, intensity: Intensity = "small")
   };
   requestAnimationFrame(frame);
 }
+
+// Green shades for the perfect-score fireworks.
+const FIREWORK_COLORS = [
+  "hsl(152 76% 45%)",
+  "hsl(142 71% 45%)",
+  "hsl(160 84% 39%)",
+  "hsl(134 61% 55%)",
+  "hsl(152 60% 68%)",
+  "hsl(45 96% 58%)", // one golden accent per burst
+];
+
+const FIREWORKS_LIFETIME_MS = 3200;
+const FIREWORK_DRAG = 0.975;
+const FIREWORK_GRAVITY = 0.07;
+
+interface FireworkPiece {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  color: string;
+  bornAt: number;
+}
+
+/**
+ * Perfect-score celebration: a volley of green firework bursts across the
+ * upper half of the screen. Same zero-dependency canvas approach as
+ * `celebrate`, skipped for users who prefer reduced motion.
+ */
+export function fireworks(): void {
+  if (typeof window === "undefined" || prefersReducedMotion()) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement("canvas");
+  canvas.setAttribute("aria-hidden", "true");
+  Object.assign(canvas.style, {
+    position: "fixed",
+    inset: "0",
+    width: "100vw",
+    height: "100vh",
+    pointerEvents: "none",
+    zIndex: "9999",
+  });
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    canvas.remove();
+    return;
+  }
+  ctx.scale(dpr, dpr);
+
+  const pieces: FireworkPiece[] = [];
+  const burst = (bornAt: number) => {
+    const cx = window.innerWidth * (0.15 + Math.random() * 0.7);
+    const cy = window.innerHeight * (0.12 + Math.random() * 0.38);
+    const count = 60 + Math.floor(Math.random() * 30);
+    for (let i = 0; i < count; i++) {
+      // Radial explosion: even angles, slightly varied speed → a round shell.
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.1;
+      const velocity = 4.5 * (0.5 + Math.random() * 0.7);
+      pieces.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(angle) * velocity,
+        vy: Math.sin(angle) * velocity,
+        size: 2 + Math.random() * 2.5,
+        color: FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)],
+        bornAt,
+      });
+    }
+  };
+
+  // Five bursts over ~1.6s.
+  const burstTimes = [0, 350, 700, 1100, 1550];
+
+  const start = performance.now();
+  let nextBurst = 0;
+  const frame = (now: number) => {
+    const elapsed = now - start;
+    while (nextBurst < burstTimes.length && elapsed >= burstTimes[nextBurst]) {
+      burst(elapsed);
+      nextBurst++;
+    }
+
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (const p of pieces) {
+      const age = elapsed - p.bornAt;
+      const alpha = Math.max(0, 1 - age / 1500);
+      if (alpha <= 0) continue;
+      p.vx *= FIREWORK_DRAG;
+      p.vy = p.vy * FIREWORK_DRAG + FIREWORK_GRAVITY;
+      p.x += p.vx;
+      p.y += p.vy;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (0.6 + alpha * 0.4), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if (elapsed < FIREWORKS_LIFETIME_MS) requestAnimationFrame(frame);
+    else canvas.remove();
+  };
+  requestAnimationFrame(frame);
+}
+

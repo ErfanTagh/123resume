@@ -508,6 +508,7 @@
       "page": "Seite"
     },
     "score": {
+      "chip": "Score",
       "label": "Lebenslauf-Bewertung",
       "title": "CV-Bewertung & Analyse",
       "subtitle": "Echtzeit-Vollständigkeitsanalyse",
@@ -623,6 +624,21 @@
       }
     },
     "improve": {
+      "reviewTitle": "Claudes Bewertung Ihres Lebenslaufs",
+      "reviewSubtitle": "Grüne Vorschläge verbessern oder ergänzen Text; rote markieren Text, der Ihren Lebenslauf schwächt. Jeder zeigt, wie viel Ihr Score gewinnen kann.",
+      "points": "+{points} Pkt.",
+      "potentialGain": "Noch bis zu +{points} Score-Punkte möglich",
+      "deleteBadge": "Entfernen",
+      "deleteWhy": "Warum entfernen:",
+      "keep": "Behalten",
+      "additionsTitle": "Vorgeschlagene Ergänzungen",
+      "suggestionsSummary": "{count} Vorschläge · bis zu +{points} Pkt.",
+      "signIn": "Für die KI-Prüfung anmelden",
+      "perfect": "Perfekt — Ihr Lebenslauf hat 10/10 erreicht!",
+      "loadingTitle": "Claude prüft Ihren Lebenslauf",
+      "loadingHint": "Das dauert meist unter einer Minute.",
+      "stepScore": "Lebenslauf wird bewertet",
+      "stepSuggest": "Verbesserungen werden gesucht",
       "newBadge": "Neu",
       "addNote": "Übernehmen Sie das nur, wenn es auf Sie zutrifft.",
       "title": "Lebenslauf mit KI verbessern",

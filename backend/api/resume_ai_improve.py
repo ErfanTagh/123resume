@@ -10,12 +10,14 @@ Returns a list of proposed changes — each with the react-hook-form field
 `path`, a human `label`, the `original` text, and the `improved` text — so the
 frontend can present an Accept/Reject card per change.
 
-Two kinds of change:
-  - rewrites of text that already exists (no facts invented), and
+Three kinds of change, each with `points` (estimated overall-score gain, 0–10 scale):
+  - rewrites of text that already exists (no facts invented),
   - additions (kind "add"): new skills, work bullets and project highlights
     that fit the candidate's roles. These are proposals: the user is told to
     accept only what is true for them, and the model may not invent numbers.
     For an addition, `path` is the array to append to and `original` is "".
+  - deletions (kind "delete"): existing text that hurts the resume (filler,
+    ambiguity, duplication), with a `reason`; `improved` is "".
 """
 from __future__ import annotations
 
@@ -41,6 +43,49 @@ MAX_NEW_BULLETS_PER_ROLE = 2
 MAX_NEW_BULLETS = 6
 MAX_NEW_HIGHLIGHTS = 3
 MAX_ADDITION_CHARS = 220
+MAX_DELETIONS = 6
+MAX_REASON_CHARS = 180
+
+# Per-change score gain (same 0–10 scale as the resume score).
+MIN_POINTS = 0.1
+MAX_POINTS = 1.0
+
+
+def _clamp_points(value: Any) -> float:
+    """Normalize the model's estimated score gain to one decimal in [MIN, MAX]."""
+    try:
+        pts = float(value)
+    except (TypeError, ValueError):
+        return MIN_POINTS
+    return round(min(MAX_POINTS, max(MIN_POINTS, pts)), 1)
+
+
+def _normalize_points_to_gap(changes: List[Dict[str, Any]], gap: float) -> List[Dict[str, Any]]:
+    """
+    Rescale the per-change points so they add up to EXACTLY `gap` (the distance
+    from the current score to 10). The model's own points are kept as weights;
+    allocation happens in tenths with largest-remainder rounding, so a user who
+    accepts every suggestion lands precisely on 10/10.
+    """
+    if not changes or gap <= 0:
+        for c in changes:
+            c["points"] = 0.0
+        return changes
+    weights = [float(c.get("points") or 0.0) for c in changes]
+    total = sum(weights)
+    if total <= 0:
+        weights = [1.0] * len(changes)
+        total = float(len(changes))
+    gap_tenths = int(round(gap * 10))
+    raw = [w / total * gap_tenths for w in weights]
+    allocated = [int(x) for x in raw]
+    leftover = gap_tenths - sum(allocated)
+    by_remainder = sorted(range(len(raw)), key=lambda i: raw[i] - allocated[i], reverse=True)
+    for i in by_remainder[:leftover]:
+        allocated[i] += 1
+    for change, tenths in zip(changes, allocated):
+        change["points"] = tenths / 10.0
+    return changes
 
 
 def _norm(text: Any) -> str:
@@ -243,11 +288,13 @@ def _collect_additions(parsed: Dict[str, Any], ctx: Dict[str, Any]) -> List[Dict
 
     have = {sk.lower() for sk in ctx["skills"]}
     for raw in (adds.get("skills") or [])[: MAX_NEW_SKILLS * 2]:
-        skill = _norm(raw)[:60]
+        # Entries are either plain strings or {"text": ..., "points": ...}.
+        points = _clamp_points(raw.get("points") if isinstance(raw, dict) else None)
+        skill = _norm(raw.get("text") if isinstance(raw, dict) else raw)[:60]
         if skill and skill.lower() not in have and len([c for c in out if c["kind"] == "add"]) < MAX_NEW_SKILLS:
             have.add(skill.lower())
             out.append({"path": ctx["skills_path"], "label": "New skill", "original": "",
-                        "improved": skill, "kind": "add"})
+                        "improved": skill, "kind": "add", "points": points})
 
     roles = {r["role"]: r for r in ctx["roles"]}
     per_role: Dict[int, int] = {}
@@ -269,7 +316,8 @@ def _collect_additions(parsed: Dict[str, Any], ctx: Dict[str, Any]) -> List[Dict
         n_bullets += 1
         label_role = " at ".join([p for p in (role["position"], role["company"]) if p])
         out.append({"path": f"workExperience.{idx}.responsibilities", "label": f"New bullet — {label_role}",
-                    "original": "", "improved": text, "kind": "add"})
+                    "original": "", "improved": text, "kind": "add",
+                    "points": _clamp_points(row.get("points"))})
 
     projects = {p["project"]: p for p in ctx["projects"]}
     n_high = 0
@@ -284,7 +332,8 @@ def _collect_additions(parsed: Dict[str, Any], ctx: Dict[str, Any]) -> List[Dict
         if idx in projects and text:
             n_high += 1
             out.append({"path": f"projects.{idx}.highlights", "label": f"New highlight — {projects[idx]['name']}",
-                        "original": "", "improved": text, "kind": "add"})
+                        "original": "", "improved": text, "kind": "add",
+                        "points": _clamp_points(row.get("points"))})
     return out
 
 
@@ -304,7 +353,8 @@ def _extract_json_object(text: str) -> Dict[str, Any]:
 def improve_resume_fields(
     resume: Dict[str, Any],
     output_language: str = "en",
-) -> List[Dict[str, str]]:
+    current_score: float | None = None,
+) -> List[Dict[str, Any]]:
     """
     Returns a list of proposed changes:
       [{path, label, original, improved, kind?}, ...]
@@ -322,6 +372,27 @@ def improve_resume_fields(
 
     lang_rule = output_language_rule(lang, writes="each improved text", source="that field's original text")
 
+    # Points: with the current score known, the suggestions must together close
+    # the exact gap to a 10/10 (the backend rescales to guarantee the sum).
+    gap = round(max(0.0, 10.0 - current_score), 1) if current_score is not None else None
+    if gap is not None:
+        points_rule = (
+            f"POINTS. The resume's current overall score is {current_score}/10. For EVERY rewrite, addition "
+            f"and deletion, give \"points\": that change's share of the remaining {gap} points. The points of "
+            f"ALL your suggestions together MUST add up to exactly {gap}, so a user who applies every single "
+            "suggestion reaches a 10/10 resume. Weight each change's share by its real impact: fixing a vague "
+            "summary or an empty section is worth far more than a cosmetic rewording. Cover every real "
+            "weakness you can find, so that applying everything genuinely earns the perfect score."
+        )
+    else:
+        points_rule = (
+            f"POINTS. The resume has an overall score from 0 to 10. For EVERY rewrite, addition and deletion you "
+            f"propose, estimate \"points\": how much the overall score would improve if the user applies that one "
+            f"change, as a number between {MIN_POINTS} and {MAX_POINTS} (one decimal). Be honest and conservative: "
+            f"a cosmetic rewording is {MIN_POINTS}; a change that fixes a real weakness (vague summary, empty "
+            "bullet, unprofessional wording) is worth more. Points are estimates, not a promise."
+        )
+
     # Compact list the model sees — id + kind + context + original text only.
     model_items = [
         {"id": it["id"], "kind": it["kind"], "context": it["context"], "original": it["original"]}
@@ -329,7 +400,8 @@ def improve_resume_fields(
     ]
 
     system = (
-        "You improve resumes: you rewrite existing text fields and propose relevant additions. "
+        "You improve resumes: you rewrite existing text fields, propose relevant additions, "
+        "and flag text that hurts the resume and should be removed. "
         "Reply with a single JSON object only (no markdown fences). "
         "Rewrites keep the same facts; never invent employers, dates, numbers or metrics."
     )
@@ -351,6 +423,8 @@ Rules:
 - If a field is already strong and you cannot meaningfully improve it, return its text unchanged.
 - {lang_rule}
 
+{points_rule}
+
 PART 2 — ADDITIONS. Also propose new content the candidate can add, whenever you find anything relevant:
 - "skills": up to {MAX_NEW_SKILLS} skills that fit their roles and title and are NOT already in their skills list
   (core tools and abilities someone in these roles almost certainly uses).
@@ -362,11 +436,19 @@ The candidate decides whether each addition is true for them, so: NEVER put numb
 team sizes or other metrics in an addition, and never name employers, clients or certifications that aren't in the resume.
 Write additions in the resume's own language. Return empty lists when nothing fits.
 
+PART 3 — DELETIONS. Flag up to {MAX_DELETIONS} input fields (by id) whose text actively HURTS the
+resume and is better deleted than rewritten: meaningless filler, vague buzzword soup with no content,
+duplicated statements, unprofessional or ambiguous claims a recruiter would question. For each, give
+a short "reason" (max {MAX_REASON_CHARS} characters, in the resume's own language, addressed to the
+user) and "points". Only flag text that is genuinely harmful — an empty list is the normal case.
+Never flag a field you are also meaningfully rewriting; pick one: rewrite it OR delete it.
+
 Return JSON exactly as:
-{{"items": [{{"id": "<id>", "improved": "<improved text>"}}, ...],
-  "additions": {{"skills": ["<skill>", ...],
-                 "bullets": [{{"role": <role number>, "text": "<bullet>"}}, ...],
-                 "highlights": [{{"project": <project number>, "text": "<highlight>"}}, ...]}}}}
+{{"items": [{{"id": "<id>", "improved": "<improved text>", "points": <number>}}, ...],
+  "additions": {{"skills": [{{"text": "<skill>", "points": <number>}}, ...],
+                 "bullets": [{{"role": <role number>, "text": "<bullet>", "points": <number>}}, ...],
+                 "highlights": [{{"project": <project number>, "text": "<highlight>", "points": <number>}}, ...]}},
+  "deletions": [{{"id": "<id>", "reason": "<why this hurts the resume>", "points": <number>}}, ...]}}
 Include one item per input id, preserving ids.
 
 Fields to improve (JSON):
@@ -399,19 +481,50 @@ Roles, projects and current skills (for additions; "role"/"project" are the numb
         logger.warning("resume_improve JSON parse error: %s | snippet=%s", e, raw[:300])
         raise
 
-    improved_by_id: Dict[str, str] = {}
+    improved_by_id: Dict[str, Dict[str, Any]] = {}
     for row in parsed.get("items") or []:
         if not isinstance(row, dict):
             continue
         rid = str(row.get("id") or "").strip()
         improved = _norm(row.get("improved"))
         if rid and improved:
-            improved_by_id[rid] = improved[:MAX_OUTPUT_CHARS]
+            improved_by_id[rid] = {
+                "improved": improved[:MAX_OUTPUT_CHARS],
+                "points": _clamp_points(row.get("points")),
+            }
 
-    changes: List[Dict[str, str]] = []
+    # Deletions: fields whose text hurts the resume. A deletion wins over a
+    # rewrite of the same field (the model is told to pick one, but be safe).
+    deletions_by_id: Dict[str, Dict[str, Any]] = {}
+    for row in (parsed.get("deletions") or [])[:MAX_DELETIONS]:
+        if not isinstance(row, dict):
+            continue
+        rid = str(row.get("id") or "").strip()
+        if rid:
+            deletions_by_id[rid] = {
+                "reason": _norm(row.get("reason"))[:MAX_REASON_CHARS],
+                "points": _clamp_points(row.get("points")),
+            }
+
+    changes: List[Dict[str, Any]] = []
     for it in items:
-        improved = improved_by_id.get(it["id"], "")
         original = it["original"]
+        deletion = deletions_by_id.get(it["id"])
+        if deletion:
+            changes.append(
+                {
+                    "path": it["path"],
+                    "label": it["label"],
+                    "original": original,
+                    "improved": "",
+                    "kind": "delete",
+                    "reason": deletion["reason"],
+                    "points": deletion["points"],
+                }
+            )
+            continue
+        row = improved_by_id.get(it["id"])
+        improved = row["improved"] if row else ""
         # Skip when the model returned nothing or text that is effectively unchanged.
         if not improved or improved.strip().lower() == original.strip().lower():
             continue
@@ -421,10 +534,15 @@ Roles, projects and current skills (for additions; "role"/"project" are the numb
                 "label": it["label"],
                 "original": original,
                 "improved": improved,
+                "points": row["points"],
             }
         )
 
     changes += _collect_additions(parsed, ctx)
+
+    # Make "accept everything → 10/10" arithmetically true, whatever the model said.
+    if gap is not None:
+        changes = _normalize_points_to_gap(changes, gap)
 
     logger.info(
         "resume_improve model_ok lang=%s items_in=%d changes_out=%d",

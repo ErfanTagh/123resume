@@ -439,11 +439,16 @@ export const aiAPI = {
    */
   improveResume: async (
     resume: Record<string, unknown>,
-    options?: { outputLanguage?: "en" | "de" },
+    options?: { outputLanguage?: "en" | "de"; currentScore?: number },
   ): Promise<{ changes: ResumeImproveChange[] }> => {
     const payload: Record<string, unknown> = { resume };
     if (options?.outputLanguage === "de" || options?.outputLanguage === "en") {
       payload.outputLanguage = options.outputLanguage;
+    }
+    // With the current score, the backend calibrates the suggestions' points so
+    // accepting every one of them closes the exact gap to a 10/10.
+    if (typeof options?.currentScore === "number" && Number.isFinite(options.currentScore)) {
+      payload.currentScore = options.currentScore;
     }
     const doFetch = () =>
       fetch(`${API_BASE_URL}/ai/resume-improve/`, {
@@ -493,12 +498,18 @@ export interface ResumeImproveChange {
   /** react-hook-form field path, e.g. "personalInfo.summary" or "workExperience.0.description".
    *  For an addition: the array to append to, e.g. "skills" or "workExperience.0.responsibilities". */
   path: string;
-  /** "add": a new skill/bullet/highlight proposed by the AI; `original` is "". Absent for rewrites. */
-  kind?: "add";
+  /** "add": a new skill/bullet/highlight proposed by the AI; `original` is "".
+   *  "delete": existing text that hurts the resume and should be removed; `improved` is "".
+   *  Absent for rewrites. */
+  kind?: "add" | "delete";
   /** Human-readable label for the field, e.g. "Experience — Engineer at Acme". */
   label: string;
   original: string;
   improved: string;
+  /** Estimated overall-score gain (0–10 scale) if this change is applied. */
+  points?: number;
+  /** For "delete": why this text hurts the resume (in the resume's language). */
+  reason?: string;
 }
 
 export type AiImproveFieldType =

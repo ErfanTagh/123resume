@@ -219,7 +219,19 @@ def improve_resume(request):
     )
 
     try:
-        changes = resume_ai_improve.improve_resume_fields(resume, out_lang)
+        # Current overall score (0-10): with it, the suggestions' points are
+        # calibrated to close the exact gap to 10 when all are accepted.
+        current_score = None
+        raw_score = data.get("current_score", data.get("currentScore"))
+        if raw_score is not None:
+            try:
+                current_score = min(10.0, max(0.0, float(raw_score)))
+            except (TypeError, ValueError):
+                current_score = None
+
+        changes = resume_ai_improve.improve_resume_fields(
+            resume, out_lang, current_score=current_score
+        )
         logger.info(
             "resume_improve ok user_id=%s changes=%d",
             getattr(request.user, "pk", None),

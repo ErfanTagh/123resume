@@ -190,6 +190,9 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
   /** Popover opens below the mark, or above it when the mark is near the
    *  bottom of the viewport. */
   const [popoverPlacement, setPopoverPlacement] = useState<"below" | "above">("below");
+  // The popover opens next to the cursor, so its anchor is the mouse position
+  // (in wrapper-local coordinates), not the mark, which may span far away.
+  const [popoverPos, setPopoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   // Hover: a short grace period lets the mouse travel from the mark into the
   // popover (and between lines of one mark) without the dialog closing.
   const hoverCloseTimer = useRef<number>();
@@ -197,21 +200,24 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
   // over the next mark while you read the current one should not yank focus.
   const hoverOpenTimer = useRef<number>();
   const HOVER_OPEN_DELAY = 220;
-  // Open a mark's popover right away (click, or once hover intent is met).
-  const openMark = (index: number, anchor: HTMLElement) => {
+  // Open a mark's popover right away (click, or once hover intent is met),
+  // anchored at the cursor position (clientX/clientY).
+  const openMark = (index: number, clientX: number, clientY: number) => {
     window.clearTimeout(hoverCloseTimer.current);
     window.clearTimeout(hoverOpenTimer.current);
-    const r = anchor.getBoundingClientRect();
-    setPopoverPlacement(window.innerHeight - r.bottom < 260 ? "above" : "below");
+    const wrapper = previewRef.current?.querySelector(".resume-content-wrapper") as HTMLElement | null;
+    const wr = wrapper?.getBoundingClientRect();
+    setPopoverPos({ x: clientX - (wr?.left ?? 0), y: clientY - (wr?.top ?? 0) });
+    setPopoverPlacement(window.innerHeight - clientY < 260 ? "above" : "below");
     setActiveMarkIndex(index);
   };
   // Hover over a mark: keep the current popover if it is this one; otherwise
   // open after a short delay so a passing cursor does not switch suggestions.
-  const openMarkOnHover = (index: number, anchor: HTMLElement) => {
+  const openMarkOnHover = (index: number, clientX: number, clientY: number) => {
     window.clearTimeout(hoverCloseTimer.current);
     if (index === activeMarkIndex) return;
     window.clearTimeout(hoverOpenTimer.current);
-    hoverOpenTimer.current = window.setTimeout(() => openMark(index, anchor), HOVER_OPEN_DELAY);
+    hoverOpenTimer.current = window.setTimeout(() => openMark(index, clientX, clientY), HOVER_OPEN_DELAY);
   };
   const scheduleCloseMark = () => {
     window.clearTimeout(hoverOpenTimer.current);
@@ -769,7 +775,7 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
       <div
         ref={scrollContainerRef}
         data-resume-scroll
-        className={`min-h-0 flex-1 ${
+        className={`min-h-0 flex-1 overscroll-contain ${
           template === "latex"
             ? "max-h-[calc(100vh-11rem)] overflow-x-hidden overflow-y-auto"
             : "max-h-[calc(100vh-11rem)] overflow-y-auto bg-muted/20"
@@ -803,11 +809,11 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                       role="button"
                       aria-label={reviewChanges?.[mark.index]?.label}
                       className="absolute flex cursor-pointer items-center justify-center overflow-hidden transition-transform hover:scale-[1.04]"
-                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.currentTarget)}
+                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.clientX, e.clientY)}
                       onMouseLeave={scheduleCloseMark}
                       onClick={(e) => {
                         e.stopPropagation();
-                        openMark(mark.index, e.currentTarget);
+                        openMark(mark.index, e.clientX, e.clientY);
                       }}
                       style={{
                         // border-box + a small inset keeps a gap between adjacent chips
@@ -838,11 +844,11 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                       role="button"
                       aria-label={reviewChanges?.[mark.index]?.label}
                       className="absolute cursor-pointer rounded-[2px] transition-opacity hover:opacity-60"
-                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.currentTarget)}
+                      onMouseEnter={(e) => openMarkOnHover(mark.index, e.clientX, e.clientY)}
                       onMouseLeave={scheduleCloseMark}
                       onClick={(e) => {
                         e.stopPropagation();
-                        openMark(mark.index, e.currentTarget);
+                        openMark(mark.index, e.clientX, e.clientY);
                       }}
                       style={{
                         top: r.top - 1,
@@ -863,14 +869,12 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                   width: POPOVER_WIDTH,
                   // Above the page-break/page-number indicators (z-index 999).
                   zIndex: 1200,
-                  top:
-                    popoverPlacement === "above"
-                      ? activeMark.rects[0].top - 8
-                      : activeMark.rects[0].top + activeMark.rects[0].height + 8,
+                  // Anchored at the cursor, just below (or above) it.
+                  top: popoverPlacement === "above" ? popoverPos.y - 14 : popoverPos.y + 18,
                   transform: popoverPlacement === "above" ? "translateY(-100%)" : undefined,
                   left: Math.max(
                     8,
-                    Math.min(activeMark.rects[0].left, Math.max(8, wrapperWidth - POPOVER_WIDTH - 8)),
+                    Math.min(popoverPos.x - 24, Math.max(8, wrapperWidth - POPOVER_WIDTH - 8)),
                   ),
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -938,12 +942,6 @@ export const ResumePreviewPane = ({ data, form, onTranslated, review }: ResumeEd
                     </p>
                   ) : (
                     <>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t("resume.improve.before") || "Current"}
-                      </p>
-                      <p className="max-h-32 overflow-y-auto rounded-md bg-muted/60 p-2 text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                        {activeChange.original}
-                      </p>
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
                         {t("resume.improve.after") || "Suggested"}
                       </p>

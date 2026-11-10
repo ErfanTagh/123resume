@@ -102,6 +102,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const data = await res.json().catch(() => ({}));
         if (res.ok) sendResponse({ ok: true, application: data.application, tracker_url: data.tracker_url });
         else sendResponse({ ok: false, error: data.error || `api-${res.status}` });
+      } else if (msg.type === "cover-letter") {
+        // Current page text + chosen resume -> the existing cover-letter system.
+        const res = await authedFetch(
+          `/resumes/${encodeURIComponent(msg.resume_id)}/cover-letter/`,
+          {
+            method: "POST",
+            body: {
+              title: msg.title,
+              description: msg.description,
+              output_language: msg.output_language,
+            },
+          },
+        );
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) sendResponse({ ok: true, cover_letter: data.cover_letter, job_title: data.job_title });
+        else sendResponse({ ok: false, error: data.error || `api-${res.status}` });
       } else if (msg.type === "disconnect") {
         await chrome.storage.local.remove("auth");
         sendResponse({ ok: true });

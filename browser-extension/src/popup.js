@@ -177,6 +177,82 @@ async function saveCurrentJob(status) {
 }
 
 // ---------------------------------------------------------------------------
+// Generate a cover letter for the current page with the selected resume
+// ---------------------------------------------------------------------------
+let lastLetter = { text: "", title: "" };
+
+async function generateCoverLetter() {
+  const resumeId = $("resume").value;
+  const result = $("cover-result");
+  const btn = $("cover");
+  if (!resumeId) {
+    result.className = "result err";
+    result.textContent = "Pick a resume first.";
+    return;
+  }
+  btn.disabled = true;
+  $("cover-out").hidden = true;
+  result.className = "result";
+  result.textContent = "Reading page & writing your cover letter… keep this open.";
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) {
+      result.className = "result err";
+      result.textContent = "No active tab to read.";
+      return;
+    }
+    let page;
+    try {
+      const out = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: grabPageText });
+      page = out?.[0]?.result;
+    } catch {
+      result.className = "result err";
+      result.textContent = "Can't read this page. Open the job posting and try again.";
+      return;
+    }
+    if (!page || !page.text || page.text.length < 40) {
+      result.className = "result err";
+      result.textContent = "Couldn't find any job text on this page.";
+      return;
+    }
+    const res = await send({
+      type: "cover-letter",
+      resume_id: resumeId,
+      title: page.title,
+      description: page.text,
+      output_language: $("cl-lang").value,
+    });
+    if (!res?.ok || !res.cover_letter) {
+      result.className = "result err";
+      result.textContent = res?.error ? String(res.error) : "Could not generate the cover letter. Try again.";
+      return;
+    }
+    lastLetter = { text: res.cover_letter, title: res.job_title || page.title || "Cover Letter" };
+    $("cover-text").value = lastLetter.text;
+    $("cover-out").hidden = false;
+    result.className = "result ok";
+    result.textContent = "Cover letter ready — review and download.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function downloadLetter() {
+  if (!lastLetter.text) return;
+  const safe =
+    (lastLetter.title || "Cover Letter").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 80) || "Cover Letter";
+  const blob = new Blob([lastLetter.text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Cover Letter - ${safe}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ---------------------------------------------------------------------------
 
 async function render() {
   const status = await send({ type: "status" });
@@ -220,5 +296,7 @@ $("resume").addEventListener("change", (e) => loadJobs(e.target.value));
 $("find").addEventListener("click", () => loadJobs($("resume").value));
 $("germany").addEventListener("change", () => loadJobs($("resume").value));
 $("save").addEventListener("click", () => saveCurrentJob("saved"));
+$("cover").addEventListener("click", generateCoverLetter);
+$("cover-download").addEventListener("click", downloadLetter);
 
 render();

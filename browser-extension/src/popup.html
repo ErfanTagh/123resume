@@ -44,6 +44,25 @@
           </p>
         </section>
 
+        <section class="block">
+          <div class="row">
+            <span class="section-title">Cover letter</span>
+            <select id="cl-lang" class="mini-select">
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </div>
+          <button id="cover" class="primary">Generate cover letter</button>
+          <p id="cover-result" class="result"></p>
+          <div id="cover-out" hidden>
+            <textarea id="cover-text" rows="8" readonly></textarea>
+            <button id="cover-download" class="primary cover-download">Download .txt</button>
+          </div>
+          <p class="muted small">
+            Uses the resume selected above and the job on the current page.
+          </p>
+        </section>
+
         <button id="disconnect" class="link">Disconnect</button>
       </div>
     </main>

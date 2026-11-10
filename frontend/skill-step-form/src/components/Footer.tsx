@@ -62,6 +62,7 @@ export const Footer = () => {
             <ul className="space-y-3">
               <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.privacyPolicy')}</Link></li>
               <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.termsOfService')}</Link></li>
+              <li><Link to="/impressum" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.impressum')}</Link></li>
               <li><Link to="/data-protection" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.dataProtection')}</Link></li>
               <li><Link to="/cookies" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.cookiePolicy')}</Link></li>
             </ul>

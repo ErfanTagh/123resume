@@ -42,6 +42,7 @@ import Templates from "./pages/Templates";
 import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Impressum from "./pages/Impressum";
 import DataProtection from "./pages/DataProtection";
 import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
@@ -161,6 +162,7 @@ const AppRoutes = () => {
           <Route path="/careers" element={<Careers />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/impressum" element={<Impressum />} />
           <Route path="/data-protection" element={<DataProtection />} />
           <Route path="/cookies" element={<Cookies />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

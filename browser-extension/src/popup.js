@@ -119,10 +119,10 @@ async function loadJobs(id) {
 // ---------------------------------------------------------------------------
 async function saveCurrentJob(status) {
   const result = $("result");
-  const buttons = [$("save"), $("applied")];
-  buttons.forEach((b) => (b.disabled = true));
+  const btn = $("save");
+  btn.disabled = true;
   result.className = "result";
-  result.textContent = status === "applied" ? "Reading page & saving as applied…" : "Reading page & saving…";
+  result.textContent = "Reading page & saving…";
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
@@ -164,10 +164,7 @@ async function saveCurrentJob(status) {
     result.textContent = "";
     const line = document.createElement("span");
     line.textContent =
-      `Saved${status === "applied" ? " as applied" : ""}: ` +
-      (app.job_title || "job") +
-      (app.company ? " · " + app.company : "") +
-      ". ";
+      "Saved: " + (app.job_title || "job") + (app.company ? " · " + app.company : "") + ". ";
     const link = document.createElement("a");
     link.href = res.tracker_url || "https://123resume.de/resumes?tab=job-tracker";
     link.target = "_blank";
@@ -175,7 +172,7 @@ async function saveCurrentJob(status) {
     link.textContent = "View in tracker";
     result.append(line, link);
   } finally {
-    buttons.forEach((b) => (b.disabled = false));
+    btn.disabled = false;
   }
 }
 
@@ -223,6 +220,5 @@ $("resume").addEventListener("change", (e) => loadJobs(e.target.value));
 $("find").addEventListener("click", () => loadJobs($("resume").value));
 $("germany").addEventListener("change", () => loadJobs($("resume").value));
 $("save").addEventListener("click", () => saveCurrentJob("saved"));
-$("applied").addEventListener("click", () => saveCurrentJob("applied"));
 
 render();

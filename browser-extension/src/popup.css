@@ -50,21 +50,6 @@ button.link {
   text-decoration: underline;
   padding: 0;
 }
-.save-row { display: flex; gap: 8px; }
-.save-row .primary { flex: 1 1 auto; min-width: 0; width: auto; }
-button.secondary {
-  flex: 0 0 auto;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-  color: #3f3a42;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-button.secondary:hover { border-color: #e83a6a; color: #e83a6a; }
-button.secondary:disabled { opacity: 0.6; cursor: default; }
 .result a { color: #e83a6a; text-decoration: underline; }
 .muted { color: #8a8490; font-size: 13px; }
 .small { font-size: 11px; margin-top: 10px; line-height: 1.4; }

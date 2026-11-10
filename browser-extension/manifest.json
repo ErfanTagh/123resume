@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "123Resume Job Saver",
   "version": "0.2.0",
-  "description": "Find jobs that fit your resume and save any posting to your 123Resume tracker — Claude tidies it into a clean record you can find later.",
+  "description": "Find jobs that fit your resume and save any posting to your 123Resume tracker — Claude turns it into a clean record.",
   "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": ["https://123resume.de/*"],
   "icons": {

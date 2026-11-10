@@ -459,7 +459,25 @@ export const PRIVACY: Record<"en" | "de", LegalDoc> = {
         ],
       },
       {
-        title: "15. Contact",
+        title: "15. Browser extension",
+        blocks: [
+          {
+            p: "We offer an optional Chrome extension, “123Resume Autofill”. It is not required to use 123Resume and does nothing until you install it and sign in. What it accesses:",
+          },
+          {
+            list: [
+              "Your 123Resume login: it reads your existing session (access and refresh tokens) from a 123resume.de tab you are already signed in to, and stores it in your browser's local storage so it can call our API for you.",
+              "Your resumes: it fetches your resume data from our API to fill application forms, and the openings that match your resume.",
+              "The current job page: when you click “Fill current form”, it fills contact fields (name, email, phone, links) into the form on the tab you are viewing. It runs only on that tab, only when you click, and does not read or transmit the contents of other sites.",
+            ],
+          },
+          {
+            p: "The extension communicates only with the 123Resume API (https://123resume.de). It sends your data to no other server and contains no tracking or advertising. Your login stays in your browser; remove it any time with the extension's “Disconnect” button or by uninstalling it.",
+          },
+        ],
+      },
+      {
+        title: "16. Contact",
         blocks: [{ p: `For privacy questions or to exercise your rights, contact us at ${CONTACT}.` }],
       },
     ],
@@ -589,7 +607,25 @@ export const PRIVACY: Record<"en" | "de", LegalDoc> = {
         ],
       },
       {
-        title: "15. Kontakt",
+        title: "15. Browser-Erweiterung",
+        blocks: [
+          {
+            p: "Wir bieten eine optionale Chrome-Erweiterung „123Resume Autofill“ an. Sie ist für die Nutzung von 123Resume nicht erforderlich und tut nichts, bis Sie sie installieren und sich anmelden. Worauf sie zugreift:",
+          },
+          {
+            list: [
+              "Ihre 123Resume-Anmeldung: Sie liest Ihre bestehende Sitzung (Access- und Refresh-Token) aus einem 123resume.de-Tab, in dem Sie bereits angemeldet sind, und speichert sie im lokalen Speicher Ihres Browsers, um unsere API für Sie aufzurufen.",
+              "Ihre Lebensläufe: Sie ruft Ihre Lebenslaufdaten über unsere API ab, um Bewerbungsformulare auszufüllen, sowie die zu Ihrem Lebenslauf passenden Stellen.",
+              "Die aktuelle Stellenseite: Wenn Sie auf „Formular ausfüllen“ klicken, füllt sie Kontaktfelder (Name, E-Mail, Telefon, Links) in das Formular im gerade geöffneten Tab ein. Sie läuft nur in diesem Tab, nur auf Ihren Klick, und liest oder übermittelt keine Inhalte anderer Websites.",
+            ],
+          },
+          {
+            p: "Die Erweiterung kommuniziert ausschließlich mit der 123Resume-API (https://123resume.de). Sie sendet Ihre Daten an keinen anderen Server und enthält kein Tracking und keine Werbung. Ihre Anmeldung bleibt in Ihrem Browser; Sie können sie jederzeit über die Schaltfläche „Trennen“ der Erweiterung oder durch Deinstallation entfernen.",
+          },
+        ],
+      },
+      {
+        title: "16. Kontakt",
         blocks: [{ p: `Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte erreichen Sie uns unter ${CONTACT}.` }],
       },
     ],

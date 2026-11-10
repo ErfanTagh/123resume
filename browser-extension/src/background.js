@@ -35,11 +35,18 @@ async function refreshAccess() {
 }
 
 /** Fetch with the stored token, refreshing once on a 401. Returns the Response. */
-async function authedFetch(path) {
+async function authedFetch(path, options = {}) {
   const auth = await getStored();
   if (!auth?.access) throw new Error("not-connected");
   const call = (token) =>
-    fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+    fetch(`${API_BASE}${path}`, {
+      method: options.method || "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
   let res = await call(auth.access);
   if (res.status === 401) {
     const fresh = await refreshAccess();
@@ -79,6 +86,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const res = await authedFetch(`/job-openings/?resume_id=${encodeURIComponent(msg.id)}${country}`);
         const data = await res.json().catch(() => ({}));
         if (res.ok) sendResponse({ ok: true, jobs: data.jobs || [] });
+        else sendResponse({ ok: false, error: data.error || `api-${res.status}` });
+      } else if (msg.type === "save-job") {
+        // Page text from the current tab -> Claude parses it -> saved to the
+        // user's job tracker. Nothing is filled into the page.
+        const res = await authedFetch("/extension/save-job/", {
+          method: "POST",
+          body: {
+            page_text: msg.page_text,
+            url: msg.url,
+            title: msg.title,
+            status: msg.status,
+          },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) sendResponse({ ok: true, application: data.application, tracker_url: data.tracker_url });
         else sendResponse({ ok: false, error: data.error || `api-${res.status}` });
       } else if (msg.type === "disconnect") {
         await chrome.storage.local.remove("auth");

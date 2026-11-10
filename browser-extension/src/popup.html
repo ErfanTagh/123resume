@@ -8,7 +8,7 @@
   <body>
     <header>
       <span class="logo">123<b>Resume</b></span>
-      <span class="tag">Autofill</span>
+      <span class="tag">Jobs</span>
     </header>
 
     <main id="main">
@@ -35,12 +35,15 @@
         </section>
 
         <section class="block">
-          <button id="fill" class="primary">Fill current form</button>
+          <div class="save-row">
+            <button id="save" class="primary">Save this job</button>
+            <button id="applied" class="secondary">I applied</button>
+          </div>
           <p id="result" class="result"></p>
           <p class="muted small">
-            Click an opening to open its application form, then press “Fill
-            current form”. It fills contact fields only; review and submit
-            yourself, and attach your resume PDF.
+            Open any job posting, then press “Save this job”. We read the page,
+            Claude tidies it into a clean record, and it’s stored in your
+            123Resume job tracker. “I applied” saves it as applied.
           </p>
         </section>
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "123Resume Autofill",
-  "version": "0.1.0",
-  "description": "See openings that fit your resume and autofill the company's application form with your 123Resume data. You review and submit.",
+  "name": "123Resume Job Saver",
+  "version": "0.2.0",
+  "description": "Find jobs that fit your resume and save any posting to your 123Resume tracker — Claude tidies it into a clean record you can find later.",
   "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": ["https://123resume.de/*"],
   "icons": {
@@ -12,7 +12,7 @@
   },
   "background": { "service_worker": "src/background.js" },
   "action": {
-    "default_title": "123Resume Autofill",
+    "default_title": "123Resume Job Saver",
     "default_popup": "src/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

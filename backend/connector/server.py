@@ -102,11 +102,10 @@ Job tracker (on the site: "Job tracker", German "Bewerbungen"):
 - Only record what the user told you. Share tracker_url afterwards.
 
 Job suggestions (on the site: "Job suggestions", German "Jobvorschläge"):
-- suggest_jobs finds LinkedIn jobs posted in the last week that fit a resume,
-  from its job title and city unless you pass other keywords or a location.
-- It's in a test phase: each user gets 1 new search per day. Search once with
-  the best keywords; don't try variations unless the user asks. If a search is
-  refused, tell the user why (the message says) and when they can search again.
+- suggest_jobs returns free openings from company career pages (Greenhouse,
+  Lever, Ashby, SmartRecruiters, Recruitee, Arbeitnow), ranked for a resume from
+  its job title and city unless you pass other keywords or a location. Free and
+  unlimited (no daily cap); each job links to the company's own application form.
 - Present the best fits first (matched_skills, level_fit "fit") with their
   links. The results have no job descriptions: don't claim what a job requires
   beyond its title, ask the user to paste the ad when they want details.
@@ -287,11 +286,12 @@ async def update_application(application_id: str, changes: ApplicationChanges) -
 
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True, open_world_hint=True))
 async def suggest_jobs(resume_id: str, keywords: str = "", location: str = "") -> dict:
-    """Find LinkedIn jobs posted in the last week that fit a resume. Empty keywords and
-    location use the resume's job title and city. Each job has matched_skills (resume
-    skills its title names), level_fit against the user's experience, and in_tracker if
-    it's already in the job tracker. No job descriptions. Limited to 1 new search per
-    user per day; repeating a search from the last 24 hours is free."""
+    """Free job openings from company career pages (Greenhouse, Lever, Ashby,
+    SmartRecruiters, Recruitee, Arbeitnow), ranked for a resume; each links to the
+    company's own application form. Empty keywords and location use the resume's job
+    title and city. Each job has matched_skills (resume skills its title names),
+    level_fit against the user's experience, and in_tracker if it's already in the job
+    tracker. No job descriptions. Free and unlimited (no daily cap)."""
     return await _run(store.suggest_jobs, resume_id, keywords, location)
 
 

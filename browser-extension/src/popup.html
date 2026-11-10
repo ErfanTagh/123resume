@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <span class="logo">123<b>Resume</b></span>
+      <span class="tag">Autofill</span>
+    </header>
+
+    <main id="main">
+      <p id="status" class="muted">Loading…</p>
+
+      <div id="connect" hidden>
+        <p>Sign in to 123Resume, then come back here.</p>
+        <button id="open-login" class="primary">Open 123Resume login</button>
+      </div>
+
+      <div id="ready" hidden>
+        <label for="resume">Resume</label>
+        <select id="resume"></select>
+
+        <section class="block">
+          <div class="row">
+            <span class="section-title">Openings for you</span>
+            <button id="find" class="link">Refresh</button>
+          </div>
+          <label class="check"><input type="checkbox" id="germany" checked /> Germany &amp; remote only</label>
+          <div id="jobs" class="jobs"></div>
+          <div id="jobs-pager" class="pager"></div>
+          <p id="jobs-note" class="muted small"></p>
+        </section>
+
+        <section class="block">
+          <button id="fill" class="primary">Fill current form</button>
+          <p id="result" class="result"></p>
+          <p class="muted small">
+            Click an opening to open its application form, then press “Fill
+            current form”. It fills contact fields only; review and submit
+            yourself, and attach your resume PDF.
+          </p>
+        </section>
+
+        <button id="disconnect" class="link">Disconnect</button>
+      </div>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -17,7 +17,7 @@ import { ResumeCustomizeSidebar } from "./ResumeCustomizeSidebar";
 import { SignupOverlay } from "./SignupOverlay";
 import { SaveStatusBadge, type SaveStatus } from "./SaveStatusBadge";
 import { cvFormSchema, CVFormData } from "./types";
-import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare, Check, LogIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileCheck, Beaker, CheckCircle2, ArrowRight, MessageSquare, Check, Lock } from "lucide-react";
 import { RESUME_COLOR_THEMES, getActiveResumeThemeId } from "@/lib/resumeColorThemes";
 import { toast } from "@/hooks/use-toast";
 import { getTestProfile, getTestProfileNames } from "@/lib/testData";
@@ -1213,19 +1213,8 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                       <SaveStatusBadge status={saveStatus} />
                     </div>
 
-                    {/* Score and AI review controls live ON the preview, not here. */}
-                    {!user && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => navigate("/login")}
-                      >
-                        <LogIn className="h-3.5 w-3.5" />
-                        {t("resume.improve.signIn") || "Sign in for the AI review"}
-                      </Button>
-                    )}
+                    {/* Score and AI review controls live ON the preview. Guests see a
+                        locked preview (below) prompting sign-in, so no button here. */}
 
                     <Button
                       type="button"
@@ -1263,6 +1252,36 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
               >
                 {/* Live preview — the whole page on the review step */}
                 <div className={isReviewMode ? "min-w-0" : "hidden min-w-0 lg:block"}>
+                  {isReviewMode && !user ? (
+                    // Guests see the finished resume, but locked: a sign-in prompt
+                    // over a blurred preview. The AI review (Claude) never runs for them.
+                    <div className="relative overflow-hidden rounded-xl border border-border">
+                      <div
+                        aria-hidden
+                        className="pointer-events-none max-h-[600px] select-none overflow-hidden opacity-80 blur-[3px]"
+                      >
+                        <ResumePreviewPane data={formDataWithSkills} form={form} />
+                      </div>
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent to-background" />
+                      <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <div className="w-full max-w-sm rounded-2xl border border-border bg-card/95 p-6 text-center shadow-xl backdrop-blur">
+                          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Lock className="h-6 w-6" />
+                          </div>
+                          <h3 className="mb-1.5 text-lg font-semibold">{t("resume.locked.title")}</h3>
+                          <p className="mb-4 text-sm text-muted-foreground">{t("resume.locked.subtitle")}</p>
+                          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+                            <Button type="button" className="sm:min-w-28" onClick={() => navigate("/login")}>
+                              {t("navigation.login")}
+                            </Button>
+                            <Button type="button" variant="outline" className="sm:min-w-28" onClick={() => navigate("/signup")}>
+                              {t("navigation.signup")}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
                   <ResumePreviewPane
                     data={formDataWithSkills}
                     form={form}
@@ -1291,6 +1310,7 @@ export const CVFormContainer = ({ initialData, editId }: CVFormContainerProps) =
                     }
                     onTranslated={user ? () => fetchAiResumeScoreIfDirty({ force: true }) : undefined}
                   />
+                  )}
                 </div>
 
                 {/* Customize tools + form — right on desktop; collapses on review */}

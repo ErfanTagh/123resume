@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "123Resume Autofill",
+  "version": "0.1.0",
+  "description": "See openings that fit your resume and autofill the company's application form with your 123Resume data. You review and submit.",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["https://123resume.de/*"],
+  "background": { "service_worker": "src/background.js" },
+  "action": {
+    "default_title": "123Resume Autofill",
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://123resume.de/*"],
+      "js": ["src/content-123resume.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

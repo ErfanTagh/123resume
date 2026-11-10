@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, Bookmark, BookmarkCheck, BookmarkX, Building2, Check, Compass, ExternalLink, MapPin, Search } from "lucide-react";
+import { AlertCircle, Bookmark, BookmarkCheck, BookmarkX, Building2, Check, ChevronLeft, ChevronRight, Compass, ExternalLink, MapPin, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -49,6 +49,7 @@ const jobKey = (link?: string): string => {
 };
 
 const FILTER_KEYS: (keyof JobFilters)[] = ["fitsLevel", "matchesSkills", "last24h", "hideSaved"];
+const PAGE_SIZE = 10;
 
 const CompanyLogo = ({ src }: { src: string }) => {
   const [failed, setFailed] = useState(false);
@@ -96,6 +97,8 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
   const [savingKey, setSavingKey] = useState("");
   const [sort, setSort] = useState<JobSort>("best");
   const [filters, setFilters] = useState<JobFilters>(NO_FILTERS);
+  const [page, setPage] = useState(1);
+  const [germanyOnly, setGermanyOnly] = useState(true);
 
   const userLevel = result?.profile?.level ?? null;
   // Sorting and filters only reorder what was fetched: no new search, no credits
@@ -111,13 +114,21 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
   );
   const anyFilter = FILTER_KEYS.some((key) => filters[key]);
 
+  // 10 per page; best matches first. Any change to the list resets to page 1.
+  const pageCount = Math.max(1, Math.ceil(visibleJobs.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageJobs = visibleJobs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  useEffect(() => {
+    setPage(1);
+  }, [result, sort, filters]);
+
   const runSearch = useCallback(
     async (search?: { q: string; location: string }) => {
       if (!resumeId) return;
       setIsLoading(true);
       setLoadError("");
       try {
-        const data = await jobSuggestionAPI.get(resumeId, search);
+        const data = await jobSuggestionAPI.get(resumeId, search, germanyOnly ? "germany" : "");
         setResult(data);
         setKeywords(data.query?.q ?? "");
         setLocation(data.query?.location ?? "");
@@ -128,7 +139,7 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
         setIsLoading(false);
       }
     },
-    [resumeId, t],
+    [resumeId, t, germanyOnly],
   );
 
   // A resume's own title and city first; the fields can then narrow or change the search
@@ -300,6 +311,16 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
         </Button>
       </form>
 
+      <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={germanyOnly}
+          onChange={(e) => setGermanyOnly(e.target.checked)}
+          className="h-4 w-4 rounded border-input accent-primary"
+        />
+        {t("pages.resumes.jobSuggestions.germanyOnly")}
+      </label>
+
       {loadError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -374,8 +395,7 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
                 <span className="font-medium text-foreground/80">
                   {t("pages.resumes.jobSuggestions.showing")
                     .replace("{shown}", String(visibleJobs.length))
-                    .replace("{total}", String(jobs.length))}{" "}
-                  · {t("pages.resumes.jobSuggestions.postedThisWeek")}
+                    .replace("{total}", String(jobs.length))}
                 </span>
                 {userLevel && result.profile && (
                   <span>
@@ -398,7 +418,7 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
               </div>
             ) : (
             <div className="flex flex-col gap-2.5">
-              {visibleJobs.map((job) => {
+              {pageJobs.map((job) => {
                 const key = jobKey(job.link);
                 const trackedStatus = tracked.get(key)?.status;
                 const fit = levelFit(job.level, userLevel);
@@ -519,19 +539,43 @@ export function JobSuggestionsPanel({ resumes, isLoadingResumes }: JobSuggestion
               })}
             </div>
             )}
+
+            {pageCount > 1 && (
+              <div className="flex items-center justify-center gap-3 pt-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  {t("pages.resumes.jobSuggestions.prev")}
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {t("pages.resumes.jobSuggestions.pageOf")
+                    .replace("{page}", String(currentPage))
+                    .replace("{pages}", String(pageCount))}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage >= pageCount}
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                >
+                  {t("pages.resumes.jobSuggestions.next")}
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )
       ) : null}
 
-      {result && (
+      {result && result.fetchedAt && !errorCode && (
         <p className="text-xs text-muted-foreground">
-          {result.fetchedAt && !errorCode && (
-            <>
-              {t("pages.resumes.jobSuggestions.source").replace("{time}", updatedAt(result.fetchedAt))}
-              {" · "}
-            </>
-          )}
-          {t("pages.resumes.jobSuggestions.searchesLeft").replace("{n}", String(result.searchesLeft ?? 0))}
+          {t("pages.resumes.jobSuggestions.source").replace("{time}", updatedAt(result.fetchedAt))}
         </p>
       )}
     </div>

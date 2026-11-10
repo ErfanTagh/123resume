@@ -32,6 +32,7 @@ urlpatterns = [
     path('job-applications/', views.job_application_list, name='job-application-list'),
     path('job-applications/<str:pk>/', views.job_application_detail, name='job-application-detail'),
     path('job-suggestions/', views.job_suggestions, name='job-suggestions'),
+    path('job-openings/', views.job_openings, name='job-openings'),
 
     # Resume endpoints (protected)
     path('resumes/', views.resume_list, name='resume-list'),

@@ -623,6 +623,11 @@
         }
       }
     },
+    "locked": {
+      "title": "Melden Sie sich an, um Ihren Lebenslauf freizuschalten",
+      "subtitle": "Ihr Lebenslauf ist fertig. Melden Sie sich an oder erstellen Sie ein kostenloses Konto, um die KI-Analyse zu nutzen, Verbesserungen anzuwenden und ihn herunterzuladen.",
+      "badge": "Vorschau"
+    },
     "improve": {
       "reviewTitle": "Claudes Bewertung Ihres Lebenslaufs",
       "reviewSubtitle": "Grüne Vorschläge verbessern oder ergänzen Text; rote markieren Text, der Ihren Lebenslauf schwächt. Jeder zeigt, wie viel Ihr Score gewinnen kann.",
@@ -1006,14 +1011,18 @@
         }
       },
       "jobSuggestions": {
-        "subtitle": "Neue LinkedIn-Jobs aus der letzten Woche, die zu deinem Lebenslauf passen. Speichere die interessanten in deinen Bewerbungen.",
+        "subtitle": "Offene Stellen von den Karriereseiten der Unternehmen, die zu deinem Lebenslauf passen – beste Übereinstimmung zuerst. Speichere passende Jobs in deinen Bewerbungen.",
         "resume": "Lebenslauf",
         "keywords": "Jobtitel oder Stichwörter",
         "keywordsPlaceholder": "z. B. Frontend-Entwickler",
         "location": "Ort",
         "locationPlaceholder": "Stadt oder Land",
+        "germanyOnly": "Nur Deutschland & Remote",
         "search": "Suchen",
-        "searching": "LinkedIn wird durchsucht...",
+        "searching": "Passende Stellen werden gesucht…",
+        "pageOf": "Seite {page} von {pages}",
+        "prev": "Zurück",
+        "next": "Weiter",
         "postedThisWeek": "In der letzten Woche veröffentlicht",
         "matches": "Passt zu deinen Skills:",
         "save": "Speichern",
@@ -1023,13 +1032,13 @@
         "inTracker": "Schon in deinen Bewerbungen",
         "savedTitle": "In deinen Bewerbungen gespeichert",
         "savedDesc": "Du findest den Job unter Bewerbungen, Gespeichert.",
-        "open": "Auf LinkedIn öffnen",
-        "source": "Jobs von LinkedIn, aktualisiert {time}",
+        "open": "Stelle öffnen",
+        "source": "Aktualisiert {time}",
         "searchesLeft": "Neue Suchen heute übrig: {n}",
         "noResumesTitle": "Erstelle zuerst einen Lebenslauf",
         "noResumesDesc": "Wir nutzen den Jobtitel und die Stadt aus deinem Lebenslauf, um passende Jobs zu finden.",
-        "emptyTitle": "Diese Woche gab es keine Jobs für diese Suche",
-        "emptyDesc": "Versuche einen allgemeineren Jobtitel oder eine andere Stadt.",
+        "emptyTitle": "Derzeit keine passenden Stellen",
+        "emptyDesc": "Versuche einen allgemeineren Jobtitel oder entferne die Filter.",
         "sort": "Sortieren",
         "sortBest": "Beste Treffer",
         "sortNewest": "Neueste",

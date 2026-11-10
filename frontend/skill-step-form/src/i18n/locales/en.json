@@ -623,6 +623,11 @@
         }
       }
     },
+    "locked": {
+      "title": "Sign in to unlock your resume",
+      "subtitle": "Your resume is ready. Log in or create a free account to run the AI review, apply improvements, and download it.",
+      "badge": "Preview"
+    },
     "improve": {
       "reviewTitle": "Claude's review of your resume",
       "reviewSubtitle": "Green suggestions improve or add text; red ones flag text that weakens your resume. Each shows how much your score could gain.",
@@ -1006,14 +1011,18 @@
         }
       },
       "jobSuggestions": {
-        "subtitle": "Fresh LinkedIn jobs from the last week that fit your resume. Save the ones you like to your job tracker.",
+        "subtitle": "Open roles from company career pages that match your resume — best fit first. Save the ones you like to your job tracker.",
         "resume": "Resume",
         "keywords": "Job title or keywords",
         "keywordsPlaceholder": "e.g. Frontend Developer",
         "location": "Location",
         "locationPlaceholder": "City or country",
+        "germanyOnly": "Germany & remote only",
         "search": "Search",
-        "searching": "Searching LinkedIn...",
+        "searching": "Finding matching openings…",
+        "pageOf": "Page {page} of {pages}",
+        "prev": "Previous",
+        "next": "Next",
         "postedThisWeek": "Posted in the last week",
         "matches": "Fits your skills:",
         "save": "Save",
@@ -1023,13 +1032,13 @@
         "inTracker": "Already in your job tracker",
         "savedTitle": "Saved to your job tracker",
         "savedDesc": "Find it under Job tracker, Saved.",
-        "open": "Open on LinkedIn",
-        "source": "Jobs from LinkedIn, updated {time}",
+        "open": "Open job",
+        "source": "Updated {time}",
         "searchesLeft": "New searches left today: {n}",
         "noResumesTitle": "Create a resume first",
         "noResumesDesc": "We use your resume's job title and city to find jobs that fit you.",
-        "emptyTitle": "No jobs posted this week for this search",
-        "emptyDesc": "Try a broader job title or another city.",
+        "emptyTitle": "No matching openings right now",
+        "emptyDesc": "Try a broader job title, or clear the filters.",
         "sort": "Sort",
         "sortBest": "Best match",
         "sortNewest": "Newest",

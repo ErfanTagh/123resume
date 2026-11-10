@@ -470,8 +470,29 @@ _SEARCH_REFUSED = {
 }
 
 
+def _posted_label(date_str: str) -> str:
+    """Short 'posted' label from a YYYY-MM-DD date."""
+    from datetime import datetime
+    try:
+        days = (datetime.utcnow().date() - datetime.strptime(date_str, "%Y-%m-%d").date()).days
+    except (ValueError, TypeError):
+        return ""
+    if days <= 0:
+        return "today"
+    if days == 1:
+        return "yesterday"
+    if days < 7:
+        return f"{days} days ago"
+    if days < 14:
+        return "1 week ago"
+    if days < 31:
+        return f"{days // 7} weeks ago"
+    return f"{days // 30} month{'s' if days >= 60 else ''} ago"
+
+
 def suggest_jobs(user_id: int, resume_id: str, keywords: str, location: str) -> dict:
     from api import job_suggestions as js
+    from api import ats_openings
 
     doc = _own_resume(user_id, resume_id)
     default_keywords, default_location = js.resume_search_defaults(doc)
@@ -484,10 +505,10 @@ def suggest_jobs(user_id: int, resume_id: str, keywords: str, location: str) -> 
         )
 
     db = _db()
-    try:
-        jobs, fetched_at, from_cache = js.find_jobs(db, user_id, keywords, location)
-    except js.JobSearchError as e:
-        raise ConnectorError(_SEARCH_REFUSED.get(e.code, _SEARCH_REFUSED["upstream"]))
+    # Same shared path as the website and browser extension, so all three agree.
+    ranked, all_jobs, fetched_at, from_cache = ats_openings.openings_for_resume(
+        db, keywords, js.resume_skills(doc), location
+    )
 
     years = js.experience_years(doc)
     level = js.user_level(years)
@@ -496,34 +517,38 @@ def suggest_jobs(user_id: int, resume_id: str, keywords: str, location: str) -> 
         for a in db[APPLICATIONS].find({"user_id": user_id, "job_link": {"$nin": [None, ""]}}, {"job_link": 1, "status": 1})
     }
     out_jobs = []
-    for job in js.annotate_jobs(jobs, js.resume_skills(doc)):
+    for job in ranked:
+        job_level = js.job_level(job["title"])
         item = {
             "title": job["title"],
             "company": job["company"],
-            "location": job["location"],
-            "posted": job["posted_at"],
-            "date": job["date"],
-            "link": job["link"],
-            "matched_skills": job["matched_skills"],
-            "level": job["level"],
-            "level_fit": js.level_fit(job["level"], level),
+            "location": job["location"] or ("Remote" if job.get("remote") else ""),
+            "posted": _posted_label(job.get("date")),
+            "date": job.get("date") or "",
+            "link": job["url"],
+            "matched_skills": job.get("matched_skills") or [],
+            "level": job_level,
+            "level_fit": js.level_fit(job_level, level),
         }
-        status = tracked.get(js.job_key(job["link"]))
+        status = tracked.get(js.job_key(job["url"]))
         if status:
             item["in_tracker"] = status
         out_jobs.append(item)
 
     return {
-        "query": {"keywords": keywords, "location": location or "worldwide", "posted": "last week"},
+        "query": {"keywords": keywords, "location": location or "worldwide"},
         "user_level": level,
         "experience_years": years,
         "jobs": out_jobs,
+        "total_scanned": len(all_jobs),
         "from_cache": from_cache,
-        "fetched_at": fetched_at.isoformat() + "Z",
-        "new_searches_left_today": js.searches_left_today(db, user_id),
+        "fetched_at": (fetched_at.isoformat() + "Z") if fetched_at else None,
         "suggestions_url": f"{SITE_URL}/resumes?tab=job-suggestions&resume={resume_id}",
         "note": (
-            "Only titles, companies and links: no job descriptions. matched_skills are resume "
-            "skills the title names; level_fit compares the title's level to the user's experience."
+            "Free openings from company career pages (Greenhouse, Lever, Ashby, SmartRecruiters, "
+            "Recruitee, Arbeitnow), ranked for this resume, each linking to the company's own "
+            "application form. matched_skills are resume skills the title names; level_fit compares "
+            "the title's level to the user's experience. No job descriptions, so don't claim "
+            "requirements beyond the title."
         ),
     }

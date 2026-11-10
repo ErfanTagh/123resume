@@ -1115,12 +1115,17 @@ export interface JobSuggestionsResult {
 
 export const jobSuggestionAPI = {
   /** Without a search, the resume's title and city are used. */
-  get: async (resumeId: string, search?: { q: string; location: string }): Promise<JobSuggestionsResult> => {
+  get: async (
+    resumeId: string,
+    search?: { q: string; location: string },
+    country?: string,
+  ): Promise<JobSuggestionsResult> => {
     const params = new URLSearchParams({ resume_id: resumeId });
     if (search) {
       params.set('q', search.q);
       params.set('location', search.location);
     }
+    if (country) params.set('country', country);
     const makeRequest = () =>
       fetch(`${API_BASE_URL}/job-suggestions/?${params}`, {
         headers: createHeaders(true),

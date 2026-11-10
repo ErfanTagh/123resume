@@ -237,19 +237,63 @@ async function generateCoverLetter() {
   }
 }
 
-function downloadLetter() {
-  if (!lastLetter.text) return;
-  const safe =
-    (lastLetter.title || "Cover Letter").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 80) || "Cover Letter";
-  const blob = new Blob([lastLetter.text], { type: "text/plain;charset=utf-8" });
+function safeName() {
+  return (lastLetter.title || "Cover Letter").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 80) || "Cover Letter";
+}
+
+function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Cover Letter - ${safe}.txt`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function downloadTxt() {
+  triggerDownload(new Blob([lastLetter.text], { type: "text/plain;charset=utf-8" }), `Cover Letter - ${safeName()}.txt`);
+}
+
+// Real, selectable-text PDF — mirrors the site's generateTextPdf (jsPDF, A4,
+// Times 12, 20mm margins). Falls back to .txt if jsPDF didn't load.
+function downloadLetter() {
+  if (!lastLetter.text) return;
+  const JsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!JsPDF) {
+    downloadTxt();
+    return;
+  }
+  try {
+    const doc = new JsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const usableWidth = pageWidth - margin * 2;
+    const lineHeight = 7;
+    const paragraphGap = lineHeight * 0.5;
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    let y = margin;
+    for (const raw of (lastLetter.text || "").replace(/\r\n/g, "\n").split("\n")) {
+      if (raw.trim() === "") {
+        y += paragraphGap;
+        continue;
+      }
+      for (const line of doc.splitTextToSize(raw, usableWidth)) {
+        if (y > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += lineHeight;
+      }
+    }
+    doc.save(`Cover Letter - ${safeName()}.pdf`);
+  } catch (e) {
+    downloadTxt();
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -100,7 +100,7 @@ p { margin: 0 0 10px; line-height: 1.45; font-size: 13px; }
 .toggle.collapsed .chev { transform: rotate(-90deg); }
 .toggle:hover .section-title { color: #e83a6a; }
 .section-body[hidden] { display: none; }
-.head-left { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.head-right { display: inline-flex; align-items: center; gap: 8px; flex: none; }
 .grip { display: inline-flex; align-items: center; padding: 2px; color: #cbc4ce; cursor: grab; }
 .grip:hover { color: #8a8490; }
 .grip:active { cursor: grabbing; }

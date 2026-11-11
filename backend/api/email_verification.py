@@ -1423,6 +1423,208 @@ def _germany_blog_announcement_html(greet: str) -> str:
 </html>"""
 
 
+EXT_STORE_URL = "https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek"
+EXT_BLOG_URL = "https://123resume.de/blog/save-jobs-chrome-extension"
+
+
+def send_extension_announcement_email(to_email: str, name: str = "") -> bool:
+    """Announce the 123Resume Job Saver Chrome extension (EN + DE in one email)."""
+    greet = (name or "").strip() or "there"
+    from_formatted = (os.getenv("BROADCAST_FROM_EMAIL") or "").strip() or "123Resume <contact@123resume.de>"
+    return _send_with_mailgun(
+        subject="New: the 123Resume Chrome extension \U0001F9E9",
+        plain_message=_extension_announcement_plain(greet),
+        html_message=_extension_announcement_html(greet),
+        to_email=to_email,
+        reply_to="contact@123resume.de",
+        from_formatted=from_formatted,
+        extra={
+            "o:tag": "product-update",
+            "o:tracking": "yes",
+            "h:List-Unsubscribe": "<%tag_unsubscribe_url%>",
+            "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+    )
+
+
+def _extension_announcement_plain(greet: str) -> str:
+    return f"""Hi {greet},
+
+We just launched the 123Resume Chrome extension. It sits right next to the job you're looking at and does three things:
+
+1) Shows open roles that fit your resume, straight from company career pages.
+2) Saves any posting to your job tracker in one click - Claude tidies it into a clean record (title, company, location, requirements, skills).
+3) Writes a tailored cover letter for the role, ready to download as a PDF.
+
+No separate login - it reuses your 123resume.de session.
+
+Add it to Chrome:
+{EXT_STORE_URL}
+
+Read more on the blog:
+{EXT_BLOG_URL}
+
+--- Deutsche Version ---
+
+Hallo {greet},
+
+wir haben die 123Resume-Chrome-Erweiterung veroeffentlicht. Sie sitzt direkt neben der Stelle, die Sie ansehen, und kann drei Dinge:
+
+1) Zeigt offene Stellen, die zu Ihrem Lebenslauf passen, direkt von den Karriereseiten der Unternehmen.
+2) Speichert jede Anzeige mit einem Klick in Ihrem Bewerbungstracker - Claude macht daraus einen sauberen Eintrag.
+3) Erstellt ein passgenaues Anschreiben fuer die Stelle, zum Download als PDF.
+
+Keine separate Anmeldung - sie nutzt Ihre 123resume.de-Sitzung.
+
+Zu Chrome hinzufuegen:
+{EXT_STORE_URL}
+
+Mehr im Blog:
+{EXT_BLOG_URL}
+
+Best regards / Viele Gruesse,
+Erfan
+
+---
+123Resume, https://123resume.de
+You're receiving this because you have a 123Resume account.
+"""
+
+
+def _ext_feature(emoji: str, text: str, pink: str) -> str:
+    return (
+        f'<tr><td valign="top" style="padding:4px 10px 4px 0;font-size:18px;line-height:1.5;">{emoji}</td>'
+        f'<td style="padding:4px 0;font-size:15px;line-height:1.5;color:#5c5660;">{text}</td></tr>'
+    )
+
+
+def _extension_announcement_html(greet: str) -> str:
+    pink = "#e83a6a"
+    en_feats = (
+        _ext_feature("&#128269;", "<b>Finds roles that fit your resume</b>, straight from company career pages.", pink)
+        + _ext_feature("&#128190;", "<b>Saves any posting to your tracker in one click</b> &mdash; Claude tidies it into a clean record.", pink)
+        + _ext_feature("&#9997;&#65039;", "<b>Writes a tailored cover letter</b> for the role, ready to download as a PDF.", pink)
+    )
+    de_feats = (
+        _ext_feature("&#128269;", "<b>Findet Stellen, die zu Ihrem Lebenslauf passen</b> &mdash; direkt von den Karriereseiten.", pink)
+        + _ext_feature("&#128190;", "<b>Speichert jede Anzeige mit einem Klick</b> in Ihrem Tracker &mdash; Claude r&auml;umt sie auf.", pink)
+        + _ext_feature("&#9997;&#65039;", "<b>Schreibt ein passgenaues Anschreiben</b> f&uuml;r die Stelle, als PDF zum Download.", pink)
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The 123Resume Chrome extension</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Save jobs and write cover letters right from the posting. / Deutsche Version unten.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ee;border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:28px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #ebe4df;box-shadow:0 8px 24px -4px rgba(120,40,70,0.10);">
+          <tr>
+            <td style="padding:28px 28px 8px;text-align:center;">
+              <a href="https://123resume.de" style="text-decoration:none;">
+                <img src="https://123resume.de/logoo.png" alt="123Resume" width="132" height="34" style="display:inline-block;border:0;height:34px;width:auto;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 0;">
+              <a href="{EXT_STORE_URL}" style="text-decoration:none;">
+                <img src="https://123resume.de/blog-extension.png" alt="123Resume Chrome extension" width="544" style="display:block;width:100%;height:auto;border:0;border-radius:12px;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hi {greet},</p>
+              <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Save jobs &amp; write cover letters, right from the posting
+              </h1>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#5c5660;">
+                We just launched the 123Resume Chrome extension. It sits right next to the job you're looking at:
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;">{en_feats}</table>
+              <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:#8a8490;">No separate login &mdash; it reuses your 123resume.de session.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 6px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{EXT_STORE_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Add to Chrome
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:10px 0 0;font-size:13px;color:#8a8490;">
+                or <a href="{EXT_BLOG_URL}" style="color:{pink};font-weight:600;text-decoration:none;">read the full walkthrough</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-top:1px solid #f0e4ea;padding-top:18px;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#8a8490;text-align:center;">
+                    &#127465;&#127466; Deutsche Version
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 4px;">
+              <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#3f3a42;">Hallo {greet},</p>
+              <h2 style="margin:0 0 12px;font-size:22px;line-height:1.25;font-weight:800;color:#1c1917;letter-spacing:-0.02em;">
+                Jobs speichern &amp; Anschreiben schreiben &mdash; direkt aus der Anzeige
+              </h2>
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#5c5660;">
+                Wir haben die 123Resume-Chrome-Erweiterung ver&ouml;ffentlicht. Sie sitzt direkt neben der Stelle, die Sie ansehen:
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;">{de_feats}</table>
+              <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:#8a8490;">Keine separate Anmeldung &mdash; sie nutzt Ihre 123resume.de-Sitzung.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 8px;" align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:10px;background:{pink};">
+                    <a href="{EXT_STORE_URL}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Zu Chrome hinzuf&uuml;gen
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 28px;">
+              <p style="margin:0 0 4px;font-size:14px;color:#3f3a42;">Best regards / Viele Gr&uuml;&szlig;e,</p>
+              <p style="margin:0;font-size:14px;color:#3f3a42;">Erfan</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#faf6f8;border-top:1px solid #f0e4ea;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8a8490;">
+                <a href="https://123resume.de" style="color:{pink};text-decoration:none;">123resume.de</a>
+                &middot; You're receiving this because you have a 123Resume account
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
 def send_job_suggestions_announcement_email(to_email: str, name: str = "") -> bool:
     """Announce Job suggestions (LinkedIn jobs that fit a resume), with its test-phase limits."""
     greet = (name or "").strip() or "there"

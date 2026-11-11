@@ -38,6 +38,12 @@ class Command(BaseCommand):
             help="Send to at most N users (after dedupe). 0 = no limit.",
         )
         parser.add_argument(
+            "--only-to",
+            metavar="EMAILS",
+            default="",
+            help="Comma-separated emails: send only to these (names looked up). For retries.",
+        )
+        parser.add_argument(
             "--sleep",
             type=float,
             default=0.25,
@@ -71,6 +77,11 @@ class Command(BaseCommand):
 
         recipients = list(by_email.values())
         total_unique = len(recipients)
+
+        only_to = {e.strip().lower() for e in (options["only_to"] or "").split(",") if e.strip()}
+        if only_to:
+            recipients = [(e, n) for (e, n) in recipients if e.lower() in only_to]
+
         if limit > 0:
             recipients = recipients[:limit]
 

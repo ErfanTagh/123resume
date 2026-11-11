@@ -1071,6 +1071,14 @@
       },
       "jobTracker": {
         "subtitle": "Behalten Sie Bewerbungen im Blick: Stelle, verwendeter Lebenslauf und Anschreiben.",
+        "extension": {
+          "emptyTitle": "Jobs speichern beim Surfen",
+          "emptyDesc": "Installieren Sie die 123Resume-Chrome-Erweiterung und speichern Sie jede Stellenanzeige mit einem Klick in Ihrem Tracker — Claude macht daraus einen sauberen Eintrag, und Sie können auch ein Anschreiben erstellen.",
+          "bannerText": "Schneller speichern — legen Sie jede Anzeige mit einem Klick ab, mit unserer Chrome-Erweiterung.",
+          "cta": "Zu Chrome hinzufügen",
+          "how": "So funktioniert's",
+          "dismiss": "Schließen"
+        },
         "filters": {
           "all": "Alle",
           "active": "Aktiv",

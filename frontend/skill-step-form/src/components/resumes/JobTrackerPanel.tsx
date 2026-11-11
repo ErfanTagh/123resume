@@ -8,6 +8,7 @@ import {
 } from "@/lib/api";
 import { JobApplicationFormDialog } from "@/components/resumes/JobApplicationFormDialog";
 import { ApplyStreakCard } from "@/components/resumes/ApplyStreakCard";
+import { ExtensionPromoEmpty, ExtensionPromoBanner, isChromiumDesktop } from "@/components/resumes/ExtensionPromo";
 import { computeApplyStreak } from "@/lib/applyStreak";
 import { useRefreshJobApplications } from "@/hooks/useJobApplications";
 import { RowAction } from "@/components/resumes/RowAction";
@@ -110,6 +111,10 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
   const [editing, setEditing] = useState<JobApplication | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Only promote the Chrome extension on a desktop Chromium browser; set after
+  // mount so prerender/first paint and the client agree.
+  const [chromium, setChromium] = useState(false);
+  useEffect(() => setChromium(isChromiumDesktop()), []);
   const refreshShared = useRefreshJobApplications();
 
   const loadApplications = useCallback(async () => {
@@ -244,20 +249,26 @@ export function JobTrackerPanel({ resumes }: JobTrackerPanelProps) {
           <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : applications.length === 0 ? (
-        <Card className="text-center py-10 border-dashed">
-          <CardContent className="pt-6">
-            <Briefcase className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              {t("pages.resumes.jobTracker.emptyTitle") || "No applications yet"}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              {t("pages.resumes.jobTracker.emptyDesc") ||
-                "Add a job to track your applications, resume version, and cover letter."}
-            </p>
-          </CardContent>
-        </Card>
+        chromium ? (
+          <ExtensionPromoEmpty />
+        ) : (
+          <Card className="text-center py-10 border-dashed">
+            <CardContent className="pt-6">
+              <Briefcase className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">
+                {t("pages.resumes.jobTracker.emptyTitle") || "No applications yet"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {t("pages.resumes.jobTracker.emptyDesc") ||
+                  "Add a job to track your applications, resume version, and cover letter."}
+              </p>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="space-y-3">
+          {chromium && <ExtensionPromoBanner />}
+
           {/* Filters with counts, so a long list stays easy to scan */}
           <div className="flex flex-wrap gap-1.5" role="tablist">
             {FILTERS.map((f) => {

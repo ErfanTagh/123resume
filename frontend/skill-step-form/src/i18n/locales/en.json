@@ -1071,6 +1071,14 @@
       },
       "jobTracker": {
         "subtitle": "Keep track of jobs you applied to, which resume you used, and your cover letter for each.",
+        "extension": {
+          "emptyTitle": "Save jobs as you browse",
+          "emptyDesc": "Add the 123Resume Chrome extension and save any job posting to your tracker in one click — Claude tidies it into a clean record, and you can generate a cover letter too.",
+          "bannerText": "Add jobs faster — save any posting with one click using our Chrome extension.",
+          "cta": "Add to Chrome",
+          "how": "See how it works",
+          "dismiss": "Dismiss"
+        },
         "filters": {
           "all": "All",
           "active": "Active",

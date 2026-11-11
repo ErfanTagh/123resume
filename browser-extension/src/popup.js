@@ -297,6 +297,40 @@ function downloadLetter() {
 }
 
 // ---------------------------------------------------------------------------
+// Collapsible sections (chevron toggles; state remembered per section).
+// Openings starts collapsed so Save / Cover letter are reachable without scrolling.
+// ---------------------------------------------------------------------------
+function initCollapsibles() {
+  document.querySelectorAll(".toggle[data-section]").forEach((btn) => {
+    const key = btn.dataset.section;
+    const body = document.querySelector('.section-body[data-body="' + key + '"]');
+    if (!body) return;
+    let collapsed;
+    try {
+      const v = localStorage.getItem("sec_" + key);
+      collapsed = v === null ? key === "openings" : v === "1";
+    } catch {
+      collapsed = key === "openings";
+    }
+    const apply = () => {
+      body.hidden = collapsed;
+      btn.classList.toggle("collapsed", collapsed);
+      btn.setAttribute("aria-expanded", String(!collapsed));
+    };
+    apply();
+    btn.addEventListener("click", () => {
+      collapsed = !collapsed;
+      try {
+        localStorage.setItem("sec_" + key, collapsed ? "1" : "0");
+      } catch {
+        /* storage blocked: still toggle for this view */
+      }
+      apply();
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 
 async function render() {
   const status = await send({ type: "status" });
@@ -343,4 +377,5 @@ $("save").addEventListener("click", () => saveCurrentJob("saved"));
 $("cover").addEventListener("click", generateCoverLetter);
 $("cover-download").addEventListener("click", downloadLetter);
 
+initCollapsibles();
 render();

@@ -25,46 +25,61 @@
 
         <section class="block">
           <div class="row">
-            <span class="section-title">Openings for you</span>
+            <button type="button" class="toggle" data-section="openings">
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              <span class="section-title">Openings for you</span>
+            </button>
             <button id="find" class="link">Refresh</button>
           </div>
-          <label class="check"><input type="checkbox" id="germany" checked /> Germany &amp; remote only</label>
-          <div id="jobs" class="jobs"></div>
-          <div id="jobs-pager" class="pager"></div>
-          <p id="jobs-note" class="muted small"></p>
-        </section>
-
-        <section class="block">
-          <div class="row">
-            <span class="section-title">This job posting</span>
+          <div class="section-body" data-body="openings">
+            <label class="check"><input type="checkbox" id="germany" checked /> Germany &amp; remote only</label>
+            <div id="jobs" class="jobs"></div>
+            <div id="jobs-pager" class="pager"></div>
+            <p id="jobs-note" class="muted small"></p>
           </div>
-          <button id="save" class="primary">Save this job to my tracker</button>
-          <p id="result" class="result"></p>
-          <p class="muted small">
-            Reads the job posting open in your current browser tab, lets Claude
-            tidy it into a clean record, and saves it to your 123Resume job
-            tracker — not one of the openings listed above.
-          </p>
         </section>
 
         <section class="block">
           <div class="row">
-            <span class="section-title">Cover letter</span>
+            <button type="button" class="toggle" data-section="save">
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              <span class="section-title">This job posting</span>
+            </button>
+          </div>
+          <div class="section-body" data-body="save">
+            <button id="save" class="primary">Save this job to my tracker</button>
+            <p id="result" class="result"></p>
+            <p class="muted small">
+              Reads the job posting open in your current browser tab, lets Claude
+              tidy it into a clean record, and saves it to your 123Resume job
+              tracker — not one of the openings listed above.
+            </p>
+          </div>
+        </section>
+
+        <section class="block">
+          <div class="row">
+            <button type="button" class="toggle" data-section="cover">
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              <span class="section-title">Cover letter</span>
+            </button>
             <select id="cl-lang" class="mini-select">
               <option value="en">English</option>
               <option value="de">Deutsch</option>
             </select>
           </div>
-          <button id="cover" class="primary">Generate cover letter</button>
-          <p id="cover-result" class="result"></p>
-          <div id="cover-out" hidden>
-            <textarea id="cover-text" rows="8" readonly></textarea>
-            <button id="cover-download" class="primary cover-download">Download PDF</button>
+          <div class="section-body" data-body="cover">
+            <button id="cover" class="primary">Generate cover letter</button>
+            <p id="cover-result" class="result"></p>
+            <div id="cover-out" hidden>
+              <textarea id="cover-text" rows="8" readonly></textarea>
+              <button id="cover-download" class="primary cover-download">Download PDF</button>
+            </div>
+            <p class="muted small">
+              Writes a letter for the job posting open in your current browser tab,
+              using the resume selected above.
+            </p>
           </div>
-          <p class="muted small">
-            Writes a letter for the job posting open in your current browser tab,
-            using the resume selected above.
-          </p>
         </section>
 
         <button id="disconnect" class="link">Disconnect</button>

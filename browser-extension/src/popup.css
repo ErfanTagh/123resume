@@ -84,6 +84,22 @@ p { margin: 0 0 10px; line-height: 1.45; font-size: 13px; }
 .block { margin-top: 14px; padding-top: 12px; border-top: 1px solid #eee; }
 .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #3f3a42; }
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+.toggle .chev { width: 13px; height: 13px; flex: none; color: #8a8490; transition: transform 0.15s ease; }
+.toggle.collapsed .chev { transform: rotate(-90deg); }
+.toggle:hover .section-title { color: #e83a6a; }
+.section-body[hidden] { display: none; }
 .check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5c5660; margin: 0 0 8px; cursor: pointer; }
 .check input { margin: 0; }
 .jobs { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; }

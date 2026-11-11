@@ -23,12 +23,16 @@
         <label for="resume">Resume</label>
         <select id="resume"></select>
 
-        <section class="block">
+        <div id="sections">
+        <section class="block" data-section-id="openings">
           <div class="row">
-            <button type="button" class="toggle" data-section="openings">
-              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              <span class="section-title">Openings for you</span>
-            </button>
+            <div class="head-left">
+              <span class="grip" draggable="true" title="Drag to reorder" aria-label="Drag to reorder"><svg class="grip-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="19" r="1.6"/></svg></span>
+              <button type="button" class="toggle" data-section="openings">
+                <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                <span class="section-title">Openings for you</span>
+              </button>
+            </div>
             <button id="find" class="link">Refresh</button>
           </div>
           <div class="section-body" data-body="openings">
@@ -39,12 +43,15 @@
           </div>
         </section>
 
-        <section class="block">
+        <section class="block" data-section-id="save">
           <div class="row">
-            <button type="button" class="toggle" data-section="save">
-              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              <span class="section-title">This job posting</span>
-            </button>
+            <div class="head-left">
+              <span class="grip" draggable="true" title="Drag to reorder" aria-label="Drag to reorder"><svg class="grip-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="19" r="1.6"/></svg></span>
+              <button type="button" class="toggle" data-section="save">
+                <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                <span class="section-title">This job posting</span>
+              </button>
+            </div>
           </div>
           <div class="section-body" data-body="save">
             <button id="save" class="primary">Save this job to my tracker</button>
@@ -57,12 +64,15 @@
           </div>
         </section>
 
-        <section class="block">
+        <section class="block" data-section-id="cover">
           <div class="row">
-            <button type="button" class="toggle" data-section="cover">
-              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              <span class="section-title">Cover letter</span>
-            </button>
+            <div class="head-left">
+              <span class="grip" draggable="true" title="Drag to reorder" aria-label="Drag to reorder"><svg class="grip-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="19" r="1.6"/></svg></span>
+              <button type="button" class="toggle" data-section="cover">
+                <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                <span class="section-title">Cover letter</span>
+              </button>
+            </div>
             <select id="cl-lang" class="mini-select">
               <option value="en">English</option>
               <option value="de">Deutsch</option>
@@ -81,6 +91,7 @@
             </p>
           </div>
         </section>
+        </div>
 
         <button id="disconnect" class="link">Disconnect</button>
       </div>

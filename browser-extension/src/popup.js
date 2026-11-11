@@ -332,6 +332,80 @@ function initCollapsibles() {
 
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Drag to reorder the sections (grip handle); order remembered.
+// ---------------------------------------------------------------------------
+function applySectionOrder() {
+  const container = document.getElementById("sections");
+  if (!container) return;
+  let order = null;
+  try {
+    order = JSON.parse(localStorage.getItem("section_order") || "null");
+  } catch {
+    order = null;
+  }
+  if (!Array.isArray(order)) return;
+  for (const id of order) {
+    const el = container.querySelector('section[data-section-id="' + id + '"]');
+    if (el) container.appendChild(el);
+  }
+}
+
+function saveSectionOrder() {
+  const container = document.getElementById("sections");
+  if (!container) return;
+  const order = [...container.querySelectorAll("section[data-section-id]")].map((s) => s.dataset.sectionId);
+  try {
+    localStorage.setItem("section_order", JSON.stringify(order));
+  } catch {
+    /* storage blocked */
+  }
+}
+
+function sectionAfterCursor(container, y) {
+  const els = [...container.querySelectorAll("section[data-section-id]:not(.dragging)")];
+  let closest = { offset: -Infinity, el: null };
+  for (const el of els) {
+    const box = el.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) closest = { offset, el };
+  }
+  return closest.el;
+}
+
+function initDragReorder() {
+  const container = document.getElementById("sections");
+  if (!container) return;
+  let dragEl = null;
+  container.querySelectorAll(".grip").forEach((grip) => {
+    grip.addEventListener("dragstart", (e) => {
+      dragEl = grip.closest("section");
+      if (!dragEl) return;
+      dragEl.classList.add("dragging");
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        try {
+          e.dataTransfer.setData("text/plain", dragEl.dataset.sectionId || "");
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+    grip.addEventListener("dragend", () => {
+      if (dragEl) dragEl.classList.remove("dragging");
+      dragEl = null;
+      saveSectionOrder();
+    });
+  });
+  container.addEventListener("dragover", (e) => {
+    if (!dragEl) return;
+    e.preventDefault();
+    const after = sectionAfterCursor(container, e.clientY);
+    if (after == null) container.appendChild(dragEl);
+    else container.insertBefore(dragEl, after);
+  });
+}
+
 async function render() {
   const status = await send({ type: "status" });
   if (!status?.connected) {
@@ -377,5 +451,7 @@ $("save").addEventListener("click", () => saveCurrentJob("saved"));
 $("cover").addEventListener("click", generateCoverLetter);
 $("cover-download").addEventListener("click", downloadLetter);
 
+applySectionOrder();
 initCollapsibles();
+initDragReorder();
 render();

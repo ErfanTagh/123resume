@@ -100,6 +100,14 @@ p { margin: 0 0 10px; line-height: 1.45; font-size: 13px; }
 .toggle.collapsed .chev { transform: rotate(-90deg); }
 .toggle:hover .section-title { color: #e83a6a; }
 .section-body[hidden] { display: none; }
+.head-left { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.grip { display: inline-flex; align-items: center; padding: 2px; color: #cbc4ce; cursor: grab; }
+.grip:hover { color: #8a8490; }
+.grip:active { cursor: grabbing; }
+.grip-ic { width: 12px; height: 12px; }
+#sections section { background: #fff; }
+#sections section.dragging { opacity: 0.45; }
+#sections section.dragging .section-title { color: #e83a6a; }
 .check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5c5660; margin: 0 0 8px; cursor: pointer; }
 .check input { margin: 0; }
 .jobs { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "123Resume Job Saver",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Find jobs that fit your resume and save any posting to your 123Resume tracker — Claude turns it into a clean record.",
   "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": ["https://123resume.de/*"],

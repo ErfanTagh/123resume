@@ -22,6 +22,60 @@ type BlogPostsByLanguage = {
 export const blogPostsByLanguage: BlogPostsByLanguage = {
   en: [
     {
+      id: "save-jobs-chrome-extension",
+      title: "Save Jobs and Write Cover Letters Right From the Posting — Our New Chrome Extension",
+      excerpt: "Browse roles that fit your resume, save any posting to your tracker in one click, and generate a tailored cover letter — without leaving the page.",
+      category: "Job Search",
+      readTime: "3 min read",
+      date: "Nov 11, 2026",
+      isoDate: "2026-11-11",
+      gradient: "from-rose-500/20 via-pink-500/10 to-fuchsia-500/5",
+      iconColor: "text-rose-500",
+      image: "/blog-extension.png",
+      tags: ["Chrome Extension", "Job Search", "AI", "Cover Letter", "123Resume"],
+      content: `
+Applying for jobs means living across a dozen tabs. You find a great role on one career page, a promising one on another, and by Friday you can't remember which was which — and every posting still wants its own cover letter.
+
+Our new Chrome extension, **123Resume Job Saver**, pulls all of that into one place, right next to the job you're looking at.
+
+[Add it to Chrome →](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek)
+
+## Set it up in 1 minute
+
+1. Install it | Open the [Chrome Web Store listing](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek) and click **Add to Chrome**.
+2. Sign in to 123Resume | Make sure you're logged in at 123resume.de in a tab — the extension reuses that session, with no separate login.
+3. Open it and pick a resume | Click the 123Resume icon in your toolbar, choose a resume, and you're ready.
+
+!> You need a free 123Resume account. No account yet? Build your resume first at 123resume.de.
+
+## What it does
+
+### See openings that fit your resume
+
+Open the extension and it shows open roles matched to the resume you pick, pulled straight from companies' own career pages. They link to the real application form and are free to browse. Flip on **Germany & remote only** to keep the list focused on roles you can take.
+
+### Save any job to your tracker — tidied up for you
+
+Found a posting anywhere on the web? Click **Save this job to my tracker**. The extension reads the page, and Claude turns the messy posting into a clean record — title, company, location, salary, responsibilities, requirements and key skills — then files it in your 123Resume job tracker. Your whole search stays in one list instead of scattered across bookmarks and tabs.
+
+### Write a cover letter — and download the PDF
+
+Still on the posting? Pick a resume, choose English or German, and hit **Generate cover letter**. You get a letter tuned to that specific role — no generic templates — ready to review and **download as a PDF**.
+
+## Your data stays yours
+
++ It reads a job page **only when you click a button** — never in the background, and never on sites you're only browsing
++ It talks **only to the 123Resume API** — no third parties, no tracking, no ads
++ Your login stays in your browser, and you can remove it anytime with **Disconnect**
+
+Full details are in our [Privacy Policy](https://123resume.de/privacy), under "Browser extension".
+
+## Get started
+
+[Install the extension](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek), sign in at 123resume.de, and keep your whole job hunt — openings, saved roles and cover letters — in one place.
+`,
+    },
+    {
       id: "job-search-international-students-germany",
       title: "How to Increase Your Chances in the Job Search as an International Student in Germany",
       excerpt: "You can have all the knowledge in the world, but interviews are won with words. Here is how non-native speakers can prepare for German interviews.",
@@ -182,6 +236,60 @@ It gives Claude secure access to one app, here your 123Resume account, so it can
     },
   ],
   de: [
+    {
+      id: "save-jobs-chrome-extension",
+      title: "Jobs speichern und Anschreiben direkt aus der Stellenanzeige — unsere neue Chrome-Erweiterung",
+      excerpt: "Entdecken Sie passende Stellen, speichern Sie jede Anzeige mit einem Klick in Ihrem Tracker und erstellen Sie ein passgenaues Anschreiben — ohne die Seite zu verlassen.",
+      category: "Jobsuche",
+      readTime: "3 Min. Lesezeit",
+      date: "11. Nov. 2026",
+      isoDate: "2026-11-11",
+      gradient: "from-rose-500/20 via-pink-500/10 to-fuchsia-500/5",
+      iconColor: "text-rose-500",
+      image: "/blog-extension.png",
+      tags: ["Chrome-Erweiterung", "Jobsuche", "KI", "Anschreiben", "123Resume"],
+      content: `
+Bei der Jobsuche lebt man in einem Dutzend Tabs. Eine gute Stelle auf der einen Karriereseite, eine vielversprechende auf der nächsten — und am Freitag wissen Sie nicht mehr, welche welche war. Jede Anzeige will außerdem ihr eigenes Anschreiben.
+
+Unsere neue Chrome-Erweiterung **123Resume Job Saver** bringt all das an einen Ort, direkt neben der Stelle, die Sie gerade ansehen.
+
+[Zu Chrome hinzufügen →](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek)
+
+## In 1 Minute eingerichtet
+
+1. Installieren | Öffnen Sie die [Chrome-Web-Store-Seite](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek) und klicken Sie auf **Add to Chrome**.
+2. Bei 123Resume anmelden | Stellen Sie sicher, dass Sie in einem Tab bei 123resume.de angemeldet sind — die Erweiterung nutzt diese Sitzung, ganz ohne separate Anmeldung.
+3. Öffnen und Lebenslauf wählen | Klicken Sie auf das 123Resume-Symbol in Ihrer Symbolleiste, wählen Sie einen Lebenslauf, und los geht's.
+
+!> Sie brauchen ein kostenloses 123Resume-Konto. Noch keines? Erstellen Sie zuerst Ihren Lebenslauf auf 123resume.de.
+
+## Was sie kann
+
+### Passende Stellen sehen
+
+Öffnen Sie die Erweiterung, und sie zeigt offene Stellen, die zum gewählten Lebenslauf passen — direkt von den Karriereseiten der Unternehmen. Sie verlinken auf das echte Bewerbungsformular und sind kostenlos. Mit **Nur Deutschland & Remote** bleibt die Liste auf passende Stellen beschränkt.
+
+### Jede Stelle in den Tracker speichern — automatisch aufbereitet
+
+Irgendwo eine Anzeige gefunden? Klicken Sie auf **Diese Stelle in meinen Tracker speichern**. Die Erweiterung liest die Seite, und Claude macht aus der unübersichtlichen Anzeige einen sauberen Eintrag — Titel, Unternehmen, Ort, Gehalt, Aufgaben, Anforderungen und wichtigste Skills — und legt ihn in Ihrem 123Resume-Bewerbungstracker ab. Ihre ganze Suche bleibt in einer Liste statt verstreut über Lesezeichen und Tabs.
+
+### Ein Anschreiben erstellen — und als PDF herunterladen
+
+Noch auf der Anzeige? Wählen Sie einen Lebenslauf und Englisch oder Deutsch und klicken Sie auf **Anschreiben erstellen**. Sie erhalten ein auf genau diese Stelle zugeschnittenes Anschreiben — keine Standardvorlagen — zum Prüfen und als **PDF herunterladen**.
+
+## Ihre Daten bleiben bei Ihnen
+
++ Sie liest eine Stellenseite **nur auf Ihren Klick** — nie im Hintergrund und nie auf Seiten, die Sie nur durchstöbern
++ Sie kommuniziert **ausschließlich mit der 123Resume-API** — keine Dritten, kein Tracking, keine Werbung
++ Ihre Anmeldung bleibt in Ihrem Browser, und Sie können sie jederzeit über **Trennen** entfernen
+
+Alle Details finden Sie in unserer [Datenschutzerklärung](https://123resume.de/privacy) unter „Browser-Erweiterung".
+
+## Jetzt starten
+
+[Installieren Sie die Erweiterung](https://chromewebstore.google.com/detail/123resume-job-saver/gnmehpfghhjablmcdcghdcblecigglek), melden Sie sich bei 123resume.de an, und behalten Sie Ihre ganze Jobsuche — Stellen, gespeicherte Jobs und Anschreiben — an einem Ort.
+`,
+    },
     {
       id: "job-search-international-students-germany",
       title: "So erhöhen Sie Ihre Chancen bei der Jobsuche als internationale:r Studierende:r in Deutschland",

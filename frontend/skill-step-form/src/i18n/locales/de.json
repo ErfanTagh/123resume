@@ -1074,6 +1074,7 @@
         "extension": {
           "emptyTitle": "Jobs speichern beim Surfen",
           "emptyDesc": "Installieren Sie die 123Resume-Chrome-Erweiterung und speichern Sie jede Stellenanzeige mit einem Klick in Ihrem Tracker — Claude macht daraus einen sauberen Eintrag, und Sie können auch ein Anschreiben erstellen.",
+          "bannerTitle": "Jobs von überall mit einem Klick speichern",
           "bannerText": "Schneller speichern — legen Sie jede Anzeige mit einem Klick ab, mit unserer Chrome-Erweiterung.",
           "cta": "Zu Chrome hinzufügen",
           "how": "So funktioniert's",

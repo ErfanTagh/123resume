@@ -80,24 +80,30 @@ export function ExtensionPromoBanner() {
   };
 
   return (
-    <div className="relative flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 py-3 pl-4 pr-10 sm:flex-row sm:items-center sm:justify-between sm:pr-10">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Chrome className="h-4 w-4" />
-        </span>
-        <p className="text-sm text-foreground/90">
+    <div className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 pr-10 sm:flex-row sm:items-center sm:gap-5">
+      <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary/15 text-primary">
+        <Chrome className="h-6 w-6" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-base font-semibold text-foreground sm:text-lg">
+          {t("pages.resumes.jobTracker.extension.bannerTitle") || "Save jobs from any site, in one click"}
+        </h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">
           {t("pages.resumes.jobTracker.extension.bannerText") ||
-            "Add jobs faster — save any posting with one click using our Chrome extension."}{" "}
-          <Link to={BLOG_URL} className="font-medium text-primary underline-offset-2 hover:underline">
-            {t("pages.resumes.jobTracker.extension.how") || "See how it works"}
-          </Link>
+            "Add jobs faster — save any posting with one click using our Chrome extension."}
         </p>
       </div>
-      <Button asChild size="sm" className="flex-none self-start sm:self-auto">
-        <a href={STORE_URL} target="_blank" rel="noopener noreferrer">
-          {t("pages.resumes.jobTracker.extension.cta") || "Add to Chrome"}
-        </a>
-      </Button>
+      <div className="flex flex-none flex-wrap items-center gap-x-4 gap-y-2">
+        <Button asChild>
+          <a href={STORE_URL} target="_blank" rel="noopener noreferrer">
+            <Chrome className="mr-2 h-4 w-4" />
+            {t("pages.resumes.jobTracker.extension.cta") || "Add to Chrome"}
+          </a>
+        </Button>
+        <Link to={BLOG_URL} className="text-sm font-medium text-primary underline-offset-2 hover:underline">
+          {t("pages.resumes.jobTracker.extension.how") || "See how it works"}
+        </Link>
+      </div>
       <button
         type="button"
         onClick={dismiss}

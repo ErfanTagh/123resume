@@ -46,26 +46,26 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
   return (
     <section className="grid overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       {/* Streak */}
-      <div className="relative bg-gradient-to-br from-[hsl(var(--sunset-orange)/0.10)] via-[hsl(var(--sunset-pink)/0.07)] to-[hsl(var(--sunset-violet)/0.10)] p-5 sm:p-6">
-        <div className="flex items-center gap-4">
+      <div className="relative bg-gradient-to-br from-[hsl(var(--sunset-orange)/0.10)] via-[hsl(var(--sunset-pink)/0.07)] to-[hsl(var(--sunset-violet)/0.10)] p-4 sm:p-5">
+        <div className="flex items-center gap-3.5">
           <div className="relative shrink-0">
             {s.state === "atRisk" && (
               <span className="absolute inset-0 rounded-2xl bg-[hsl(var(--sunset-pink)/0.45)] motion-safe:animate-ping" aria-hidden />
             )}
             <span
               className={cn(
-                "relative flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm",
+                "relative flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm",
                 lit ? `${GRADIENT} text-white shadow-[hsl(var(--sunset-pink)/0.35)]` : "bg-muted text-muted-foreground",
               )}
               aria-hidden
             >
-              <Flame className="h-9 w-9" fill={lit ? "currentColor" : "none"} strokeWidth={lit ? 1.5 : 2} />
+              <Flame className="h-7 w-7" fill={lit ? "currentColor" : "none"} strokeWidth={lit ? 1.5 : 2} />
             </span>
           </div>
           <div className="min-w-0">
             <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{k("title")}</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">{s.current}</span>
+              <span className="text-4xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">{s.current}</span>
               <span className="text-sm font-semibold text-muted-foreground">
                 {s.current === 1 ? k("unitOne") : k("unitMany")}
               </span>
@@ -75,7 +75,7 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
 
         <p
           className={cn(
-            "mt-4 text-sm leading-relaxed",
+            "mt-3 text-sm leading-relaxed",
             s.state === "atRisk" ? "font-semibold text-primary" : "text-muted-foreground",
           )}
           role={s.state === "atRisk" ? "alert" : undefined}
@@ -84,7 +84,7 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
         </p>
 
         {/* This week, Duolingo style */}
-        <ol className="mt-5 grid grid-cols-7 gap-1.5" aria-label={k("thisWeek")}>
+        <ol className="mt-4 grid grid-cols-7 gap-1.5" aria-label={k("thisWeek")}>
           {s.week.map((c) => {
             const isToday = c.date === todayKey;
             const done = c.count > 0;
@@ -95,7 +95,7 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
                 </span>
                 <span
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+                    "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                     done && `${GRADIENT} text-white shadow-sm`,
                     !done && isToday && "border-2 border-dashed border-primary bg-card motion-safe:animate-pulse",
                     !done && !isToday && !c.future && "bg-muted",
@@ -109,22 +109,22 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
           })}
         </ol>
 
-        <dl className="mt-5 grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-card/70 text-center">
+        <dl className="mt-4 grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-card/70 text-center">
           {[
             [k("today"), s.todayCount],
             [k("thisWeek"), s.thisWeek],
             [k("total"), s.total],
           ].map(([label, value]) => (
-            <div key={label} className="px-2 py-2.5">
+            <div key={label} className="px-2 py-2">
               <dt className="text-[11px] font-medium text-muted-foreground">{label}</dt>
-              <dd className="text-lg font-bold tabular-nums text-foreground">{value}</dd>
+              <dd className="text-base font-bold tabular-nums text-foreground">{value}</dd>
             </div>
           ))}
         </dl>
       </div>
 
       {/* Activity over the last weeks */}
-      <div className="border-t border-border p-5 sm:p-6 lg:border-l lg:border-t-0">
+      <div className="border-t border-border p-4 sm:p-5 lg:border-l lg:border-t-0">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <h3 className="whitespace-nowrap text-base font-bold text-foreground">{k("chartTitle")}</h3>
           <span className="whitespace-nowrap text-xs text-muted-foreground">
@@ -133,7 +133,7 @@ export function ApplyStreakCard({ applications }: { applications: JobApplication
         </div>
 
         {/* Month calendar: a row per week (Mon..Sun), the day number in each square */}
-        <div className="mx-auto mt-4 max-w-[380px]" role="img" aria-label={`${k("chartTitle")}: ${range}`}>
+        <div className="mx-auto mt-3 max-w-[340px]" role="img" aria-label={`${k("chartTitle")}: ${range}`}>
           <div className="grid grid-cols-7 gap-1.5 pb-1.5">
             {s.week.map((c) => (
               <span key={c.date} className="text-center text-[11px] font-semibold uppercase text-muted-foreground">

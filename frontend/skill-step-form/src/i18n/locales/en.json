@@ -1074,6 +1074,7 @@
         "extension": {
           "emptyTitle": "Save jobs as you browse",
           "emptyDesc": "Add the 123Resume Chrome extension and save any job posting to your tracker in one click — Claude tidies it into a clean record, and you can generate a cover letter too.",
+          "bannerTitle": "Save jobs from any site, in one click",
           "bannerText": "Add jobs faster — save any posting with one click using our Chrome extension.",
           "cta": "Add to Chrome",
           "how": "See how it works",

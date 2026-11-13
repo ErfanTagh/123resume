@@ -1,9 +1,9 @@
 """
 API error alerts emailed to the operator (Mailgun, background thread).
 
-Always notify on HTTP 500+ / uncaught exceptions; sample 1-in-5 of other 4xx.
-Scanner probe paths (/.env, /wp-admin, …) never alert on 4xx — they are noise.
-Never blocks the request.
+Notify only on HTTP 500+ / uncaught exceptions — real server errors. 4xx
+client errors (400 bad request, validation errors, 404s, scanner probes, …)
+are low-signal and never alert. Never blocks the request.
 
 An alert should answer, at a glance: what broke (in plain words, with the
 likely cause for errors we have seen before), how often and since when, whether
@@ -243,17 +243,15 @@ def _fingerprint(path: str, status: int, kind: str) -> str:
 # --------------------------------------------------------------------------
 
 def should_alert(status, path, exc_type=""):
-    """True for all 5xx; 1-in-5 for other client/API errors (deterministic)."""
-    if status is None or status < 400:
+    """True only for real server errors (5xx / uncaught exceptions).
+
+    4xx client errors (400 bad request, validation errors, 404s, scanner
+    probes, …) are low-signal and never alert — they say little about the
+    health of the server and are just noise in the inbox.
+    """
+    if status is None or status < 500:
         return False
-    if status >= 500:
-        return True
-    # Never email about scanner 4xx — /.env, /wp-admin, /api/contents, …
-    if is_probe_path(path) or is_unknown_api_path(path):
-        return False
-    fp = _fingerprint(path, status, exc_type or "client")
-    digest = hashlib.sha256(fp.encode("utf-8")).hexdigest()
-    return int(digest[:8], 16) % 5 == 0
+    return True
 
 
 def _record_occurrence(fp: str) -> Dict[str, Any]:

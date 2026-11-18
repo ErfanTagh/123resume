@@ -732,28 +732,26 @@ function addSinglePageClassToHTML(html: string): string {
 /**
  * Download PDF from resume HTML (from DOM element)
  */
-/**
- * Small "Made with 123resume" line appended at the end of the resume content,
- * in the resume's language (UI language as fallback, like section headings).
- * Appended after the flex spacer so it anchors to the bottom of the last PDF
- * page; must be in the DOM before the spacer/single-page measurements run so
- * the fitting math accounts for its height.
- */
-function createMadeWithElement(resumeLanguage?: string): HTMLElement {
-  const el = document.createElement('div');
-  el.className = 'resume-made-with';
-  el.style.cssText =
-    'flex:0 0 auto;margin-top:5mm;text-align:center;font-size:9px;line-height:1.2;color:#9ca3af;';
-  el.textContent = getMadeWithLabel(resumeLanguage || i18n.language);
-  return el;
-}
-
 async function downloadPDFFromHTML(
   resumeId: string,
   resumeHTML: string,
   filename?: string,
-  options?: { isSinglePage?: boolean }
+  options?: { isSinglePage?: boolean; resumeLanguage?: string }
 ): Promise<void> {
+  // Footer printed at the bottom of every PDF page. It replaces the page
+  // number and is rendered as @page generated content (not a DOM text node),
+  // so no PDF viewer turns it into a clickable link. The ".de" is dropped so
+  // the line can never be auto-linkified into a URL that navigates away.
+  const madeWithLabel = getMadeWithLabel(options?.resumeLanguage || i18n.language)
+    .replace(/123resume\.de/gi, '123resume');
+  const madeWithCss = madeWithLabel.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  // Templates print a page number via `@bottom-center { content: counter(page) }`
+  // in their own <style>; swap every such footer for the branding line.
+  resumeHTML = resumeHTML.replace(
+    /content:\s*counter\(page\)\s*;?/g,
+    `content: "${madeWithCss}";`
+  );
+
   // Get all stylesheets from the current page (includes Tailwind CSS)
   const pageStylesheets = getAllStylesheets();
 
@@ -789,12 +787,12 @@ async function downloadPDFFromHTML(
       padding: 0 !important;
       size: A4;
       background: var(--pdf-background) !important;
-      /* Page numbers via @bottom-center if not already set by template */
+      /* Branding line via @bottom-center if not already set by template */
       @bottom-center {
-        content: counter(page);
-        font-size: 10px;
-        color: #6b7280;
-        opacity: 0.6;
+        content: "${madeWithCss}";
+        font-size: 8px;
+        color: #9ca3af;
+        opacity: 0.85;
       }
     }
     @page :first {
@@ -846,12 +844,12 @@ async function downloadPDFFromHTML(
       @page {
         size: A4;
         background: var(--pdf-background) !important;
-        /* Page numbers via @bottom-center if not already set by template */
+        /* Branding line via @bottom-center if not already set by template */
         @bottom-center {
-          content: counter(page);
-          font-size: 10px;
-          color: #6b7280;
-          opacity: 0.6;
+          content: "${madeWithCss}";
+          font-size: 8px;
+          color: #9ca3af;
+          opacity: 0.85;
         }
       }
       html, body {
@@ -1295,9 +1293,6 @@ export async function downloadResumePDF(
     // This runs in the same offscreen DOM that becomes the PDF, so measurement
     // and export share the exact same layout context.
     const resumeContainer = innerWrapper.querySelector('.resume-page-container') as HTMLElement | null;
-    (resumeContainer ?? innerWrapper).appendChild(
-      createMadeWithElement(resume.styling?.resumeLanguage)
-    );
     if (resumeContainer) {
       await applyDynamicSpacerForPDF(resumeContainer);
     }
@@ -1336,7 +1331,10 @@ export async function downloadResumePDF(
     }
 
     // Call downloadPDFFromHTML directly - same as downloadResumePDFFromElement does
-    await downloadPDFFromHTML(resume.id, resumeHTML, finalFilename, { isSinglePage });
+    await downloadPDFFromHTML(resume.id, resumeHTML, finalFilename, {
+      isSinglePage,
+      resumeLanguage: resume.styling?.resumeLanguage,
+    });
   } finally {
     // Cleanup - ensure everything is always removed
     try {
@@ -1367,14 +1365,11 @@ export async function downloadResumePDFFromElement(
   const resumeContainer = htmlElement.querySelector('.resume-page-container') as HTMLElement | null;
   let restoreSpacerStyles: (() => void) | undefined;
 
-  // Temporarily added for export; removed again in finally (live DOM).
-  const madeWithEl = createMadeWithElement(
-    typeof resumeOrFilename === 'object' ? resumeOrFilename.styling?.resumeLanguage : undefined
-  );
+  const resumeLanguage =
+    typeof resumeOrFilename === 'object' ? resumeOrFilename.styling?.resumeLanguage : undefined;
 
   htmlElement.classList.add('resume-pdf-offscreen');
   try {
-    (resumeContainer ?? htmlElement).appendChild(madeWithEl);
     if (resumeContainer) {
       restoreSpacerStyles = await applyDynamicSpacerForPDF(resumeContainer);
     }
@@ -1416,9 +1411,8 @@ export async function downloadResumePDFFromElement(
       finalFilename = `resume_${resumeId}.pdf`;
     }
 
-    await downloadPDFFromHTML(resumeId, resumeHTML, finalFilename, { isSinglePage });
+    await downloadPDFFromHTML(resumeId, resumeHTML, finalFilename, { isSinglePage, resumeLanguage });
   } finally {
-    madeWithEl.remove();
     htmlElement.classList.remove('resume-pdf-offscreen');
     restoreSpacerStyles?.();
   }

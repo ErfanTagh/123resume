@@ -9,9 +9,11 @@ type RotatingWordProps = {
   className?: string;
 };
 
+/** Stay static for reduced-motion users and on small screens (calmer mobile). */
 const prefersReduced = () =>
   typeof window !== "undefined" &&
-  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ||
+    window.matchMedia?.("(max-width: 1023px)").matches);
 
 /**
  * A single headline word that swaps through synonyms, each fading + rising in

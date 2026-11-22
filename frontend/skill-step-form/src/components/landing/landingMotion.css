@@ -24,6 +24,12 @@
     transform: none !important;
     transition: none !important;
   }
+  /* Calmer mobile: drop the ambient shimmer/float on small screens. */
+  .lm-glint::after,
+  .lm-float,
+  .lm-float-slow {
+    animation: none !important;
+  }
 }
 
 /* ---- Typewriter + caret (hero mockup code/field typing) ---- */

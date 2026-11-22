@@ -304,7 +304,7 @@ export const FeatureTabs = () => {
 
         <Tabs value={active} onValueChange={(v) => setActive(v as TabKey)}>
           {/* Pill tab switcher */}
-          <div className="mb-8 flex justify-center sm:mb-12">
+          <div className="mb-4 flex justify-center">
             <TabsList className="h-auto flex-wrap gap-1 rounded-3xl bg-muted p-1.5 sm:rounded-full">
               {TABS.map(({ key, icon: Icon }) => (
                 <TabsTrigger
@@ -322,6 +322,23 @@ export const FeatureTabs = () => {
                 </TabsTrigger>
               ))}
             </TabsList>
+          </div>
+
+          {/* Carousel position indicator — shows which tab you're on */}
+          <div className="mb-8 flex items-center justify-center gap-1.5 sm:mb-12">
+            {TABS.map(({ key }) => (
+              <button
+                key={key}
+                type="button"
+                aria-label={t(`landing.featureTabs.${key}.tab`)}
+                aria-current={active === key}
+                onClick={() => setActive(key)}
+                className={`h-1.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  active === key ? "w-9 opacity-100" : "w-3 opacity-25 hover:opacity-50"
+                }`}
+                style={{ background: "var(--gradient-primary)" }}
+              />
+            ))}
           </div>
 
           {TABS.map(({ key, cta }) => (

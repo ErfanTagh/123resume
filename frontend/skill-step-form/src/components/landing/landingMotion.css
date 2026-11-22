@@ -16,6 +16,15 @@
   opacity: 1;
   transform: none;
 }
+/* Mobile / tablet: fast scrolling makes the staggered fade read as blank gaps,
+   so skip the hide entirely and show content immediately. */
+@media (max-width: 1023px) {
+  .lm-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
 
 /* ---- Typewriter + caret (hero mockup code/field typing) ---- */
 @keyframes lm-type {

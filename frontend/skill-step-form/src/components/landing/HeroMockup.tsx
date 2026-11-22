@@ -76,7 +76,7 @@ export const HeroMockup = ({ embedded = false }: { embedded?: boolean }) => {
           </div>
 
           {/* ATS score side */}
-          <div className="col-span-2 flex flex-col gap-2.5 border-l border-border/70 bg-muted/40 p-3 sm:p-4">
+          <div className="col-span-2 flex flex-col justify-center gap-2.5 border-l border-border/70 bg-muted/40 p-3 sm:p-4">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               ATS score
             </div>

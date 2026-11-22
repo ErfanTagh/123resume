@@ -33,8 +33,9 @@ export const AnnouncementBanner = () => {
   };
 
   return (
+    // Chrome extension is desktop-only, so hide the promo on phones.
     <div
-      className="relative overflow-hidden text-white"
+      className="relative hidden overflow-hidden text-white md:block"
       style={{ background: "var(--gradient-primary)" }}
     >
       <div className="lm-glint" />

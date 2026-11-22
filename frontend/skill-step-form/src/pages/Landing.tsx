@@ -17,7 +17,7 @@ import "@/components/landing/landingMotion.css";
 
 const HEADLINE_ROTATE: Record<string, string[]> = {
   en: ["stand out", "impressive", "unforgettable", "interview-ready"],
-  de: ["unübersehbar", "beeindruckend", "unvergesslich", "interviewreif"],
+  de: ["besonders", "beeindruckend", "unvergesslich", "interviewreif"],
 };
 
 const Landing = () => {

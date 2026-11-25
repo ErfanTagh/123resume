@@ -37,6 +37,7 @@ urlpatterns = [
 
     # Resume endpoints (protected)
     path('resumes/', views.resume_list, name='resume-list'),
+    path('resumes/signature/', views.resume_signature, name='resume-signature'),  # Must come before <str:pk> pattern
     path('resumes/parse/', views.parse_resume, name='resume-parse'),  # Must come before <str:pk> pattern
     path('resumes/<str:resume_id>/pdf/', views.generate_resume_pdf, name='resume-pdf'),
     path('resumes/<str:resume_id>/match/', views.match_resume_to_job, name='resume-match'),

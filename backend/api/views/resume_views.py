@@ -314,6 +314,61 @@ def resume_list(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def resume_signature(request):
+    """
+    Lightweight fingerprint of the user's resumes.
+
+    Lets the client decide whether anything changed (created, edited, or
+    deleted - e.g. via the Claude connector, the Chrome extension, or another
+    tab) without fetching every full document. Reads only the timestamp
+    fields, so it is far cheaper than the full resume list.
+
+    Returns {"count": <int>, "latest": <ISO string|null>} where `latest` is the
+    most recent updated_at/created_at across the user's resumes. A change in
+    either field means something changed and the client should refetch.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        db = _mongo_db()
+        user_id = request.user.id
+        # Projection: pull only the timestamps, not the resume bodies.
+        cursor = db.resumes.find(
+            {'user_id': user_id},
+            {'updated_at': 1, 'created_at': 1},
+        )
+
+        count = 0
+        latest_ts = 0.0
+        latest_raw = None
+        for doc in cursor:
+            count += 1
+            for key in ('updated_at', 'created_at'):
+                raw = doc.get(key)
+                if not raw:
+                    continue
+                try:
+                    ts = datetime.fromisoformat(str(raw).replace('Z', '+00:00')).timestamp()
+                except (ValueError, TypeError, OSError):
+                    ts = 0.0
+                if ts > latest_ts:
+                    latest_ts = ts
+                    latest_raw = raw
+
+        return Response({
+            'count': count,
+            'latest': get_date_or_now(latest_raw) if latest_raw else None,
+        })
+    except Exception as e:
+        logger.error("resume_signature error: %s", e)
+        return Response(
+            {'error': 'Failed to compute resume signature'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def resume_detail(request, pk):

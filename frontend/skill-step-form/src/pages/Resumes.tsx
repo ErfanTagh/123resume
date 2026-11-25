@@ -108,8 +108,17 @@ export default function Resumes() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const loadResumes = useCallback(async () => {
-    setIsLoading(true);
+  // Fingerprint ("count:latest") of the resumes as of the last load, so we can
+  // tell on tab-focus whether anything actually changed before refetching.
+  const lastSignatureRef = useRef<string | null>(null);
+  // Debounce rapid tab flips so we don't hit the signature endpoint repeatedly.
+  const lastSigCheckAtRef = useRef(0);
+
+  // `silent` does a background refresh: no spinner and the current list stays
+  // on screen, so returning to the tab doesn't flash the whole page.
+  const loadResumes = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) setIsLoading(true);
     setError('');
     try {
       // Always fetch fresh data - no caching
@@ -117,14 +126,30 @@ export default function Resumes() {
       // Ensure we have an array and set it
       if (Array.isArray(data)) {
         setResumes(data);
-      } else {
+      } else if (!silent) {
         setResumes([]);
       }
+      // After a visible (re)load, record the current fingerprint so the next
+      // tab-focus check compares against fresh data. Fire-and-forget.
+      if (!silent) {
+        resumeAPI
+          .getSignature()
+          .then((sig) => {
+            lastSignatureRef.current = `${sig.count}:${sig.latest ?? ''}`;
+          })
+          .catch(() => {
+            /* non-fatal: focus check will just reseed later */
+          });
+      }
     } catch (err: any) {
-      setError(err.message || t('pages.resumes.errors.loadFailed') || 'Failed to load resumes');
-      setResumes([]); // Clear resumes on error
+      // On a silent refresh, keep whatever is already shown instead of
+      // wiping the list and surfacing an error over good data.
+      if (!silent) {
+        setError(err.message || t('pages.resumes.errors.loadFailed') || 'Failed to load resumes');
+        setResumes([]); // Clear resumes on error
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [t]); // Include t for translation
 
@@ -147,12 +172,24 @@ export default function Resumes() {
 
     window.addEventListener('resumeSaved', handleResumeSaved);
 
-    // Also listen for visibility change to refresh when user returns to tab
-    // This helps ensure mobile browsers show fresh data
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user) {
-        // Refresh data when tab becomes visible (helps with mobile browser caching)
-        loadResumes();
+    // When the user returns to the tab, ask the server for a cheap fingerprint
+    // of their resumes. Only if it differs from what we last loaded do we do a
+    // silent in-place refresh — so nothing flashes unless something actually
+    // changed (e.g. an edit made via the Claude connector or another tab).
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible' || !user) return;
+      // Debounce rapid tab flips.
+      if (Date.now() - lastSigCheckAtRef.current < 2000) return;
+      lastSigCheckAtRef.current = Date.now();
+      try {
+        const sig = await resumeAPI.getSignature();
+        const key = `${sig.count}:${sig.latest ?? ''}`;
+        if (lastSignatureRef.current !== null && key !== lastSignatureRef.current) {
+          await loadResumes({ silent: true });
+        }
+        lastSignatureRef.current = key;
+      } catch {
+        /* network blip: keep showing what we have */
       }
     };
 

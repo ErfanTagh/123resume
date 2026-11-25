@@ -3,6 +3,7 @@ API Views for Resume/CV operations
 """
 from .resume_views import (
     resume_list,
+    resume_signature,
     resume_detail,
     public_resume_detail,
     resume_public_profile_toggle,
@@ -22,6 +23,7 @@ from .ai_views import resume_assistant_chat, resume_score, suggest_work_bullet, 
 
 __all__ = [
     'resume_list',
+    'resume_signature',
     'resume_detail',
     'public_resume_detail',
     'resume_public_profile_toggle',

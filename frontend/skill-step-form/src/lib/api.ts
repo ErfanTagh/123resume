@@ -703,6 +703,21 @@ export const resumeAPI = {
   },
 
   /**
+   * Lightweight fingerprint of the user's resumes ({ count, latest }).
+   * Lets the list page detect out-of-band changes (Claude connector, extension,
+   * another tab) without refetching every full resume document.
+   */
+  getSignature: async (): Promise<{ count: number; latest: string | null }> => {
+    const timestamp = Date.now();
+    const makeRequest = () => fetch(`${API_BASE_URL}/resumes/signature/?_t=${timestamp}`, {
+      headers: createHeaders(true, true),
+      cache: 'no-store',
+    });
+    const response = await makeRequest();
+    return handleResponse(response, makeRequest);
+  },
+
+  /**
    * Get a specific resume by ID
    */
   getById: async (id: string): Promise<Resume> => {

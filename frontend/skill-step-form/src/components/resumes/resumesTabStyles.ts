@@ -5,8 +5,7 @@ export type ResumesTabId =
   | "job-matching"
   | "job-suggestions"
   | "job-tracker"
-  | "portfolio"
-  | "business-card";
+  | "portfolio";
 
 /** Outer rail: flush left, white, full viewport height — no vertical scroll. */
 export const resumesSideRailClass = cn(

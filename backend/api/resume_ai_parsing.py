@@ -252,18 +252,94 @@ def _norm_languages(raw: Any) -> List[Dict[str, str]]:
     return out
 
 
+# Keys the model uses for a category label and for its list of skills when it
+# returns a categorized skills section instead of a flat list.
+_SKILL_NAME_KEYS = ("category", "name", "group", "title", "label", "type")
+_SKILL_LIST_KEYS = ("skills", "items", "values", "list", "entries", "skillList")
+_SKILL_MAX = 100  # must match SkillSerializer.skill max_length
+
+
+def _skill_values_to_list(value: Any) -> List[str]:
+    """Flatten a category's skills (a list, or a comma string) to clean names."""
+    result: List[str] = []
+    if isinstance(value, list):
+        for v in value:
+            if isinstance(v, dict):
+                v = v.get("skill") or v.get("name") or v.get("value") or ""
+            s = _s(v, _SKILL_MAX).strip()
+            if s:
+                result.append(s)
+    elif isinstance(value, str):
+        for part in value.split(","):
+            s = part.strip()[:_SKILL_MAX]
+            if s:
+                result.append(s)
+    return result
+
+
+def _emit_skill_group(name: str, values: List[str], out: List[Dict[str, str]]) -> None:
+    """Emit a category as one or more "Name: a, b, c" rows, each within the
+    per-skill length limit. Templates re-merge rows that share a name, so a
+    long category split across rows still renders as one group."""
+    prefix = f"{name}: " if name else ""
+    line = prefix
+    for v in values:
+        addition = v if line == prefix else f", {v}"
+        if line != prefix and len(line) + len(addition) > _SKILL_MAX:
+            out.append({"skill": line})
+            line = prefix + v
+        else:
+            line += addition
+    if line and line != prefix:
+        out.append({"skill": line[:_SKILL_MAX]})
+
+
 def _norm_skills(raw: Any) -> List[Dict[str, str]]:
-    if not isinstance(raw, list):
-        return []
+    """Normalize the model's skills output to the flat [{"skill": ...}] form.
+
+    Accepts every shape the model emits for a skills section, not only plain
+    strings and {"skill": ...} dicts. Categorized shapes — {"category": "...",
+    "items": [...]}, {"name": "...", "skills": [...]}, or a category-keyed dict
+    like {"Programming": [...]} — become "Category: a, b, c" rows (which the
+    templates split back into groups). Before this, any categorized section was
+    silently dropped and the resume rendered no skills at all.
+    """
     out: List[Dict[str, str]] = []
-    for item in raw[:80]:
-        if isinstance(item, dict) and item.get("skill"):
-            s = _s(item.get("skill"), 200)
+
+    def emit(item: Any) -> None:
+        if isinstance(item, str):
+            s = item.strip()[:_SKILL_MAX]
             if s:
                 out.append({"skill": s})
-        elif isinstance(item, str) and item.strip():
-            out.append({"skill": item.strip()[:200]})
-    return out
+            return
+        if not isinstance(item, dict):
+            return
+        if item.get("skill"):  # already a flat skill
+            s = _s(item.get("skill"), _SKILL_MAX).strip()
+            if s:
+                out.append({"skill": s})
+            return
+        name = next((_s(item.get(k), 120).strip() for k in _SKILL_NAME_KEYS if item.get(k)), "")
+        values: List[str] = []
+        for k in _SKILL_LIST_KEYS:
+            if k in item:
+                values = _skill_values_to_list(item.get(k))
+                break
+        if values:
+            _emit_skill_group(name, values, out)
+            return
+        # Single-key dict, e.g. {"Programming": ["Python", "Java"]}
+        for k, v in item.items():
+            _emit_skill_group(_s(k, 120).strip(), _skill_values_to_list(v), out)
+
+    if isinstance(raw, list):
+        for item in raw[:80]:
+            emit(item)
+    elif isinstance(raw, dict):  # {"Programming": ["Python"], "Tools": "Docker"}
+        for k, v in list(raw.items())[:80]:
+            _emit_skill_group(_s(k, 120).strip(), _skill_values_to_list(v), out)
+
+    return out[:120]
 
 
 def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
@@ -303,9 +379,29 @@ def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
     skills = _norm_skills(raw.get("skills"))
     base["skills"] = skills if skills else [{"skill": ""}]
 
+    # Templates render ONLY the sections listed in sectionOrder. Keep the
+    # model's order, but weave in any standard section it left out — at its
+    # canonical position, not the end — so a section that has data (skills,
+    # languages, ...) is never hidden just because the model omitted it.
+    # Empty sections render nothing anyway.
+    standard_order = list(base.get("sectionOrder") or [])
     so = raw.get("sectionOrder")
     if isinstance(so, list) and all(isinstance(x, str) for x in so):
-        base["sectionOrder"] = [x for x in so if x][:20]
+        merged = [x for x in so if x][:20]
+        present = set(merged)
+        for i, section in enumerate(standard_order):
+            if section in present:
+                continue
+            # Slot it right after the nearest earlier canonical section that is
+            # already in the list; if none precede it, put it at the front.
+            insert_at = 0
+            for prev in reversed(standard_order[:i]):
+                if prev in present:
+                    insert_at = merged.index(prev) + 1
+                    break
+            merged.insert(insert_at, section)
+            present.add(section)
+        base["sectionOrder"] = merged
 
     tpl = raw.get("template")
     if isinstance(tpl, str) and tpl in (
@@ -316,6 +412,7 @@ def normalize_ai_parse(raw: Dict[str, Any]) -> Dict[str, Any]:
         "latex",
         "starRover",
         "slateCopper",
+        "prism",
     ):
         base["template"] = tpl
 
@@ -380,7 +477,7 @@ Return JSON with this shape. Every key is optional; omit what is empty.
   "sectionOrder": ["summary","workExperience","education","projects","certificates","publications","skills","languages","interests"]
 }
 Put a job's bullet points in "responsibilities", and use "description" only for a paragraph that isn't a bullet list.
-sectionOrder: the sections in the order they appear in the resume.
+sectionOrder: the sections in the order they appear in the resume. It MUST include every section you return data for (if you return "skills", "skills" must be in sectionOrder), using exactly these lowercase keys: summary, workExperience, education, projects, certificates, publications, skills, languages, interests.
 """.strip()
 
     user_msg = f"{schema_hint}\n\n--- RESUME TEXT ---\n{t}"

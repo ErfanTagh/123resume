@@ -11,7 +11,6 @@ import { JobMatchingPanel } from '@/components/resumes/JobMatchingPanel';
 import { JobTrackerPanel } from '@/components/resumes/JobTrackerPanel';
 import { JobSuggestionsPanel } from '@/components/resumes/JobSuggestionsPanel';
 import { PortfolioWebsiteTab } from '@/components/resumes/PortfolioWebsiteTab';
-import { BusinessCardPanel } from '@/components/resumes/BusinessCardPanel';
 import { ResumesTabBar } from '@/components/resumes/ResumesTabBar';
 import { isResumesTabId } from '@/components/resumes/resumesTabs';
 import type { ResumesTabId } from '@/components/resumes/resumesTabStyles';
@@ -58,7 +57,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Input } from '@/components/ui/input';
-import { RowAction, ROW_ACTION_FRAME, ROW_ACTION_TONES } from '@/components/resumes/RowAction';
+import { RowAction } from '@/components/resumes/RowAction';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -253,6 +252,13 @@ export default function Resumes() {
     if (rating >= 9) return t('pages.resumes.rating.excellent') || "Excellent";
     if (rating >= 7) return t('pages.resumes.rating.good') || "Good";
     return t('pages.resumes.rating.needsWork') || "Needs Work";
+  };
+
+  // Tinted badge styling that matches the score color (green / yellow / red).
+  const getRatingBadgeClass = (rating: number) => {
+    if (rating >= 9) return "border-green-600/30 bg-green-500/10 text-green-700 dark:text-green-400";
+    if (rating >= 7) return "border-yellow-600/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400";
+    return "border-red-600/30 bg-red-500/10 text-red-700 dark:text-red-400";
   };
 
   const handleDownloadPDF = async (resume: Resume) => {
@@ -477,7 +483,8 @@ export default function Resumes() {
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4"></div>
+              <div className="inline-block h-12 
+                w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4"></div>
               <p className="text-muted-foreground text-sm sm:text-base">{t('pages.resumes.loading') || 'Loading resumes...'}</p>
             </div>
           </div>
@@ -597,23 +604,11 @@ export default function Resumes() {
                     </div>
                   </div>
 
-                  {/* Score — the one comparable field, aligned in its own column across every row */}
-                  <div
-                    className="hidden w-16 flex-none flex-col items-end sm:flex sm:w-20"
-                    title={scoreBreakdownTitle}
-                  >
-                    <span className={`text-lg font-bold tabular-nums sm:text-xl ${getRatingColor(displayScore)}`}>
-                      {displayScore}
-                      <span className="text-xs font-normal text-muted-foreground">/10</span>
-                    </span>
-                    <Badge variant="outline" className="mt-0.5 px-1.5 py-0 text-[10px] leading-4">
-                      {getRatingBadge(displayScore)}
-                    </Badge>
-                  </div>
-
                   {/* Actions — icon buttons in tinted frames, labelled by tooltip. Rename
-                      and Delete are rarer and riskier, so they sit behind the menu. */}
-                  <div className="flex flex-none items-center gap-1 sm:gap-1.5">
+                      and Delete are rarer and riskier, so they sit behind the menu.
+                      On hover-capable devices they stay hidden until the row is hovered,
+                      focused, or its menu is open; on touch devices they're always shown. */}
+                  <div className="flex flex-none items-center gap-1 transition-opacity duration-200 sm:gap-1.5 [@media(hover:hover)]:pointer-events-none [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:pointer-events-auto [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-within:pointer-events-auto [@media(hover:hover)]:focus-within:opacity-100">
                     {/* Opens Job suggestions with this resume picked */}
                     <RowAction
                       tone="emerald"
@@ -652,12 +647,34 @@ export default function Resumes() {
                         <Languages className="h-4 w-4" />
                       )}
                     </RowAction>
+                  </div>
 
+                  {/* Score — the one comparable field. Sits after the hover actions so
+                      it holds its column; the static menu is the only thing to its right. */}
+                  <div
+                    className="hidden w-16 flex-none flex-col items-end sm:mr-4 sm:flex sm:w-20"
+                    title={scoreBreakdownTitle}
+                  >
+                    <span className={`text-lg font-bold tabular-nums sm:text-xl ${getRatingColor(displayScore)}`}>
+                      {displayScore}
+                      <span className="text-xs font-normal text-muted-foreground">/10</span>
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className={`mt-0.5 px-1.5 py-0 text-[10px] leading-4 ${getRatingBadgeClass(displayScore)}`}
+                    >
+                      {getRatingBadge(displayScore)}
+                    </Badge>
+                  </div>
+
+                  {/* More options — always visible, at the very end of the row. Rename
+                      and Delete are rarer/riskier, so they live behind this menu. */}
+                  <div className="flex flex-none items-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className={`${ROW_ACTION_FRAME} ${ROW_ACTION_TONES.neutral}`}
+                          className="flex h-8 w-8 flex-none items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground sm:h-9 sm:w-9"
                           aria-label={t('pages.resumes.menu') || 'Resume options'}
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -743,13 +760,6 @@ export default function Resumes() {
               isLoading={isLoading}
               onResumesChange={setResumes}
             />
-          </TabsContent>
-
-          <TabsContent
-            value="business-card"
-            className="mt-0 focus-visible:outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
-          >
-            <BusinessCardPanel resumes={resumes} isLoadingResumes={isLoading} />
           </TabsContent>
         </div>
       </Tabs>

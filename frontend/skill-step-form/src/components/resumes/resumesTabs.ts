@@ -1,7 +1,6 @@
 import {
   Briefcase,
   Compass,
-  CreditCard,
   FileText,
   Globe,
   Sparkles,
@@ -52,12 +51,6 @@ export const RESUMES_TABS: ResumesTabConfig[] = [
     labelKey: "pages.resumes.tabs.portfolio",
     fallback: "Portfolio",
     icon: Globe,
-  },
-  {
-    id: "business-card",
-    labelKey: "pages.resumes.tabs.businessCard",
-    fallback: "Card",
-    icon: CreditCard,
   },
 ];
 
